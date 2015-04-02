@@ -13,6 +13,7 @@ Package.describe({
 Package.onUse(function(api) {
   api.versionsFrom('1.1');
   api.addFiles('postgres.js');
+  api.export('Postgres')
 });
 
 Package.onTest(function(api) {

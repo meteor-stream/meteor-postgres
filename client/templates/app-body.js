@@ -1,3 +1,4 @@
+console.log(Postgres);
 var MENU_KEY = 'menuOpen';
 Session.setDefault(MENU_KEY, false);
 
@@ -8,6 +9,7 @@ var SHOW_CONNECTION_ISSUE_KEY = 'showConnectionIssue';
 Session.setDefault(SHOW_CONNECTION_ISSUE_KEY, false);
 
 var CONNECTION_ISSUE_TIMEOUT = 5000;
+
 
 Meteor.startup(function () {
   // set up a swipe left / right handler
@@ -111,7 +113,7 @@ Template.appBody.events({
 
   'click .js-logout': function() {
     Meteor.logout();
-    
+
     // if we are on a private list, we'll need to go to a public one
     var current = Router.current();
     if (current.route.name === 'listsShow' && current.data().userId) {
