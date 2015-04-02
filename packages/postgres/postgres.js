@@ -28,7 +28,6 @@
 //db.update('users', ["name"], ["Paulo2"], where);
 //db.select('users', select);
 
-var pg = npm.require('pg');
 var conString = 'postgres://postgres:1234@localhost/postgres';
 Postgres = {
   'test': function(){

@@ -10,6 +10,10 @@ Package.describe({
   documentation: 'README.md'
 });
 
+Npm.depends({
+  'pg'  :  '4.3.0'
+});
+
 Package.onUse(function(api) {
   api.versionsFrom('1.1');
   api.addFiles('postgres.js');
