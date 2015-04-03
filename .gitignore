@@ -25,3 +25,6 @@ TAGS
 *.out
 npm-debug.log
 universe
+.floo
+.flooignore
+.gitconfig
