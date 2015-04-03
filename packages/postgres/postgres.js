@@ -27,8 +27,7 @@
 //db.insert('users', ['username', 'password', 'name'], ['pdiniz', 1234, 'paulo']);
 //db.update('users', ["name"], ["Paulo2"], where);
 //db.select('users', select);
-
-var pg = npm.require('pg');
+pg = Npm.require('pg');
 var conString = 'postgres://postgres:1234@localhost/postgres';
 Postgres = {
   'test': function(){
