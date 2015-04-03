@@ -57,7 +57,7 @@ Postgres.createTable = function(name, object) {
   initString += ", created_at TIMESTAMPTZ default now()); ";
   initString += "CREATE FUNCTION notify_trigger() RETURNS trigger AS $$ "+
   "DECLARE " +
-  "BEGIN" +
+  "BEGIN " +
   "PERFORM pg_notify('watchers', TG_TABLE_NAME || ',modified,' || NEW ); " +
   "RETURN new; " +
   "END; " +
