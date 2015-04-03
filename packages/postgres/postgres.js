@@ -41,7 +41,7 @@ Postgres = {
  * @param name
  * @param {object} [options]
  * @param {dataType} object.field[0]
- * @param {constraint} object.field.dataType
+ * @param {constraint} object.field[1]
  */
 Postgres.createTable = function(name, object) {
   var id = object.id || 'id serial primary key not null';
@@ -52,7 +52,17 @@ Postgres.createTable = function(name, object) {
     initString += ', ' + key + ' ' + object[key][0] + ' ' + object[key][1];
   }
   // closes string
-  initString += ", created_at TIMESTAMPTZ default now());";
+  initString += ", created_at TIMESTAMPTZ default now()); ";
+  initString += "CREATE FUNCTION notify_trigger() RETURNS trigger AS $$ "+
+  "DECLARE " +
+  "BEGIN" +
+  "PERFORM pg_notify('watchers', TG_TABLE_NAME || ',modified,' || NEW ); " +
+  "RETURN new; " +
+  "END; " +
+  "$$ LANGUAGE plpgsql; " +
+  "CREATE TRIGGER watched_table_trigger AFTER INSERT ON "+ name +
+  " FOR EACH ROW EXECUTE PROCEDURE notify_trigger();";
+
   // node postgres connection/query function
   console.log(initString);
   pg.connect(conString, function(err, client, done) {
@@ -60,8 +70,11 @@ Postgres.createTable = function(name, object) {
     client.query(initString, function(error, results) {
       console.log("error in create table " + name, error);
       console.log("results in create table " + name, results);
-      done();
     });
+    client.on('notification', function(msg) {
+      console.log(msg);
+    });
+    var query = client.query("LISTEN watchers");
   });
 };
 
