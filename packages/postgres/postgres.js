@@ -3,6 +3,13 @@
  * Created by ppp on 4/2/2015.
  */
 
+Postgres.QueryOperators = {
+  $eq: ' = ',
+  $gt: ' > ',
+  $lt: ' < '
+};
+
+
 //var newTable = {
 //  username: ['varchar (100)', 'not null'],
 //  password: ['varchar (100)', 'not null'],
@@ -134,35 +141,45 @@ Postgres.insert = function(name, fieldNames, values) {
 
 /**
  * TODO: update
- * @param {string} name
- * @param {array} fieldNames
- * @param {array} values
- * @param {object} where
- * @param {conditionalString} object.fieldNames
+ * @param {string} table
+ * @param {array} setFields
+ * @param {array} setValues
+ * @param {object} whereObj
  */
-// where = { fieldName: conditionalString } truthy value?
-Postgres.update = function(name, fieldNames, values, where) {
+// Postgres.update(tableName, setFields, setValue, whereObj);
+//whereObj = {
+//  fieldName: {
+//    operator: conString
+//  },
+//};
+Postgres.update = function(table, setFields, setValues, whereOp, whereObj) {
   // 'UPDATE table SET fieldName  = value WHERE parameters;'
-  var initString = 'UPDATE ' + name + ' SET '; // field names
+  var initString = 'UPDATE ' + table + ' SET '; // field names
   var valueString = ' = '; // where params
   var whereString = 'WHERE ';
-  for (var i = 0, count = fieldNames.length - 1; i < count;) {
-    initString += fieldNames[i] + ', ';
+  for (var i = 0, count = setFields.length - 1; i < count;) {
+    initString += setFields[i] + ', ';
     valueString += '$' + (++i) + ', ';
   }
   for (var field in where) {
     whereString += field + where[field] + ', ';
   }
   whereString = whereString.substring(0, whereString.length - 2);
-  // 'INSERT INTO ' + name + ' (' + fieldNames
-  initString += fieldNames[fieldNames.length - 1] + valueString + '$' + fieldNames.length + ' ' + whereString + ';';
+  // 'INSERT INTO ' + table + ' (' + setFields
+  initString += setFields[setFields.length - 1] + valueString + '$' + setFields.length + ' ' + whereString + ';';
   console.log(initString);
   pg.connect(conString, function(err, client, done) {
     console.log(err);
-    client.query(initString, values, function(error, results) {
-      console.log("error in insert " + name, error);
-      console.log("results in insert " + name, results);
+    client.query(initString, setValues, function(error, results) {
+      console.log("error in insert " + table, error);
+      console.log("results in insert " + table, results);
       done();
     });
   });
 };
+
+//Postgres.QueryOperators = {
+//  $eq: ' = ',
+//  $gt: ' > ',
+//  $lt: ' < '
+//};
