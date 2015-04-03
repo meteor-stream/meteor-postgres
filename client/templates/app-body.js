@@ -1,4 +1,3 @@
-console.log(Postgres);
 var MENU_KEY = 'menuOpen';
 Session.setDefault(MENU_KEY, false);
 
