@@ -38,40 +38,47 @@ Postgres.QueryOperators = {
   $lt: ' < '
 };
 
+Postgres.DataTypes = {
+  number: 'int',
+  string: 'varchar 255',
+  json: 'json',
+  datetime: 'timestamp',
+  float: 'float'
+}
+;
+
 /**
  * TODO: add relationships? helper tables? triggers? add password and id field datatypes
- * @param name
- * @param {object} [options]
- * @param {dataType} object.field[0]
- * @param {constraint} object.field[1]
+ * @param {string} table
+ * @param {object} tableObj
+ * @param {string} tableObj key (field name)
+ * @param {string} tableObj value (constraints)
  */
-Postgres.createTable = function(name, object) {
-  var id = object.id || 'id serial primary key not null';
-  var initString = 'CREATE TABLE ' + name + '( ' + id;
-  var fieldArray = [];
-  for (var key in object) {
-    // CREATE TABLE $1 (id serial primary key not null, field_name data_type constraint
-    initString += ', ' + key + ' ' + object[key][0] + ' ' + object[key][1];
+Postgres.createTable = function(table, tableObj) {
+  // SQL: 'CREATE TABLE table (fieldName constraint);'
+  // initialize input string parts
+  var initString = 'CREATE TABLE ' + table + '( id serial primary key not null';
+  // iterate through array arguments to populate input string parts
+  for (var key in tableObj) {
+    initString += ', ' + key + ' ' + tableObj[key][0] + ' ' + tableObj[key][1];
   }
-  // closes string
-  initString += ", created_at TIMESTAMPTZ default now()); ";
-  initString += "CREATE FUNCTION notify_trigger() RETURNS trigger AS $$ "+
+  // add notify functionality and close input string
+  initString += ", created_at TIMESTAMPTZ default now()); " +
+  "CREATE FUNCTION notify_trigger() RETURNS trigger AS $$ "+
   "DECLARE " +
   "BEGIN" +
   "PERFORM pg_notify('watchers', TG_TABLE_NAME || ',modified,' || NEW ); " +
   "RETURN new; " +
   "END; " +
   "$$ LANGUAGE plpgsql; " +
-  "CREATE TRIGGER watched_table_trigger AFTER INSERT ON "+ name +
+  "CREATE TRIGGER watched_table_trigger AFTER INSERT ON "+ table +
   " FOR EACH ROW EXECUTE PROCEDURE notify_trigger();";
-
-  // node postgres connection/query function
-  console.log(initString);
-  pg.connect(conString, function(err, client, done) {
+  // send request to postgresql database
+  pg.connect(conString, function(err, client) {
     console.log(err);
     client.query(initString, function(error, results) {
-      console.log("error in create table " + name, error);
-      console.log("results in create table " + name, results);
+      console.log("error in create table " + table, error);
+      console.log("results in create table " + table, results);
     });
     client.on('notification', function(msg) {
       console.log(msg);
@@ -80,56 +87,91 @@ Postgres.createTable = function(name, object) {
   });
 };
 
+///**
+// * TODO:
+// * @param {string} table
+// * @param {array} insertFields
+// * @param {array} insertValues
+// */
+//Postgres.insertArrays = function(table, insertFields, insertValues) {
+//  // SQL: 'INSERT INTO table (insertFields) VALUES (insertValues);'
+//  // initialize input string parts
+//  var initString = 'INSERT INTO ' + table + ' (';
+//  var valueString = ') VALUES (';
+//  // iterate through array arguments to populate input string parts
+//  for (var i = 0, count = insertFields.length - 1; i < count;) {
+//    initString += insertFields[i] + ', ';
+//    valueString += '$' + (++i) + ', ';
+//  }
+//  // combine parts and close input string
+//  initString += insertFields[insertFields.length - 1] + valueString + '$' + insertFields.length + ');';
+//  // send request to postgresql database
+//  pg.connect(conString, function(err, client, done) {
+//    console.log(err);
+//    client.query(initString, insertValues, function(error, results) {
+//      console.log("error in insert " + table, error);
+//      console.log("results in insert " + table, results);
+//      done();
+//    });
+//  });
+//};
+
 /**
- * TODO: Add joins
- * @param name
- * @param {object} [options]
- * @param {columnNames} object.columnNames
- * @param {groupBy}  object.groupBy
- * @param {limit}  object.limit
- * @param {offset}  object.offset
+ * TODO:
+ * @param {string} table
+ * @param {object} insertObj
+ * @param {string} insertObj key (field name)
+ * @param {string} insertObj value (value)
  */
-Postgres.select = function(name, object) {
-  // 'SELECT data FROM table WHERE parameters GROUP BY LIMIT OFFSET'
-  // data parameters options (name directly passed in)
-  var columnNames = object.columnNames || '*';
-  var groupBy =  object.groupBy ? ' GROUP BY ' + object.groupBy : '';
-  var limit = object.limit ? ' LIMIT ' + object.limit : '';
-  var offset = object.offset ? ' OFFSET ' + object.offset : '';
-  var initString = 'SELECT ' + columnNames + ' FROM ' + name + groupBy + limit + offset + ';';
-  console.log(initString);
+Postgres.insert = function(table, insertObj) {
+  // SQL: 'INSERT INTO table (insertFields) VALUES (insertValues);'
+  // initialize input string parts
+  var initString = 'INSERT INTO ' + table + ' (';
+  var valueString = ') VALUES (';
+  var keys = Object.keys(insertObj);
+  var insertArray = [];
+  // iterate through array arguments to populate input string parts
+  for (var i = 0, count = keys.length - 1; i < count; ) {
+    initString += keys[i] + ', ';
+    valueString += '$' + (++i) + ', ';
+    insertArray.push(insertObj[keys[i]]);
+  }
+  // combine parts and close input string
+  initString += keys[keys.length-1] + valueString + '$' + keys.length + ');';
+  insertArray.push(insertObj[keys[keys.length-1]]);
+  // send request to postgresql database
   pg.connect(conString, function(err, client, done) {
     console.log(err);
-    client.query(initString, function(error, results) {
-      console.log("error in select " + name, error);
-      console.log("results in select " + name, results.rows);
+    client.query(initString, insertArray, function(error, results) {
+      console.log("error in insert " + table, error);
+      console.log("results in insert " + table, results);
       done();
     });
   });
 };
 
 /**
- * TODO:
- * @param {string} name
- * @param {array} fieldNames
- * @param {array} values
+ * TODO: Add joins
+ * @param table
+ * @param {object} [options]
+ * @param {columnNames} selectObj.columnNames
+ * @param {groupBy}  selectObj.groupBy
+ * @param {limit}  selectObj.limit
+ * @param {offset}  selectObj.offset
  */
-Postgres.insert = function(name, fieldNames, values) {
-  // 'INSERT INTO table (fields) VALUES (values);'
-  // data parameters options (name directly passed in)
-  var initString = 'INSERT INTO ' + name + ' (';
-  var valueString = ') VALUES (';
-  for (var i = 0, count = fieldNames.length - 1; i < count;) {
-    initString += fieldNames[i] + ', ';
-    valueString += '$' + (++i) + ', ';
-  }
-  // 'INSERT INTO ' + name + ' (' + fieldNames
-  initString += fieldNames[fieldNames.length - 1] + valueString + '$' + fieldNames.length + ');';
+Postgres.select = function(table, selectObj) {
+  // SQL: 'SELECT data FROM table WHERE parameters GROUP BY LIMIT OFFSET'
+  var columnNames = selectObj.columnNames || '*';
+  var groupBy =  selectObj.groupBy ? ' GROUP BY ' + selectObj.groupBy : '';
+  var limit = selectObj.limit ? ' LIMIT ' + selectObj.limit : '';
+  var offset = selectObj.offset ? ' OFFSET ' + selectObj.offset : '';
+  var initString = 'SELECT ' + columnNames + ' FROM ' + table + groupBy + limit + offset + ';';
+  console.log(initString);
   pg.connect(conString, function(err, client, done) {
     console.log(err);
-    client.query(initString, values, function(error, results) {
-      console.log("error in insert " + name, error);
-      console.log("results in insert " + name, results);
+    client.query(initString, function(error, results) {
+      console.log("error in select " + table, error);
+      console.log("results in select " + table, results.rows);
       done();
     });
   });
@@ -145,11 +187,11 @@ Postgres.insert = function(name, fieldNames, values) {
 // Postgres.update(tableName, setFields, setValue, whereObj);
 //whereObj = {
 //  fieldName: {
-//    operator: conString
+//    operator: value
 //  },
 //};
-Postgres.update = function(table, setFields, setValues, whereOp, whereObj) {
-  // 'UPDATE table SET fieldName  = value WHERE parameters;'
+// Postgres.update(testScores, [pass], [true], { score: { $gt: 75 } });
+Postgres.update = function(table, setFields, setValues, whereObj) {
   var initString = 'UPDATE ' + table + ' SET '; // field names
   var valueString = ' = '; // where params
   var whereString = 'WHERE ';
