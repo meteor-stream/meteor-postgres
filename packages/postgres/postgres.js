@@ -1,45 +1,41 @@
-// Write your package code here!
-/**
- * Created by ppp on 4/2/2015.
- */
+pg = Npm.require('pg');
+var conString = 'postgres://postgres:1234@localhost/postgres';
+
+/*var newTable = {
+  username: ['varchar (100)', 'not null'],
+  password: ['varchar (100)', 'not null'],
+  name: ['varchar (255)', 'not null unique']
+};
+
+var newTable = {
+  username: ['varchar (100)', 'not null'],
+  password: ['varchar (100)', 'not null'],
+  name: ['varchar (255)', 'not null unique']
+};
+
+var select = {
+
+};
+
+var where = {
+  name: " = 'paulo'"
+};
+
+db.createTable('users', newTable);
+db.insert('users', ['username', 'password', 'name'], ['pdiniz', 1234, 'paulo']);
+db.update('users', ["name"], ["Paulo2"], where);
+db.select('users', select);*/
+
+Postgres = {
+  'test': function(){
+    return "Hello world";
+  }
+};
 
 Postgres.QueryOperators = {
   $eq: ' = ',
   $gt: ' > ',
   $lt: ' < '
-};
-
-
-//var newTable = {
-//  username: ['varchar (100)', 'not null'],
-//  password: ['varchar (100)', 'not null'],
-//  name: ['varchar (255)', 'not null unique']
-//};
-
-//var newTable = {
-//  username: ['varchar (100)', 'not null'],
-//  password: ['varchar (100)', 'not null'],
-//  name: ['varchar (255)', 'not null unique']
-//};
-//
-//var select = {
-//
-//};
-//
-//var where = {
-//  name: " = 'paulo'"
-//};
-
-//db.createTable('users', newTable);
-//db.insert('users', ['username', 'password', 'name'], ['pdiniz', 1234, 'paulo']);
-//db.update('users', ["name"], ["Paulo2"], where);
-//db.select('users', select);
-pg = Npm.require('pg');
-var conString = 'postgres://postgres:1234@localhost/postgres';
-Postgres = {
-  'test': function(){
-    return "Hello world";
-  }
 };
 
 /**
