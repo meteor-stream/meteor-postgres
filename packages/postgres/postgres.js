@@ -117,22 +117,24 @@ Postgres.createTable = function(table, tableObj, relTable) {
   });
 };
 Postgres.autoSelect = function () {
-  client.on('notification', function(msg) {
-    console.log(msg.payload);
-    var returnMsg = eval("(" + msg.payload + ")");
-    console.log(returnMsg);
-    console.log(typeof returnMsg);
-    console.log(returnMsg.tasks);
-    var k = '';
-    var v = '';
-    for (var key in returnMsg) {
-      k = key;
-      v = returnMsg[key];
-    }
-    var selectString = "select * from " + k + " where id = " + v + ";";
-    client.query(selectString, function(error, results) {
-      console.log("error in create table " + table, error);
-      console.log("results in create table ", results.rows);
+  pg.connect(conString, function(err, client) {
+    client.on('notification', function(msg) {
+      console.log(msg.payload);
+      var returnMsg = eval("(" + msg.payload + ")");
+      console.log(returnMsg);
+      console.log(typeof returnMsg);
+      console.log(returnMsg.tasks);
+      var k = '';
+      var v = '';
+      for (var key in returnMsg) {
+        k = key;
+        v = returnMsg[key];
+      }
+      var selectString = "select * from " + k + " where id = " + v + ";";
+      client.query(selectString, function(error, results) {
+        console.log("error in create table " + table, error);
+        console.log("results in create table ", results.rows);
+      });
     });
   });
 };
