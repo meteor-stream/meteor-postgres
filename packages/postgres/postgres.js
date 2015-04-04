@@ -196,8 +196,15 @@ Postgres.SelectOptions = {
   $off: 'OFFSET '
 };
 
+//JOIN table2 ON table1.id = table2.id
+Postgres.Joins = {
+  $k: 'key',
+  $loj: ' LEFT OUTER JOIN ',
+  $lij: ' LEFT INNER JOIN '
+};
+
 /**
- * TODO: Add joins, OR to selectObj
+ * TODO: Add right joins?, OR to selectObj, should work for all but tableObj to by empty
  * @param {object} tableObj
  * @param {string} tableObj key (table name)
  * @param {string} tableObj value (field name)
@@ -213,7 +220,11 @@ Postgres.SelectOptions = {
 // Postgres.select(testScores, { score: { $gt: '70' } }); --> return all data for students with score of 70 or above
 // Postgres.select({ testScores: 'student' }, { score: { $gt: '70' } }); --> return student names with score of 70+
 // Postgres.select({ testScores: 'student' }, { score: { $gt: '70' } }, { $gb: 'classTime' }); --> return student names with score of 70+ grouped by classTime
-Postgres.select = function(tableObj, selectObj, optionsObj) {
+// SQL: SELECT fields FROM table1 JOIN table2 ON table1.id = table2.id WHERE ... --when they are connected via helper table
+// Postgres.select({ testScores: 'student' }, { score: { $gt: '70' } }, { $gb: 'classTime' }, { $roj: 'class' }); --> ids from both tables used for join
+// SQL: SELECT fields FROM table1 JOIN table2 ON table1.id = table2.id WHERE ... --when they are connected via foreign key in first table
+// Postgres.select({ testScores: 'student' }, { score: { $gt: '70' } }, { $gb: 'classTime' }, { $k: 'class' }); // $k, $loj, $lij
+Postgres.select = function(tableObj, selectObj, optionsObj, joinObj) {
   // SQL: 'SELECT fields FROM table WHERE field operator comparator AND (more WHERE) GROUP BY field / LIMIT number / OFFSET number;'
 
   // tableObj
@@ -223,7 +234,7 @@ Postgres.select = function(tableObj, selectObj, optionsObj) {
   if (typeof tableObj === 'string') {
     table = tableObj;
     returnFields = ' * ';
-  } else {
+  } else if (Object.keys(tableObj).length === 1) {
     table = Object.keys(tableObj)[0];
     returnFields = tableObj[table];
   }
@@ -231,7 +242,7 @@ Postgres.select = function(tableObj, selectObj, optionsObj) {
   // selectObj
   // contains the field as a key then another obj as the value with the operator and conditional values
   var selectString = '';
-  if (selectObj) {
+  if (Object.keys(selectObj).length === 0) {
     var selectField, operator, comparator;
     selectField = Object.keys(selectObj)[0];
     operator = Object.keys(selectObj[selectField])[0];
@@ -247,13 +258,24 @@ Postgres.select = function(tableObj, selectObj, optionsObj) {
   // optionsObj
   // object that can contain keys from SelectOptions and values of strings or integers or floats
   var optionString = '';
-  if (optionsObj) {
+  if (Object.keys(optionsObj).length === 0) {
     for (var key in optionsObj) {
       optionString += ' ' + options[key] + ' ' + optionsObj[key];
     }
   }
 
-  var inputString = 'SELECT ' + returnFields + ' FROM ' + table + ' ' + selectString + ' ' + optionString + ';';
+  // joinObj
+  // object contains keys from join and values of table names
+  var joinString = '';
+  var joinTable, joinType;
+  if (Object.keys(joinObj).length === 0) {
+    joinTable = Object.keys(joinObj)[0];
+    joinType = tableObj[joinTable];
+    joinString += joinType + joinTable + ' ON ' + table + '(id) = ' + joinTable + '(id)';
+  }
+
+
+  var inputString = 'SELECT ' + returnFields + ' FROM ' + table + joinString + ' ' + selectString + ' ' + optionString + ';';
   console.log(inputString);
   pg.connect(conString, function(err, client, done) {
     console.log(err);
