@@ -42,7 +42,7 @@ if (Meteor.isClient) {
 
 if (Meteor.isServer) {
   var taskTable = {
-      text: ['varchar (255)', 'not null']
+      text: 'varchar (255) not null'
     };
   Postgres.createTable('tasks', taskTable);
   Meteor.publish('tasks', function(){
