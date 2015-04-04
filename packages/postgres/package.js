@@ -16,12 +16,13 @@ Npm.depends({
 
 Package.onUse(function(api) {
   api.versionsFrom('1.1');
-  api.addFiles('postgres.js', 'server');
-  api.export('Postgres', 'server');
+  api.addFiles('postgres.js', 'subscription.js', 'server');
+  api.export('Postgres', 'subscription', 'server');
 });
 
 Package.onTest(function(api) {
   api.use('tinytest');
+  api.use('underscore');
   api.use('meteor-steam:postgres');
   api.addFiles('postgres-tests.js');
 });
