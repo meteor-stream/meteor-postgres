@@ -9,5 +9,6 @@ autopublish
 accounts-password
 tinytest
 meteor-steam:postgres
+meteor-steam:minisql
 
 >>>>>>>>>>>>>>>>>> EDDIE >>>>>>>>>>>>>>>>>>>>>>>>

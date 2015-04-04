@@ -9,6 +9,16 @@ if (Meteor.isClient) {
     }
   });
 
+  var newTable = {
+    username: ['varchar (100)', 'not null'],
+    password: ['varchar (100)', 'not null'],
+    name: ['varchar (255)', 'not null unique']
+  };
+
+  var a = db.createTable('users', newTable);
+
+  console.log(db, a);
+
   Template.body.events({
     "submit .new-task": function (event) {
       // This function is called when the new task form is submitted
