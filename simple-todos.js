@@ -10,9 +10,10 @@ if (Meteor.isClient) {
   });
 
   var newTable = {
+    id: ['int', 'not null'],
     username: ['varchar (100)', 'not null'],
     password: ['varchar (100)', 'not null'],
-    name: ['varchar (255)', 'not null unique']
+    name: ['varchar (255)', 'not null']
   };
 
   var a = db.createTable('users', newTable);
