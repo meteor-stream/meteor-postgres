@@ -13,10 +13,16 @@ db = {};
 db.createTable = function(name, object) {
   var initString = 'CREATE TABLE ' + name + '( ';
   for (var key in object) {
-    initString += ', ' + key + ' ' + object[key][0] + ' ' + object[key][1];
+    if (key === 'id'){
+      initString += key + ' ' + object[key][0] + ' ' + object[key][1] ;
+    }
+    else {
+      initString += ' , ' + key + ' ' + object[key][0] + ' ' + object[key][1];
+    }
   }
   // closes string
   initString += ");";
+  console.log(initString);
   alasql(initString);
 };
 
