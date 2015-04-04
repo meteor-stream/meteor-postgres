@@ -129,10 +129,13 @@ Postgres.createRelationship = function(table1, table2) {
   });
 };
 
-// TODO
+// TODO: alter table
 Postgres.alterTable = function() {};
 
-//TODO: Cascade or restrict?
+/**
+ * TODO: Cascade or restrict?
+ * @param {string} table
+ */
 Postgres.dropTable = function(table) {
   var inputString = 'DROP TABLE IF EXISTS ' + table + ';';
   // send request to postgresql database
@@ -147,7 +150,7 @@ Postgres.dropTable = function(table) {
 };
 
 /**
- * TODO:
+ * TODO: foreign key associations
  * @param {string} table
  * @param {object} insertObj
  * @param {string} insertObj key (field name)
@@ -180,8 +183,6 @@ Postgres.insert = function(table, insertObj) {
   });
 };
 
-// TODO
-Postgres.delete = function () {};
 
 Postgres.QueryOperators = {
   $eq: ' = ',
@@ -310,6 +311,36 @@ Postgres.update = function(tableObj, updateObj, selectObj) {
     client.query(inputString, function(error, results) {
       console.log("error in select " + table, error);
       console.log("results in select " + table, results.rows);
+      done();
+    });
+  });
+};
+
+/**
+ * TODO: Additional where parameters
+ * @param table
+ * @param selectObj
+ */
+Postgres.delete = function (table, selectObj) {
+  // SQL: 'DELETE FROM table * WHERE field operator comparator;'
+  var inputString = 'DELETE FROM ' + table;
+
+  var selectString = '';
+  if (selectObj) {
+    var selectField, operator, comparator;
+    selectField = Object.keys(selectObj)[0];
+    operator = Object.keys(selectObj[selectField])[0];
+    comparator = selectObj[selectField][operator];
+    selectString += 'WHERE ' + selectField + ' ' + operator + ' ' + comparator;
+  }
+
+  inputString += selectString + ';';
+
+  pg.connect(conString, function(err, client, done) {
+    console.log(err);
+    client.query(inputString, function(error, results) {
+      console.log("error in delete " + table, error);
+      console.log("results in delete " + table, results.rows);
       done();
     });
   });
