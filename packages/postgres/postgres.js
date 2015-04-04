@@ -198,7 +198,6 @@ Postgres.SelectOptions = {
 
 //JOIN table2 ON table1.id = table2.id
 Postgres.Joins = {
-  $k: 'key',
   $loj: ' LEFT OUTER JOIN ',
   $lij: ' LEFT INNER JOIN '
 };
@@ -223,7 +222,7 @@ Postgres.Joins = {
 // SQL: SELECT fields FROM table1 JOIN table2 ON table1.id = table2.id WHERE ... --when they are connected via helper table
 // Postgres.select({ testScores: 'student' }, { score: { $gt: '70' } }, { $gb: 'classTime' }, { $roj: 'class' }); --> ids from both tables used for join
 // SQL: SELECT fields FROM table1 JOIN table2 ON table1.id = table2.id WHERE ... --when they are connected via foreign key in first table
-// Postgres.select({ testScores: 'student' }, { score: { $gt: '70' } }, { $gb: 'classTime' }, { $k: 'class' }); // $k, $loj, $lij
+// Postgres.select({ testScores: 'student' }, { score: { $gt: '70' } }, { $gb: 'classTime' }, { $loj: 'class',  }); // $loj, $lij
 Postgres.select = function(tableObj, selectObj, optionsObj, joinObj) {
   // SQL: 'SELECT fields FROM table WHERE field operator comparator AND (more WHERE) GROUP BY field / LIMIT number / OFFSET number;'
 
@@ -266,12 +265,17 @@ Postgres.select = function(tableObj, selectObj, optionsObj, joinObj) {
 
   // joinObj
   // object contains keys from join and values of table names
+  //JOIN table2 ON table1.id = table2.id --> { $roj: 'class' }
+  // foreign key will always be foreignTable_id because of code in createTable
+  // foreign key:
+  // SELECT * FROM table1 LEFT OUTER JOIN table2 ON table1(foreign_id) = table2(id)
   var joinString = '';
   var joinTable, joinType;
   if (Object.keys(joinObj).length === 0) {
-    joinTable = Object.keys(joinObj)[0];
-    joinType = tableObj[joinTable];
-    joinString += joinType + joinTable + ' ON ' + table + '(id) = ' + joinTable + '(id)';
+    joinType = Object.keys(joinObj)[0]; // '$loj'
+    joinTable = tableObj[joinType]; // 'class'
+    joinString = Postgres.Joins(joinType); // ' LEFT OUTER JOIN class ON students.class_id = class(id);
+    joinString += joinTable + ' ON '+ table + '.' + joinTable + '_id = ' + joinTable + '(id)' + ';';
   }
 
 
