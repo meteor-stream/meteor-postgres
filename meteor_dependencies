@@ -1,0 +1,13 @@
+Update this list when you need to change what is in the .meteor/packages folder. You will have to manually copy this over when pulling udstream master.
+
+>>>>>>>>>>>>>>>>>> START >>>>>>>>>>>>>>>>>>>>>>>>
+
+meteor-platform
+insecure
+less
+autopublish
+accounts-password
+tinytest
+meteor-steam:postgres
+
+>>>>>>>>>>>>>>>>>> EDDIE >>>>>>>>>>>>>>>>>>>>>>>>
