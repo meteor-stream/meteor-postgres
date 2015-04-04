@@ -16,8 +16,11 @@ Npm.depends({
 
 Package.onUse(function(api) {
   api.versionsFrom('1.1');
-  api.addFiles('postgres.js', 'subscription.js', 'server');
-  api.export('Postgres', 'subscription', 'server');
+  api.use('underscore');
+  api.use('tracker');
+  api.use('ddp');
+  api.addFiles(['postgres.js', 'subscription.js'], 'server');
+  api.export(['Postgres', 'subscription'], 'server');
 });
 
 Package.onTest(function(api) {
