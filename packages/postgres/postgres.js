@@ -33,6 +33,7 @@ Postgres = {
 };
 
 Postgres.DataTypes = {
+  // TODO: data types
   number: 'int',
   string: 'varchar 255',
   json: 'json',
@@ -41,6 +42,21 @@ Postgres.DataTypes = {
 }
 ;
 
+Postgres.tableConstraints = {
+  // TODO: unique, check, foreign key, exclude
+};
+
+/**
+ * without a ref_col after related_table, it will use the id from the related_table
+ * @param field_name
+ * @param related_table
+ * @returns {string}
+ */
+//Postgres.createForeignKey = function(field_name, related_table) {
+//  // SQL: 'field_name integer references related_table'
+//  return ' ' + field_name + ' integer references' + related_table;
+//};
+
 /**
  * TODO: add relationships? helper tables? triggers? add password and id field datatypes
  * @param {string} table
@@ -48,13 +64,17 @@ Postgres.DataTypes = {
  * @param {string} tableObj key (field name)
  * @param {string} tableObj value (constraints)
  */
-Postgres.createTable = function(table, tableObj) {
+Postgres.createTable = function(table, tableObj, relTable) {
   // SQL: 'CREATE TABLE table (fieldName constraint);'
   // initialize input string parts
   var inputString = 'CREATE TABLE ' + table + '( id serial primary key not null';
   // iterate through array arguments to populate input string parts
   for (var key in tableObj) {
     inputString += ', ' + key + ' ' + tableObj[key][0] + ' ' + tableObj[key][1];
+  }
+  // add foreign key
+  if(relTable) {
+    inputString += ' ' + relTable + '_id' + ' integer references' + relTable;
   }
   // add notify functionality and close input string
   inputString += ", created_at TIMESTAMPTZ default now()); " +
@@ -81,34 +101,50 @@ Postgres.createTable = function(table, tableObj) {
   });
 };
 
-///**
-// * TODO:
-// * @param {string} table
-// * @param {array} insertFields
-// * @param {array} insertValues
-// */
-//Postgres.insertArrays = function(table, insertFields, insertValues) {
-//  // SQL: 'INSERT INTO table (insertFields) VALUES (insertValues);'
-//  // initialize input string parts
-//  var inputString = 'INSERT INTO ' + table + ' (';
-//  var valueString = ') VALUES (';
-//  // iterate through array arguments to populate input string parts
-//  for (var i = 0, count = insertFields.length - 1; i < count;) {
-//    inputString += insertFields[i] + ', ';
-//    valueString += '$' + (++i) + ', ';
-//  }
-//  // combine parts and close input string
-//  inputString += insertFields[insertFields.length - 1] + valueString + '$' + insertFields.length + ');';
-//  // send request to postgresql database
-//  pg.connect(conString, function(err, client, done) {
-//    console.log(err);
-//    client.query(inputString, insertValues, function(error, results) {
-//      console.log("error in insert " + table, error);
-//      console.log("results in insert " + table, results);
-//      done();
-//    });
-//  });
-//};
+/**
+ * TODO:
+ * @param {string} table1
+ * @param {string} table2
+ */
+Postgres.createRelationship = function(table1, table2) {
+  // SQL: 'CREATE TABLE table1_table2(
+  //    table1_id INT NOT NULL REFERENCES table1(id) on delete cascade,
+  //    table2_id INT NOT NULL REFERENCES table2(id) on delete cascade,
+  //    primary key(table1_id, table2_id) );'
+  var table = table1 + '_' + table2;
+  var inputString = 'CREATE TABLE ' + table + '(' +
+      table1 + '_id int not null references ' + table1 + '(id) on delete cascade,' +
+      table2 + '_id int not null references ' + table2 + '(id) on delete cascade,' + ');';
+  // send request to postgresql database
+  pg.connect(conString, function(err, client) {
+    console.log(err);
+    client.query(inputString, function(error, results) {
+      console.log("error in create relationship " + table, error);
+      console.log("results in create relationship " + table, results);
+    });
+    client.on('notification', function(msg) {
+      console.log(msg);
+    });
+    var query = client.query("LISTEN watchers");
+  });
+};
+
+// TODO
+Postgres.alterTable = function() {};
+
+//TODO: Cascade or restrict?
+Postgres.dropTable = function(table) {
+  var inputString = 'DROP TABLE IF EXISTS ' + table + ';';
+  // send request to postgresql database
+  pg.connect(conString, function(err, client, done) {
+    console.log(err);
+    client.query(inputString, function(error, results) {
+      console.log("error in drop " + table, error);
+      console.log("results in drop " + table, results);
+      done();
+    });
+  });
+};
 
 /**
  * TODO:
@@ -143,6 +179,9 @@ Postgres.insert = function(table, insertObj) {
     });
   });
 };
+
+// TODO
+Postgres.delete = function () {};
 
 Postgres.QueryOperators = {
   $eq: ' = ',
@@ -271,38 +310,6 @@ Postgres.update = function(tableObj, updateObj, selectObj) {
     client.query(inputString, function(error, results) {
       console.log("error in select " + table, error);
       console.log("results in select " + table, results.rows);
-      done();
-    });
-  });
-};
-
-/**
- * TODO: update
- * @param {string} table
- * @param {array} setFields
- * @param {array} setValues
- * @param {object} whereObj
- */
-Postgres.oldUpdate = function(table, setFields, setValues, whereObj) {
-  var inputString = 'UPDATE ' + table + ' SET '; // field names
-  var valueString = ' = '; // where params
-  var whereString = 'WHERE ';
-  for (var i = 0, count = setFields.length - 1; i < count;) {
-    inputString += setFields[i] + ', ';
-    valueString += '$' + (++i) + ', ';
-  }
-  for (var field in where) {
-    whereString += field + where[field] + ', ';
-  }
-  whereString = whereString.substring(0, whereString.length - 2);
-  // 'INSERT INTO ' + table + ' (' + setFields
-  inputString += setFields[setFields.length - 1] + valueString + '$' + setFields.length + ' ' + whereString + ';';
-  console.log(inputString);
-  pg.connect(conString, function(err, client, done) {
-    console.log(err);
-    client.query(inputString, setValues, function(error, results) {
-      console.log("error in insert " + table, error);
-      console.log("results in insert " + table, results);
       done();
     });
   });
