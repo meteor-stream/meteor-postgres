@@ -20,7 +20,7 @@ Package.onUse(function(api) {
   api.use('tracker');
   api.use('ddp');
   api.addFiles(['postgres.js', 'subscription.js'], 'server');
-  api.export(['Postgres', 'subscription'], 'server');
+  api.export(['Postgres', 'Subscription'], 'server');
 });
 
 Package.onTest(function(api) {

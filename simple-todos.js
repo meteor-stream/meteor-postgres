@@ -1,12 +1,10 @@
-Tasks = new Mongo.Collection("tasks");
+tasks = new Subscription('tasks');
 
 if (Meteor.isClient) {
   // This code only runs on the client
+  Meteor.subscribe('tasks');
   Template.body.helpers({
-    tasks: function () {
-      // Show newest tasks first
-      return Tasks.find({}, {sort: {createdAt: -1}});
-    }
+    tasks: tasks.update()
   });
 
   var newTable = {
@@ -25,10 +23,7 @@ if (Meteor.isClient) {
       // This function is called when the new task form is submitted
       var text = event.target.text.value;
 
-      Tasks.insert({
-        text: text,
-        createdAt: new Date() // current time
-      });
+      Tasks.insert('tasks', ['text'], [text]);
 
       // Clear form
       event.target.text.value = "";
@@ -37,4 +32,14 @@ if (Meteor.isClient) {
       return false;
     }
   });
+}
+
+if (Meteor.isServer) {
+  var taskTable = {
+      text: ['varchar (255)', 'not null']
+    };
+  Postgres.createTable('tasks', taskTable);
+  Meteor.publish('tasks', function(){
+    return Postgres.autoSelect();
+  })
 }

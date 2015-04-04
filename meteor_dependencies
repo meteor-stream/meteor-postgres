@@ -5,7 +5,6 @@ Update this list when you need to change what is in the .meteor/packages folder.
 meteor-platform
 insecure
 less
-autopublish
 accounts-password
 tinytest
 meteor-steam:postgres

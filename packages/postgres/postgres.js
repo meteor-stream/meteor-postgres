@@ -61,7 +61,7 @@ Postgres.createTable = function(table, tableObj) {
   "CREATE FUNCTION notify_trigger() RETURNS trigger AS $$ "+
   "DECLARE " +
   "BEGIN " +
-  "PERFORM pg_notify('watchers', TG_TABLE_NAME || ',modified,' || NEW ); " +
+  "PERFORM pg_notify('watchers', '{' || TG_TABLE_NAME || ':' || NEW.id || '}'); " +
   "RETURN new; " +
   "END; " +
   "$$ LANGUAGE plpgsql; " +
@@ -75,9 +75,45 @@ Postgres.createTable = function(table, tableObj) {
       console.log("results in create table " + table, results);
     });
     client.on('notification', function(msg) {
-      console.log(msg);
+      console.log(msg.payload);
+      var returnMsg = eval("(" + msg.payload + ")");
+      console.log(returnMsg);
+      console.log(typeof returnMsg);
+      console.log(returnMsg.tasks);
+      var k = '';
+      var v = '';
+      for (var key in returnMsg){
+        k = key;
+        v = returnMsg[key];
+      }
+      var selectString = "select * from " + k + " where id = " + v + ";";
+      client.query(selectString, function(error, results) {
+        console.log("error in create table " + table, error);
+        console.log("results in create table ", results.rows);
+      });
+
     });
     var query = client.query("LISTEN watchers");
+  });
+};
+Postgres.autoSelect = function () {
+  client.on('notification', function(msg) {
+    console.log(msg.payload);
+    var returnMsg = eval("(" + msg.payload + ")");
+    console.log(returnMsg);
+    console.log(typeof returnMsg);
+    console.log(returnMsg.tasks);
+    var k = '';
+    var v = '';
+    for (var key in returnMsg) {
+      k = key;
+      v = returnMsg[key];
+    }
+    var selectString = "select * from " + k + " where id = " + v + ";";
+    client.query(selectString, function(error, results) {
+      console.log("error in create table " + table, error);
+      console.log("results in create table ", results.rows);
+    });
   });
 };
 
