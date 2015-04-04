@@ -19,8 +19,10 @@ Package.onUse(function(api) {
   api.use('underscore');
   api.use('tracker');
   api.use('ddp');
-  api.addFiles(['postgres.js', 'subscription.js'], 'server');
-  api.export(['Postgres', 'Subscription'], 'server');
+  api.addFiles('postgres.js', 'server');
+  api.export('Postgres', 'server');
+  api.addFiles('subscription.js');
+  api.export('Subscription');
 });
 
 Package.onTest(function(api) {
