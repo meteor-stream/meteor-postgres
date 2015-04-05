@@ -1,61 +1,44 @@
+// PostgreSQL connection
 pg = Npm.require('pg');
 var conString = 'postgres://postgres:1234@localhost/postgres';
 
-/*var newTable = {
-  username: ['varchar (100)', 'not null'],
-  password: ['varchar (100)', 'not null'],
-  name: ['varchar (255)', 'not null unique']
-};
+Postgres = {};
 
-var newTable = {
-  username: ['varchar (100)', 'not null'],
-  password: ['varchar (100)', 'not null'],
-  name: ['varchar (255)', 'not null unique']
-};
+/* objects: DataTypes, TableConstraints, QueryOperators, SelectOptions, and Joins */
 
-var select = {
-
-};
-
-var where = {
-  name: " = 'paulo'"
-};
-
-db.createTable('users', newTable);
-db.insert('users', ['username', 'password', 'name'], ['pdiniz', 1234, 'paulo']);
-db.update('users', ["name"], ["Paulo2"], where);
-db.select('users', select);*/
-
-Postgres = {
-  'test': function(){
-    return "Hello world";
-  }
-};
-
-Postgres.DataTypes = {
-  // TODO: data types
+Postgres._DataTypes = {
+  // TODO: data types, not currently in use
   number: 'int',
   string: 'varchar 255',
   json: 'json',
   datetime: 'timestamp',
   float: 'float'
-}
-;
+};
 
-Postgres.tableConstraints = {
+Postgres._TableConstraints = {
   // TODO: unique, check, foreign key, exclude
 };
 
-/**
- * without a ref_col after related_table, it will use the id from the related_table
- * @param field_name
- * @param related_table
- * @returns {string}
- */
-//Postgres.createForeignKey = function(field_name, related_table) {
-//  // SQL: 'field_name integer references related_table'
-//  return ' ' + field_name + ' integer references' + related_table;
-//};
+Postgres._QueryOperators = {
+  // TODO: not currently in use
+  $eq: ' = ',
+  $gt: ' > ',
+  $lt: ' < '
+};
+
+Postgres._SelectOptions = {
+  // TODO: not currently in use
+  $gb: 'GROUP BY ',
+  $lim: 'LIMIT ',
+  $off: 'OFFSET '
+};
+
+Postgres._Joins = {
+  $loj: ' LEFT OUTER JOIN ',
+  $lij: ' LEFT INNER JOIN '
+};
+
+/* methods: createTable, createRelationship, alterTable, dropTable, insert, select, update, delete, autoSelect */
 
 /**
  * TODO: add relationships? helper tables? triggers? add password and id field datatypes
@@ -70,7 +53,7 @@ Postgres.createTable = function(table, tableObj, relTable) {
   var inputString = 'CREATE TABLE ' + table + '( id serial primary key not null';
   // iterate through array arguments to populate input string parts
   for (var key in tableObj) {
-    inputString += ', ' + key + ' ' + tableObj[key][0] + ' ' + tableObj[key][1];
+    inputString += ', ' + key + ' ' + tableObj[key];
   }
   // add foreign key
   if(relTable) {
@@ -114,28 +97,6 @@ Postgres.createTable = function(table, tableObj, relTable) {
 
     });
     var query = client.query("LISTEN watchers");
-  });
-};
-Postgres.autoSelect = function () {
-  pg.connect(conString, function(err, client) {
-    client.on('notification', function(msg) {
-      console.log(msg.payload);
-      var returnMsg = eval("(" + msg.payload + ")");
-      console.log(returnMsg);
-      console.log(typeof returnMsg);
-      console.log(returnMsg.tasks);
-      var k = '';
-      var v = '';
-      for (var key in returnMsg) {
-        k = key;
-        v = returnMsg[key];
-      }
-      var selectString = "select * from " + k + " where id = " + v + ";";
-      client.query(selectString, function(error, results) {
-        console.log("error in create table " + table, error);
-        console.log("results in create table ", results.rows);
-      });
-    });
   });
 };
 
@@ -222,23 +183,7 @@ Postgres.insert = function(table, insertObj) {
 };
 
 
-Postgres.QueryOperators = {
-  $eq: ' = ',
-  $gt: ' > ',
-  $lt: ' < '
-};
 
-Postgres.SelectOptions = {
-  $gb: 'GROUP BY ',
-  $lim: 'LIMIT ',
-  $off: 'OFFSET '
-};
-
-//JOIN table2 ON table1.id = table2.id
-Postgres.Joins = {
-  $loj: ' LEFT OUTER JOIN ',
-  $lij: ' LEFT INNER JOIN '
-};
 
 /**
  * TODO: Add right joins?, OR to selectObj, should work for all but tableObj to by empty
@@ -312,7 +257,7 @@ Postgres.select = function(tableObj, selectObj, optionsObj, joinObj) {
   if (Object.keys(joinObj).length === 0) {
     joinType = Object.keys(joinObj)[0]; // '$loj'
     joinTable = tableObj[joinType]; // 'class'
-    joinString = Postgres.Joins(joinType); // ' LEFT OUTER JOIN class ON students.class_id = class(id);
+    joinString = Postgres._Joins(joinType); // ' LEFT OUTER JOIN class ON students.class_id = class(id);
     joinString += joinTable + ' ON '+ table + '.' + joinTable + '_id = ' + joinTable + '(id)' + ';';
   }
 
@@ -406,6 +351,27 @@ Postgres.delete = function (table, selectObj) {
       console.log("error in delete " + table, error);
       console.log("results in delete " + table, results.rows);
       done();
+    });
+  });
+};
+
+Postgres.autoSelect = function () {
+  client.on('notification', function(msg) {
+    console.log(msg.payload);
+    var returnMsg = eval("(" + msg.payload + ")");
+    console.log(returnMsg);
+    console.log(typeof returnMsg);
+    console.log(returnMsg.tasks);
+    var k = '';
+    var v = '';
+    for (var key in returnMsg) {
+      k = key;
+      v = returnMsg[key];
+    }
+    var selectString = "select * from " + k + " where id = " + v + ";";
+    client.query(selectString, function(error, results) {
+      console.log("error in create table " + table, error);
+      console.log("results in create table ", results.rows);
     });
   });
 };
