@@ -29,7 +29,7 @@ if (Meteor.isClient) {
       // This function is called when the new task form is submitted
       var text = event.target.text.value;
 
-      Tasks.insert('tasks', ['text'], [text]);
+      tasks.insert('tasks', ['text'], [text]);
 
       // Clear form
       event.target.text.value = "";
