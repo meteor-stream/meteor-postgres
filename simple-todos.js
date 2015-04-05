@@ -1,11 +1,17 @@
 tasks = new Subscription('tasks');
 
+tasks.addEventListener('update', function(index, msg){
+  console.log("fired");
+  console.log("index", index);
+  console.log("msg", msg);
+});
+
 if (Meteor.isClient) {
   // This code only runs on the client
   Meteor.subscribe('tasks');
-  Template.body.helpers({
-    tasks: tasks.update()
-  });
+  //Template.body.helpers({
+  //  tasks: tasks.update()
+  //});
 
   var newTable = {
     id: ['int', 'not null'],
