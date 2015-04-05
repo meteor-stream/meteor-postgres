@@ -1,7 +1,7 @@
 ## Helper Objects
 
 > Limit the functions available to the user 
-> Sanitize the commands 
+> Sanitize the commands going into postgresql
 
 DataTypes
 TableConstraints
