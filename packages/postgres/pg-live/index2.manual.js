@@ -12,7 +12,7 @@ var LiveSQL = Npm.require("./LiveSQL");
 var CONN_STR = "postgres://meteor:meteor@127.0.0.1/meteor";
 var CHANNEL = "ben_test";
 
-var liveDb = new LiveSQL.LiveSQL(CONN_STR, CHANNEL);
+var liveDb = new LiveSQL(CONN_STR, CHANNEL);
 
 var liveClassScores = function liveClassScores(liveDb, classId, onUpdate) {
 	var assignmentIds = [],
