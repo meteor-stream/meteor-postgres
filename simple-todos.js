@@ -40,12 +40,7 @@ if (Meteor.isClient) {
 
 if (Meteor.isServer) {
 
-  var liveDb = new LiveSQL({
-    host: 'localhost',
-    user: 'postgres',
-    password: '1234',
-    database: 'public'
-  });
+  var liveDb = new LiveSQL('postgres://postgres:1234@localhost/postgres', 'notify');
 
   var closeAndExit = function() {
     liveDb.end();
