@@ -92,8 +92,11 @@ Postgres.createTable = function(table, tableObj, relTable) {
       }
       var selectString = "select * from " + k + " where id = " + v + ";";
       client.query(selectString, function(error, results) {
-        console.log("error in create table " + table, error);
-        console.log("results in create table ", results.rows);
+        if (error) {
+          console.log("error in create table " + table, error);
+        } else {
+          console.log("results in create table ", results.rows);
+        }
       });
 
     });
@@ -119,8 +122,11 @@ Postgres.createRelationship = function(table1, table2) {
   pg.connect(conString, function(err, client) {
     console.log(err);
     client.query(inputString, function(error, results) {
-      console.log("error in create relationship " + table, error);
-      console.log("results in create relationship " + table, results);
+      if (error) {
+        console.log("error in create relationship " + table, error);
+      } else {
+        console.log("results in create relationship " + table, results);
+      }
     });
     client.on('notification', function(msg) {
       console.log(msg);
@@ -142,8 +148,11 @@ Postgres.dropTable = function(table) {
   pg.connect(conString, function(err, client, done) {
     console.log(err);
     client.query(inputString, function(error, results) {
-      console.log("error in drop " + table, error);
-      console.log("results in drop " + table, results);
+      if (error) {
+        console.log("error in drop " + table, error);
+      } else {
+        console.log("results in drop " + table, results);
+      }
       done();
     });
   });
@@ -178,8 +187,11 @@ Postgres.insert = function(table, insertObj) {
   pg.connect(conString, function(err, client, done) {
     console.log(err);
     client.query(inputString, insertArray, function(error, results) {
-      console.log("error in insert " + table, error);
-      console.log("results in insert " + table, results);
+      if (error) {
+        console.log("error in insert " + table, error);
+      } else {
+        console.log("results in insert " + table, results);
+      }
       done();
     });
   });
@@ -270,8 +282,11 @@ Postgres.select = function(tableObj, selectObj, optionsObj, joinObj) {
   pg.connect(conString, function(err, client, done) {
     console.log(err);
     client.query(inputString, function(error, results) {
-      console.log("error in select " + table, error);
-      console.log("results in select " + table, results.rows);
+      if (error) {
+        console.log("error in select " + table, error);
+      } else {
+        console.log("results in select " + table, results.rows);
+      }
       done();
     });
   });
@@ -321,8 +336,11 @@ Postgres.update = function(tableObj, updateObj, selectObj) {
   pg.connect(conString, function(err, client, done) {
     console.log(err);
     client.query(inputString, function(error, results) {
-      console.log("error in select " + table, error);
-      console.log("results in select " + table, results.rows);
+      if (error) {
+        console.log("error in update " + table, error);
+      } else {
+        console.log("results in update " + table, results.rows);
+      }
       done();
     });
   });
@@ -351,8 +369,11 @@ Postgres.delete = function (table, selectObj) {
   pg.connect(conString, function(err, client, done) {
     console.log(err);
     client.query(inputString, function(error, results) {
+      if (error) {
       console.log("error in delete " + table, error);
-      console.log("results in delete " + table, results.rows);
+      } else {
+        console.log("results in delete " + table, results.rows);
+      }
       done();
     });
   });
@@ -375,8 +396,11 @@ Postgres.autoSelect = function () {
       }
       var selectString = "select * from " + k + " where id = " + v + ";";
       client.query(selectString, function(error, results) {
-        console.log("error in create table " + table, error);
-        console.log("results in create table ", results.rows);
+        if (error) {
+          console.log("error in auto select " + table, error);
+        } else {
+          console.log("results in auto select ", results.rows);
+        }
       });
     });
   });
