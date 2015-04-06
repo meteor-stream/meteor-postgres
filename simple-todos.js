@@ -1,4 +1,5 @@
 tasks = new Subscription('tasks');
+
 tasks.addEventListener('added', function(index, msg){
   console.log("fired");
   console.log("index", index);
@@ -38,17 +39,41 @@ if (Meteor.isClient) {
 }
 
 if (Meteor.isServer) {
-  var taskTable = {
-      text: 'varchar (255) not null'
-    };
-  Postgres.createTable('tasks', taskTable);
-  Meteor.publish('tasks', function(){
-    console.log("Tasks updating");
-    var result = Postgres.getCursor();
-    return result;
-  })
 
-  setTimeout(function(){
-    Postgres.insert('tasks',{'text':'hello'});
-  }, 5000);
+  var liveDb = new LiveSQL({
+    host: 'localhost',
+    user: 'postgres',
+    password: '1234',
+    database: 'public'
+  });
+
+  var closeAndExit = function() {
+    liveDb.end();
+    process.exit();
+  };
+  // Close connections on hot code push
+  process.on('SIGTERM', closeAndExit);
+  // Close connections on exit (ctrl + c)
+  process.on('SIGINT', closeAndExit);
+
+  Meteor.publish('tasks', function(){
+    return liveDb.select(
+      'SELECT * FROM tasks',
+      [ { table: 'tasks' } ]
+    );
+  });
+
+  //var taskTable = {
+  //    text: 'varchar (255) not null'
+  //  };
+  //Postgres.createTable('tasks', taskTable);
+  //Meteor.publish('tasks', function(){
+  //  console.log("Tasks updating");
+  //  var result = Postgres.getCursor();
+  //  return result;
+  //})
+  //
+  //setTimeout(function(){
+  //  Postgres.insert('tasks',{'text':'hello'});
+  //}, 5000);
 }
