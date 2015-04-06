@@ -7,16 +7,18 @@ Postgres = {};
 /* objects: DataTypes, TableConstraints, QueryOperators, SelectOptions, and Joins */
 
 Postgres._DataTypes = {
-  // TODO: data types, not currently in use
-  number: 'int',
-  string: 'varchar 255',
-  json: 'json',
-  datetime: 'timestamp',
-  float: 'float'
+  $number: 'int',
+  $string: 'varchar 255',
+  $json: 'json',
+  $datetime: 'timestamp',
+  $float: 'float'
 };
 
 Postgres._TableConstraints = {
-  // TODO: unique, check, foreign key, exclude
+  $unique: 'unique',
+  $check: 'check',
+  $exclude: 'exclude',
+  $notnull: 'not null'
 };
 
 Postgres._QueryOperators = {
@@ -45,15 +47,21 @@ Postgres._Joins = {
  * @param {string} table
  * @param {object} tableObj
  * @param {string} tableObj key (field name)
- * @param {string} tableObj value (constraints)
+ * @param {array} tableObj value (type and constraints)
+ * @param {string} relTable
  */
+// Postgres.createTable('students', { name: [$string, $notnull], age: [$number] }, 'major');
 Postgres.createTable = function(table, tableObj, relTable) {
   // SQL: 'CREATE TABLE table (fieldName constraint);'
   // initialize input string parts
   var inputString = 'CREATE TABLE ' + table + '( id serial primary key not null';
   // iterate through array arguments to populate input string parts
   for (var key in tableObj) {
-    inputString += ', ' + key + ' ' + tableObj[key];
+    inputString += ', ' + key + ' ';
+    inputString += this._DataTypes[tableObj[key][0]] + ' ';
+    for (var i = 1, count = tableObj[key].length - 1; i < count; i++) {
+      inputString += tableObj[key][i] + ' ';
+    }
   }
   // add foreign key
   if(relTable) {
@@ -75,8 +83,11 @@ Postgres.createTable = function(table, tableObj, relTable) {
   pg.connect(conString, function(err, client) {
     console.log(err);
     client.query(inputString, function(error, results) {
-      console.log("error in create table " + table, error);
-      console.log("results in create table " + table, results);
+      if (error) {
+        console.log("error in create table " + table, error);
+      } else {
+        console.log("results in create table " + table, results);
+      }
     });
     client.on('notification', function(msg) {
       console.log(msg.payload);
