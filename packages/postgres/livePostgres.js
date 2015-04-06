@@ -2,6 +2,9 @@
  * Created by ppp on 4/6/2015.
  */
 // Convert the LiveMysqlSelect object into a cursor
+
+LiveSQL = Npm.require('pg-live-query');
+
 LiveSQL.LiveSelect.prototype._publishCursor = function(sub) {
   var self = this;
   var initLength;
