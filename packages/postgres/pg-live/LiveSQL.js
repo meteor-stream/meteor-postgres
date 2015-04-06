@@ -1,25 +1,25 @@
 "use strict";
 
-var _classCallCheck = require("babel-runtime/helpers/class-call-check")["default"];
+var _classCallCheck = Npm.require("babel-runtime/helpers/class-call-check")["default"];
 
-var _inherits = require("babel-runtime/helpers/inherits")["default"];
+var _inherits = Npm.require("babel-runtime/helpers/inherits")["default"];
 
-var _createClass = require("babel-runtime/helpers/create-class")["default"];
+var _createClass = Npm.require("babel-runtime/helpers/create-class")["default"];
 
-var _core = require("babel-runtime/core-js")["default"];
+var _core = Npm.require("babel-runtime/core-js")["default"];
 
-var _regeneratorRuntime = require("babel-runtime/regenerator")["default"];
+var _regeneratorRuntime = Npm.require("babel-runtime/regenerator")["default"];
 
-var EventEmitter = require("events").EventEmitter;
-var _ = require("lodash");
-var murmurHash = require("murmurhash-js").murmur3;
+var EventEmitter = Npm.require("events").EventEmitter;
+var ld = Npm.require("lodash");
+var murmurHash = Npm.require("murmurhash-js").murmur3;
 
-var common = require("./common");
+console.log(common); // To show that common is avaiable here.
 
 // Number of milliseconds between refreshes
 var THROTTLE_INTERVAL = 500;
 
-var LiveSQL = (function (_EventEmitter) {
+LiveSQL = (function (_EventEmitter) {
 	function LiveSQL(connStr, channel) {
 		_classCallCheck(this, LiveSQL);
 
@@ -102,7 +102,7 @@ var LiveSQL = (function (_EventEmitter) {
 							});
 
 							_this.updateInterval = setInterval((function () {
-								var queriesToUpdate = _.uniq(_this.waitingToUpdate.splice(0, _this.waitingToUpdate.length));
+								var queriesToUpdate = ld.uniq(_this.waitingToUpdate.splice(0, _this.waitingToUpdate.length));
 								_this.refreshCount += queriesToUpdate.length;
 
 								var _iteratorNormalCompletion = true;
@@ -323,7 +323,7 @@ var LiveSQL = (function (_EventEmitter) {
 												break;
 											}
 
-											_.pull(queryBuffer.handlers, onUpdate);
+											ld.pull(queryBuffer.handlers, onUpdate);
 
 											if (!(queryBuffer.handlers.length === 0)) {
 												context$3$0.next = 25;
@@ -332,7 +332,7 @@ var LiveSQL = (function (_EventEmitter) {
 
 											// No more query/params like this, remove from buffers
 											delete _this2.selectBuffer[queryHash];
-											_.pull(_this2.waitingToUpdate, queryHash);
+											ld.pull(_this2.waitingToUpdate, queryHash);
 
 											_iteratorNormalCompletion2 = true;
 											_didIteratorError2 = false;
@@ -341,7 +341,7 @@ var LiveSQL = (function (_EventEmitter) {
 											for (_iterator2 = _core.$for.getIterator(_core.Object.keys(_this2.tablesUsed)); !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
 												table = _step2.value;
 
-												_.pull(_this2.tablesUsed[table], queryHash);
+												ld.pull(_this2.tablesUsed[table], queryHash);
 											}
 											context$3$0.next = 17;
 											break;
@@ -560,16 +560,16 @@ var LiveSQL = (function (_EventEmitter) {
 	return LiveSQL;
 })(EventEmitter);
 
-module.exports = LiveSQL;
+LiveSQL = LiveSQL;
 
 function filterHashProperties(diff) {
 	if (diff instanceof Array) {
 		return diff.map(function (event) {
-			return _.omit(event, "_hash");
+			return ld.omit(event, "_hash");
 		});
 	}
 	// Otherwise, diff is object with arrays for keys
-	_.forOwn(diff, function (rows, key) {
+	ld.forOwn(diff, function (rows, key) {
 		diff[key] = filterHashProperties(rows);
 	});
 	return diff;

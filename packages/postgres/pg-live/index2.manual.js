@@ -1,14 +1,18 @@
 "use strict";
 
-var _regeneratorRuntime = require("babel-runtime/regenerator")["default"];
 
-var util = require("util");
-var LiveSQL = require("./LiveSQL");
+// RIGHT NOW NOTHING FROM THIS FILE IS BEING EXPORTED SO IT IS
+// BASICALLY UNUSABLE
+
+var _regeneratorRuntime = Npm.require("babel-runtime/regenerator")["default"];
+
+var util = Npm.require("util");
+var LiveSQL = Npm.require("./LiveSQL");
 
 var CONN_STR = "postgres://meteor:meteor@127.0.0.1/meteor";
 var CHANNEL = "ben_test";
 
-var liveDb = new LiveSQL(CONN_STR, CHANNEL);
+var liveDb = new LiveSQL.LiveSQL(CONN_STR, CHANNEL);
 
 var liveClassScores = function liveClassScores(liveDb, classId, onUpdate) {
 	var assignmentIds = [],
