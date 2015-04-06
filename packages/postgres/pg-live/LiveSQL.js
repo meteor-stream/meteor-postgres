@@ -19,7 +19,7 @@ console.log(common); // To show that common is avaiable here.
 // Number of milliseconds between refreshes
 var THROTTLE_INTERVAL = 500;
 
-LiveSQL = (function (_EventEmitter) {
+var LiveSQLFunc = (function (_EventEmitter) {
 	function LiveSQL(connStr, channel) {
 		_classCallCheck(this, LiveSQL);
 
@@ -560,7 +560,7 @@ LiveSQL = (function (_EventEmitter) {
 	return LiveSQL;
 })(EventEmitter);
 
-LiveSQL = LiveSQL;
+LiveSQL = LiveSQLFunc;
 
 function filterHashProperties(diff) {
 	if (diff instanceof Array) {
