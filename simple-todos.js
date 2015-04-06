@@ -1,14 +1,13 @@
 tasks = new Subscription('tasks');
-
-tasks.addEventListener('update', function(index, msg){
+tasks.addEventListener('added', function(index, msg){
   console.log("fired");
   console.log("index", index);
   console.log("msg", msg);
 });
+console.log(tasks, 123);
 
 if (Meteor.isClient) {
   // This code only runs on the client
-  Meteor.subscribe('tasks');
   //Template.body.helpers({
   //  tasks: tasks.update()
   //});
@@ -22,14 +21,12 @@ if (Meteor.isClient) {
 
   var a = db.createTable('users', newTable);
 
-  console.log(db, a);
-
   Template.body.events({
     "submit .new-task": function (event) {
       // This function is called when the new task form is submitted
       var text = event.target.text.value;
 
-      tasks.insert('tasks', ['text'], [text]);
+      // tasks.insert('tasks', ['text'], [text]);
 
       // Clear form
       event.target.text.value = "";
@@ -46,6 +43,12 @@ if (Meteor.isServer) {
     };
   Postgres.createTable('tasks', taskTable);
   Meteor.publish('tasks', function(){
-    return Postgres.autoSelect();
+    console.log("Tasks updating");
+    var result = Postgres.getCursor();
+    return result;
   })
+
+  setTimeout(function(){
+    Postgres.insert('tasks',{'text':'hello'});
+  }, 5000);
 }
