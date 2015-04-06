@@ -1,14 +1,16 @@
 "use strict";
 
-var _core = require("babel-runtime/core-js")["default"];
+var _core = Npm.require("babel-runtime/core-js")["default"];
 
-var _regeneratorRuntime = require("babel-runtime/regenerator")["default"];
+var _regeneratorRuntime = Npm.require("babel-runtime/regenerator")["default"];
 
-var _ = require("lodash");
-var pg = require("pg");
-var randomString = require("random-strings");
+var ld = Npm.require("lodash");
+var pg = Npm.require("pg");
+var randomString = Npm.require("random-strings");
 
-module.exports = {
+
+
+common = {
 
 	/**
   * Obtain a node-postgres client from the connection pool
@@ -272,7 +274,7 @@ module.exports = {
 		});
 
 		diff.copied !== null && diff.copied.forEach(function (copied) {
-			var copyRow = _.clone(data[copied.orig_index - 1]);
+			var copyRow = ld.clone(data[copied.orig_index - 1]);
 			copyRow._index = copied.new_index;
 			newResults[copied.new_index - 1] = copyRow;
 		});
