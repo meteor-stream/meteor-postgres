@@ -71,6 +71,7 @@ Postgres.createTable = function(table, tableObj, relTable) {
   "CREATE TRIGGER watched_table_trigger AFTER INSERT ON "+ table +
   " FOR EACH ROW EXECUTE PROCEDURE notify_trigger();";
   // send request to postgresql database
+  console.log(inputString);
   pg.connect(conString, function(err, client) {
     console.log(err);
     client.query(inputString, function(error, results) {
@@ -172,6 +173,8 @@ Postgres.insert = function(table, insertObj) {
   inputString += keys[keys.length-1] + valueString + '$' + keys.length + ');';
   insertArray.push(insertObj[keys[keys.length-1]]);
   // send request to postgresql database
+  console.log(inputString);
+  console.log(insertArray);
   pg.connect(conString, function(err, client, done) {
     console.log(err);
     client.query(inputString, insertArray, function(error, results) {
@@ -360,6 +363,7 @@ Postgres.autoSelect = function () {
     client.on('notification', function(msg) {
       console.log(msg.payload);
       var returnMsg = eval("(" + msg.payload + ")");
+      console.log("IN autoSelect");
       console.log(returnMsg);
       console.log(typeof returnMsg);
       console.log(returnMsg.tasks);
@@ -376,4 +380,13 @@ Postgres.autoSelect = function () {
       });
     });
   });
+};
+
+Postgres.getCursor = function(){
+  var cursor = {};
+  //Creating publish
+  cursor._publishCursor = function(){
+  };
+  cursor.autoSelect = this.autoSelect;
+  return cursor;
 };

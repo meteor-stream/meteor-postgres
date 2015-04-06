@@ -17,6 +17,7 @@ Subscription = function(connection, name /* arguments */){
     name = connection;
     if(Meteor.isClient){
       connection = Meteor.connection;
+      console.log(connection,456);
     }else if(Meteor.isServer){
       if(!selfConnection){
         selfConnection = DDP.connect(Meteor.absoluteUrl());
@@ -146,6 +147,7 @@ Subscription.prototype.removeEventListener = function(eventName){
 };
 
 Subscription.prototype.dispatchEvent = function(eventName /* arguments */){
+  console.log("in dispatchEvent");
   var self = this;
   var listenerArgs = Array.prototype.slice.call(arguments, 1);
   var listeners = self._selectEvents(eventName);
