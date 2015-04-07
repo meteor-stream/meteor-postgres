@@ -45,3 +45,8 @@ db.select = function(name, object) {
   var initString = 'SELECT ' + columnNames + ' FROM ' + name + groupBy + limit + offset + ';';
   alasql(initString);
 };
+
+db.insert = function(object, oject1, object2){
+  var insertText = "insert into tasks values (" + msg.tableId + ", " + msg.text + ", " + msg.createdAt + ");";
+  alasql(insertText)
+};
