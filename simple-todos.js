@@ -70,24 +70,9 @@ if (Meteor.isClient) {
 }
 
 if (Meteor.isServer) {
-  var liveDb = new LiveSQL('postgres://postgres:1234@localhost/postgres', 'notify');
   var cursor = Postgres.getCursor();
-  var closeAndExit = function() {
-    liveDb.end();
-    process.exit();
-  };
-  // Close connections on hot code push
-  process.on('SIGTERM', closeAndExit);
-  // // Close connections on exit (ctrl + c)
-  process.on('SIGINT', closeAndExit);
-  //console.log(liveDb);
-  //console.log(liveDb.select);
+
   Meteor.publish('tasks', function(){
-    //console.log("Updating tasks");
-    //var x = liveDb.select;
-    //LiveSQL.addCursor(x);
-    //return x.select("SELECT * FROM tasks");
     return cursor;
   });
-  //Postgres.autoSelect('tasks');
 }
