@@ -456,8 +456,9 @@ Postgres.delete = function (table, selectObj) {
   });
 };
 
-Postgres.autoSelect = function () {
+Postgres.autoSelect = function (sub) {
   pg.connect(conString, function(err, client) {
+    var query = client.query("LISTEN watchers");
     client.on('notification', function(msg) {
       console.log(msg.payload);
       var returnMsg = eval("(" + msg.payload + ")");
@@ -476,7 +477,15 @@ Postgres.autoSelect = function () {
         if (error) {
           console.log("error in auto select " + table, error);
         } else {
+          console.log(this);
           console.log("results in auto select ", results.rows);
+          sub._session.send({
+            msg: 'added',
+            collection: sub._name,
+            id: sub._subscriptionId,
+            fields: { reset: true }
+          });
+          return results.rows;
         }
       });
     });
@@ -486,7 +495,8 @@ Postgres.autoSelect = function () {
 Postgres.getCursor = function(){
   var cursor = {};
   //Creating publish
-  cursor._publishCursor = function(){
+  cursor._publishCursor = function(sub){
+    this.autoSelect(sub);
   };
   cursor.autoSelect = this.autoSelect;
   return cursor;

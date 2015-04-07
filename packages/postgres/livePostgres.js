@@ -42,7 +42,7 @@ _publishCursor = function(sub) {
   function selectHandler(eventName, fieldArgument, indexArgument, customAfter){
     // Events from mysql-live-select are the same names as the DDP msg types
     self.on(eventName, function(/* row, [newRow,] index */){
-      sub._session.send({
+      this.sub._session.send({
         msg: eventName,
         collection: sub._name,
         id: sub._subscriptionId + ':' + arguments[indexArgument],
