@@ -15,7 +15,8 @@ Npm.depends({
   'babel-runtime' :  '5.0.9',
   'lodash'        :  '3.6.0',
   'random-strings':  '0.0.1',
-  'murmurhash-js' :  '1.0.0'
+  'murmurhash-js' :  '1.0.0',
+  'pg-live-query' :  '0.0.3'
 });
 
 Package.onUse(function(api) {
@@ -24,6 +25,7 @@ Package.onUse(function(api) {
   api.use('underscore');
   api.use('tracker');
   api.use('ddp');
+  api.addFiles('livePostgres.js', 'server');
   api.export('LiveSQL', 'server');
   api.addFiles('postgres.js', 'server');
   api.export('Postgres', 'server');
