@@ -43,7 +43,7 @@ db.select = function(name, object) {
   var limit = object.limit ? ' LIMIT ' + object.limit : '';
   var offset = object.offset ? ' OFFSET ' + object.offset : '';
   var initString = 'SELECT ' + columnNames + ' FROM ' + name + groupBy + limit + offset + ';';
-  alasql(initString);
+  return alasql(initString);
 };
 
 db.insert = function(object, oject1, object2){

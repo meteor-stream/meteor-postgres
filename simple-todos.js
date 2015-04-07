@@ -23,7 +23,7 @@ tasks.addEventListener('added', function(index, msg){
   var insertText = "INSERT INTO tasks VALUES (" + tableId + ", " + "'" + text + "'" + ")";
   // console.log(insertText);
   alasql(insertText);
-  Template.tasks = db.select('tasks', {});
+  Session.set('tasks',db.select('tasks', {}));
 });
 
 if (Meteor.isClient) {
@@ -31,6 +31,7 @@ if (Meteor.isClient) {
   //Template.body.helpers({
   //  tasks: tasks.update()
   //});
+  Session.set('tasks',[]);
   var newTable = {
     id: ['int', 'not null'],
     username: ['varchar (100)', 'not null'],
@@ -48,8 +49,8 @@ if (Meteor.isClient) {
 
   Template.body.helpers({
     tasks: function () {
-      // Show newest tasks first
-      return db.select('tasks', {});
+      console.log('updating');
+      return Session.get('tasks');
     }
   });
 
