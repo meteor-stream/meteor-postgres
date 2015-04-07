@@ -3,6 +3,8 @@ tasks.addEventListener('added', function(index, msg){
   console.log("fired");
   console.log("index", index);
   console.log("msg", msg);
+  console.log('tableId', msg.tableid);
+  console.log('text', msg.text);
 });
 
 
