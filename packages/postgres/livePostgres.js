@@ -4,11 +4,19 @@
 // Convert the LiveMysqlSelect object into a cursor
 
 LiveSQL = Npm.require('pg-live-query');
-console.log("===================================================");
-console.log('select', LiveSQL.prototype.select);
-console.log("===================================================");
+// console.log("===================================================");
+// // console.log('select', LiveSQL.prototype.select);
+// console.log("===================================================");
 
-LiveSQL.prototype._publishCursor = function(sub) {
+LiveSQL.addCursor = function(context){
+  context._publishCursor = _publishCursor;
+};
+
+_publishCursor = function(sub) {
+
+  // console.log("===================================================");
+  // console.log(sub);
+  // console.log("===================================================");
   var self = this;
   var initLength;
 

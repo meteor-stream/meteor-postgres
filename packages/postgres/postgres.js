@@ -2,6 +2,8 @@
 pg = Npm.require('pg');
 var conString = 'postgres://postgres:1234@localhost/postgres';
 
+// TODO: reset command for development (in command line need a reset that does dropdb <name> and createdb <name>
+
 Postgres = {};
 
 /* objects: DataTypes, TableConstraints, QueryOperators, SelectOptions, and Joins */
@@ -43,7 +45,7 @@ Postgres._Joins = {
 /* methods: createTable, createRelationship, alterTable, dropTable, insert, select, update, delete, autoSelect */
 
 /**
- * TODO: add relationships? helper tables? triggers? add password and id field datatypes
+ * TODO: user accounts, role management, authentication
  * @param {string} table
  * @param {object} tableObj
  * @param {string} tableObj key (field name)
@@ -146,8 +148,72 @@ Postgres.createRelationship = function(table1, table2) {
   });
 };
 
+//* @param {object} tableObj
+//* @param {string} tableObj key (field name)
+//* @param {array} tableObj value (type and constraints)
+// alterTable adds or updates fields in the table
+// currently only going to allow add or drop column
 // TODO: alter table
-Postgres.alterTable = function() {};
+// updateObj $add or $drop column
+Postgres.alterTable = function(table, updateObj) {
+  // SQL: 'ALTER TABLE table ADD COLUMN fieldName dataType constraint;'
+  // initialize input string parts
+  var inputString = 'ALTER TABLE ' + table + ' ';
+  // iterate through array arguments to populate input string parts
+  for (var key in tableObj) {
+    inputString += ', ' + key + ' ';
+    inputString += this._DataTypes[tableObj[key][0]] + ' ';
+    for (var i = 1, count = tableObj[key].length - 1; i < count; i++) {
+      inputString += tableObj[key][i] + ' ';
+    }
+  }
+};
+
+Postgres.addColumn = function(table, tableObj) {
+  var inputString = 'ALTER TABLE ' + table + ' ADD COLUMN ';
+  // iterate through array arguments to populate input string parts
+  for (var key in tableObj) {
+    inputString += key + ' ';
+    inputString += this._DataTypes[tableObj[key][0]] + ' ';
+    for (var i = 1, count = tableObj[key].length - 1; i < count; i++) {
+      inputString += tableObj[key][i] + ' ';
+    }
+  }
+  inputString += ';';
+  pg.connect(conString, function(err, client) {
+    console.log(err);
+    client.query(inputString, function(error, results) {
+      if (error) {
+        console.log("error in create relationship " + table, error);
+      } else {
+        console.log("results in create relationship " + table, results);
+      }
+    });
+    client.on('notification', function(msg) {
+      console.log(msg);
+    });
+    var query = client.query("LISTEN watchers");
+  });
+};
+
+Postgres.dropColumn = function(table, column) {
+  var inputString = 'ALTER TABLE ' + table + ' DROP COLUMN ' + column;
+  inputString += ';';
+  pg.connect(conString, function(err, client) {
+    console.log(err);
+    client.query(inputString, function(error, results) {
+      if (error) {
+        console.log("error in create relationship " + table, error);
+      } else {
+        console.log("results in create relationship " + table, results);
+      }
+    });
+    client.on('notification', function(msg) {
+      console.log(msg);
+    });
+    var query = client.query("LISTEN watchers");
+  });
+};
 
 /**
  * TODO: Cascade or restrict?
