@@ -33,9 +33,11 @@ Package.onUse(function(api) {
   api.export('Subscription');
 });
 
-Package.onTest(function(api) {
+
+Package.onTest(function (api) {
+  api.versionsFrom('1.1');
+  api.addFiles('postgres.js', 'server');
+  api.export('Postgres', 'server');
   api.use('tinytest');
-  api.use('underscore');
-  api.use('meteor-steam:postgres');
-  api.addFiles('postgres-tests.js');
+  api.addFiles('postgres_tests.js', 'server');
 });
