@@ -1,7 +1,7 @@
 Meteor.methods({
   dbAdd: function(data, data1){
     var insertText = "INSERT INTO tasks VALUES (" + data + ", " + "'" + data1 + "'" + ")";
-    console.log(insertText);
+    // console.log(insertText);
     alasql(insertText);
     Template.body.tasks = alasql('select * from tasks');
   },
@@ -12,18 +12,18 @@ Meteor.methods({
 
 tasks = new Subscription('tasks');
 tasks.addEventListener('added', function(index, msg){
-  console.log("fired");
-  console.log("index", index);
-  console.log("msg", msg);
-  console.log('tableId', msg.tableId);
-  console.log('text', msg.text);
+  // console.log("fired");
+  // console.log("index", index);
+  // console.log("msg", msg);
+  // console.log('tableId', msg.tableId);
+  // console.log('text', msg.text);
   var tableId = msg.tableId;
   var text = msg.text;
   //Meteor.apply('dbAdd', [tableId, text]);
   var insertText = "INSERT INTO tasks VALUES (" + tableId + ", " + "'" + text + "'" + ")";
-  console.log(insertText);
+  // console.log(insertText);
   alasql(insertText);
-  Template.tasks = db.select('tasks', {});
+  Session.set('tasks',db.select('tasks', {}));
 });
 
 if (Meteor.isClient) {
@@ -31,6 +31,7 @@ if (Meteor.isClient) {
   //Template.body.helpers({
   //  tasks: tasks.update()
   //});
+  Session.set('tasks',[]);
   var newTable = {
     id: ['int', 'not null'],
     username: ['varchar (100)', 'not null'],
@@ -48,8 +49,8 @@ if (Meteor.isClient) {
 
   Template.body.helpers({
     tasks: function () {
-      // Show newest tasks first
-      return db.select('tasks', {});
+      console.log('updating');
+      return Session.get('tasks');
     }
   });
 
@@ -70,24 +71,9 @@ if (Meteor.isClient) {
 }
 
 if (Meteor.isServer) {
-  var liveDb = new LiveSQL('postgres://postgres:1234@localhost/postgres', 'notify');
   var cursor = Postgres.getCursor();
-  var closeAndExit = function() {
-    liveDb.end();
-    process.exit();
-  };
-  // Close connections on hot code push
-  process.on('SIGTERM', closeAndExit);
-  // // Close connections on exit (ctrl + c)
-  process.on('SIGINT', closeAndExit);
-  //console.log(liveDb);
-  //console.log(liveDb.select);
+
   Meteor.publish('tasks', function(){
-    //console.log("Updating tasks");
-    //var x = liveDb.select;
-    //LiveSQL.addCursor(x);
-    //return x.select("SELECT * FROM tasks");
     return cursor;
   });
-  //Postgres.autoSelect('tasks');
 }

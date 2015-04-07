@@ -25,8 +25,6 @@ Package.onUse(function(api) {
   api.use('underscore');
   api.use('tracker');
   api.use('ddp');
-  api.addFiles('livePostgres.js', 'server');
-  api.export('LiveSQL', 'server');
   api.addFiles('postgres.js', 'server');
   api.export('Postgres', 'server');
   api.addFiles('subscription.js');
