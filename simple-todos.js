@@ -1,11 +1,12 @@
 tasks = new Subscription('tasks');
-
-tasks.addEventListener('added', function(index, msg){
+tasks.addEventListener('update', function(index, msg){
   console.log("fired");
   console.log("index", index);
   console.log("msg", msg);
 });
 console.log(tasks, 123);
+
+
 
 if (Meteor.isClient) {
   // This code only runs on the client
@@ -39,8 +40,52 @@ if (Meteor.isClient) {
 }
 
 if (Meteor.isServer) {
-
   var liveDb = new LiveSQL('postgres://postgres:1234@localhost/postgres', 'notify');
+  liveDb.select._publishCursor  = function(sub) {
+    var self = this;
+    var initLength;
+
+    sub.onStop(function(){
+      self.stop();
+    });
+
+    // Send reset message (for code pushes)
+    sub._session.send({
+      msg: 'added',
+      collection: sub._name,
+      id: sub._subscriptionId,
+      fields: { reset: true }
+    });
+
+    self.on('update', function(rows){
+      if(sub._ready === false){
+        initLength = rows.length;
+        if(initLength === 0) sub.ready();
+      }
+    });
+
+    function selectHandler(eventName, fieldArgument, indexArgument, customAfter){
+      // Events from mysql-live-select are the same names as the DDP msg types
+      self.on(eventName, function(/* row, [newRow,] index */){
+        sub._session.send({
+          msg: eventName,
+          collection: sub._name,
+          id: sub._subscriptionId + ':' + arguments[indexArgument],
+          fields: fieldArgument !== null ? arguments[fieldArgument] : undefined
+        });
+        if(customAfter) customAfter();
+      });
+    }
+
+    selectHandler('added', 0, 1, function(){
+      if(sub._ready === false &&
+        self.data.length === initLength - 1){
+        sub.ready();
+      }
+    });
+    selectHandler('changed', 1, 2);
+    selectHandler('removed', null, 1);
+  };
 
   var closeAndExit = function() {
     liveDb.end();
@@ -57,18 +102,4 @@ if (Meteor.isServer) {
       [ { table: 'tasks' } ]
     );
   });
-
-  //var taskTable = {
-  //    text: 'varchar (255) not null'
-  //  };
-  //Postgres.createTable('tasks', taskTable);
-  //Meteor.publish('tasks', function(){
-  //  console.log("Tasks updating");
-  //  var result = Postgres.getCursor();
-  //  return result;
-  //})
-  //
-  //setTimeout(function(){
-  //  Postgres.insert('tasks',{'text':'hello'});
-  //}, 5000);
 }
