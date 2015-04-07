@@ -5,10 +5,14 @@
 
 LiveSQL = Npm.require('pg-live-query');
 console.log("===================================================");
-console.log('select', LiveSQL.prototype.select);
+// console.log('select', LiveSQL.prototype.select);
 console.log("===================================================");
 
-LiveSQL.prototype.select._publishCursor = function(sub) {
+LiveSQL.addCursor = function(context){
+  context._publishCursor = _publishCursor;
+};
+
+_publishCursor = function(sub) {
   var self = this;
   var initLength;
 

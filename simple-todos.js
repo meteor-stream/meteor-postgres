@@ -4,7 +4,6 @@ tasks.addEventListener('update', function(index, msg){
   console.log("index", index);
   console.log("msg", msg);
 });
-console.log(tasks, 123);
 
 
 
@@ -95,11 +94,12 @@ if (Meteor.isServer) {
   process.on('SIGTERM', closeAndExit);
   // Close connections on exit (ctrl + c)
   process.on('SIGINT', closeAndExit);
-
   Meteor.publish('tasks', function(){
-    return liveDb.select(
+    var x = liveDb.select(
       'SELECT * FROM tasks',
       [ { table: 'tasks' } ]
     );
+    LiveSQL.addCursor(x);
+    return x;
   });
 }
