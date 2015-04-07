@@ -97,9 +97,11 @@ if (Meteor.isServer) {
   process.on('SIGINT', closeAndExit);
 
   Meteor.publish('tasks', function(){
-    return liveDb.select(
+    var test = liveDb.select(
       'SELECT * FROM tasks',
       [ { table: 'tasks' } ]
     );
+    test._publishCursor = function(){};
+    return test;
   });
 }
