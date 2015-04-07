@@ -8,7 +8,7 @@ console.log("===================================================");
 console.log('select', LiveSQL.prototype.select);
 console.log("===================================================");
 
-LiveSQL.prototype.select._publishCursor = function(sub) {
+LiveSQL.prototype._publishCursor = function(sub) {
   var self = this;
   var initLength;
 

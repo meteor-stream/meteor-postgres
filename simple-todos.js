@@ -1,5 +1,5 @@
 tasks = new Subscription('tasks');
-tasks.addEventListener('update', function(index, msg){
+tasks.addEventListener('added', function(index, msg){
   console.log("fired");
   console.log("index", index);
   console.log("msg", msg);
@@ -95,7 +95,8 @@ if (Meteor.isServer) {
   process.on('SIGTERM', closeAndExit);
   // Close connections on exit (ctrl + c)
   process.on('SIGINT', closeAndExit);
-
+  console.log(liveDb);
+  console.log(liveDb.select);
   Meteor.publish('tasks', function(){
     return liveDb.select(
       'SELECT * FROM tasks',
