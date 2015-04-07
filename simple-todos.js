@@ -53,8 +53,8 @@ if (Meteor.isServer) {
   console.log(liveDb.select);
   Meteor.publish('tasks', function(){
     console.log("Updating tasks");
-    var x = liveDb;
+    var x = liveDb.select;
     LiveSQL.addCursor(x);
-    return x;
+    return x.select("SELECT * FROM tasks");
   });
 }
