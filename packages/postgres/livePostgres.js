@@ -16,9 +16,9 @@ _publishCursor = function(sub) {
   var self = this;
   var initLength;
 
-  sub.onStop(function(){
-    self.stop();
-  });
+  // sub.onStop(function(){
+  //   self.stop();
+  // });
 
   // Send reset message (for code pushes)
   sub._session.send({
