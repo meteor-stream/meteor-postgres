@@ -12,6 +12,6 @@ Package.describe({
 
 Package.onUse(function(api) {
   api.versionsFrom('1.1');
-  api.addFiles(['minisql.js', 'alasql.min.js'], 'client');
-  api.export('db', 'client');
+  api.addFiles(['alasql.js', 'alasql.js.map', 'minisql.js']);
+  api.export('db');
 });

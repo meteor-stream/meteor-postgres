@@ -487,7 +487,8 @@ Postgres.autoSelect = function (sub) {
             fields: {
               reset: false,
               tableId: results.rows[0].id,
-              text: results.rows[0].text
+              text: results.rows[0].text,
+              createdAt: results.rows[0].created_at
             }
           });
           return results.rows;
