@@ -479,14 +479,16 @@ Postgres.autoSelect = function (sub) {
         } else {
           console.log(this);
           console.log("results in auto select ", results.rows);
-          console.log(sub);
-          console.log(sub._name);
-          console.log(sub._subscriptionId);
+          console.log(results.rows);
           sub._session.send({
             msg: 'added',
             collection: sub._name,
             id: sub._subscriptionId,
-            fields: { reset: false }
+            fields: {
+              reset: false,
+              tableId: results.rows[0].id,
+              text: results.rows[0].text
+            }
           });
           return results.rows;
         }
