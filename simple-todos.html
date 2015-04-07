@@ -14,7 +14,8 @@
 
     <ul>
       {{#each tasks}}
-        {{> task}}
+        {{> task.text}}
+        {{> task.createAt}}
       {{/each}}
     </ul>
   </div>
