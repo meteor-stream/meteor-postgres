@@ -17,7 +17,7 @@ Subscription = function(connection, name /* arguments */){
     name = connection;
     if(Meteor.isClient){
       connection = Meteor.connection;
-      console.log(connection,456);
+      //console.log(connection,456);
     }else if(Meteor.isServer){
       if(!selfConnection){
         selfConnection = DDP.connect(Meteor.absoluteUrl());
