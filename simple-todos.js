@@ -1,7 +1,7 @@
 Meteor.methods({
   dbAdd: function(data, data1){
     var insertText = "INSERT INTO tasks VALUES (" + data + ", " + "'" + data1 + "'" + ")";
-    console.log(insertText);
+    // console.log(insertText);
     alasql(insertText);
     Template.body.tasks = alasql('select * from tasks');
   },
@@ -12,16 +12,16 @@ Meteor.methods({
 
 tasks = new Subscription('tasks');
 tasks.addEventListener('added', function(index, msg){
-  console.log("fired");
-  console.log("index", index);
-  console.log("msg", msg);
-  console.log('tableId', msg.tableId);
-  console.log('text', msg.text);
+  // console.log("fired");
+  // console.log("index", index);
+  // console.log("msg", msg);
+  // console.log('tableId', msg.tableId);
+  // console.log('text', msg.text);
   var tableId = msg.tableId;
   var text = msg.text;
   //Meteor.apply('dbAdd', [tableId, text]);
   var insertText = "INSERT INTO tasks VALUES (" + tableId + ", " + "'" + text + "'" + ")";
-  console.log(insertText);
+  // console.log(insertText);
   alasql(insertText);
   Template.tasks = db.select('tasks', {});
 });
