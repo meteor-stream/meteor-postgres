@@ -231,7 +231,7 @@ Postgres.insert = function(table, insertObj) {
   // iterate through array arguments to populate input string parts
   for (var i = 0, count = keys.length - 1; i < count; ) {
     inputString += keys[i] + ', ';
-    valueString += '$' + (++i) + ', ';
+    valueString += '$' + (i++) + ', ';
     insertArray.push(insertObj[keys[i]]);
   }
   // combine parts and close input string
@@ -321,27 +321,27 @@ Postgres.select = function(tableObj, selectObj, optionsObj, joinObj) {
   var selectString = 'WHERE ';
 
 
-    for (var key in selectObj) {
-      switch(key) {
-        case ('$and'):
-          for (var i=0; i<selectObj[key].length; i++) {
-
-          }
-          selectString += whereStatement(selectObj[key]) + ' ';
-          break;
-        case ('$or'):
-          return x;
-          break;
-        case ('$not'):
-          return y;
-          break;
-        case ('$nor'):
-          return z;
-          break;
-        default:
-          whereStatement(selectObj[key]);
-      }
-    }
+    //for (var key in selectObj) {
+    //  switch(key) {
+    //    case ('$and'):
+    //      for (var i=0; i<selectObj[key].length; i++) {
+    //
+    //      }
+    //      selectString += whereStatement(selectObj[key]) + ' ';
+    //      break;
+    //    case ('$or'):
+    //      return x;
+    //      break;
+    //    case ('$not'):
+    //      return y;
+    //      break;
+    //    case ('$nor'):
+    //      return z;
+    //      break;
+    //    default:
+    //      whereStatement(selectObj[key]);
+    //  }
+    //}
 
 
 
@@ -351,10 +351,10 @@ Postgres.select = function(tableObj, selectObj, optionsObj, joinObj) {
   // if key is $or or $and $not $nor
   // if key is string
 
-  switch (selectObj[key]) {
-    case '$or': return x;
-    case '$and':
-  }
+  //switch (selectObj[key]) {
+  //  case '$or': return x;
+  //  case '$and':
+  //}
 
 
 
@@ -410,39 +410,39 @@ Postgres.select = function(tableObj, selectObj, optionsObj, joinObj) {
 // content filters + column filters
 // table/column + content + options + join
 //Postgres.select({ testScores: 'student' }, { score: { $gt: '70' } }, { $gb: 'classTime' }, { $loj: 'class',  });
-Postgres.findOne = function(query, projection) {
-
-  var inputString = '';
-
-  pg.connect(conString, function(err, client, done) {
-    console.log(err);
-    client.query(inputString, function(error, results) {
-      if (error) {
-        console.log("error in findOne " + table, error);
-      } else {
-        console.log("results in findOne " + table, results.rows);
-      }
-      done();
-    });
-  });
-};
-
-Postgres.find = function(query, projection) {
-
-  var inputString = '';
-
-  pg.connect(conString, function(err, client, done) {
-    console.log(err);
-    client.query(inputString, function(error, results) {
-      if (error) {
-        console.log("error in findOne " + table, error);
-      } else {
-        console.log("results in findOne " + table, results.rows);
-      }
-      done();
-    });
-  });
-};
+//Postgres.findOne = function(query, projection) {
+//
+//  var inputString = '';
+//
+//  pg.connect(conString, function(err, client, done) {
+//    console.log(err);
+//    client.query(inputString, function(error, results) {
+//      if (error) {
+//        console.log("error in findOne " + table, error);
+//      } else {
+//        console.log("results in findOne " + table, results.rows);
+//      }
+//      done();
+//    });
+//  });
+//};
+//
+//Postgres.find = function(query, projection) {
+//
+//  var inputString = '';
+//
+//  pg.connect(conString, function(err, client, done) {
+//    console.log(err);
+//    client.query(inputString, function(error, results) {
+//      if (error) {
+//        console.log("error in findOne " + table, error);
+//      } else {
+//        console.log("results in findOne " + table, results.rows);
+//      }
+//      done();
+//    });
+//  });
+//};
 
 
 /**
