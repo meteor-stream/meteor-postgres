@@ -231,8 +231,8 @@ Postgres.insert = function(table, insertObj) {
   // iterate through array arguments to populate input string parts
   for (var i = 0, count = keys.length - 1; i < count; ) {
     inputString += keys[i] + ', ';
-    valueString += '$' + (i++) + ', ';
     insertArray.push(insertObj[keys[i]]);
+    valueString += '$' + (++i) + ', ';
   }
   // combine parts and close input string
   inputString += keys[keys.length-1] + valueString + '$' + keys.length + ');';
