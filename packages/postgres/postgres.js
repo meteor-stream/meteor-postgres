@@ -18,9 +18,10 @@ Postgres._DataTypes = {
 
 Postgres._TableConstraints = {
   $unique: 'unique',
-  $check: 'check',
-  $exclude: 'exclude',
-  $notnull: 'not null'
+  $check: 'check ', // + parens around a conditional
+  $exclude: 'exclude', //
+  $notnull: 'not null',
+  $default: 'default ' // + literal constant 'field data_type DEFAULT string/function'
 };
 
 Postgres._QueryOperators = {
@@ -52,17 +53,34 @@ Postgres._Joins = {
 // * @param {array} tableObj value (type and constraints)
 // * @param {string} [relTable]
 // */
-// Postgres.createTable('students', { name: [$string, $notnull], age: [$number] }, 'major');
+
+//Postgres.createTable('students', {
+//  name: ['$string', '$notnull'],
+//  age: ['$number'],
+//  class: ['$string', {$default: '2015'}]
+//});
+//CREATE TABLE students(id serial primary key not null, name varchar(255) not null, age integer, class varchar(255) default 2015,
 Postgres.createTable = function(table, tableObj, relTable) {
   // SQL: 'CREATE TABLE table (fieldName constraint);'
   // initialize input string parts
   var inputString = 'CREATE TABLE ' + table + '(id serial primary key not null';
+  var item, subKey, valOperator;
   // iterate through array arguments to populate input string parts
   for (var key in tableObj) {
     inputString += ', ' + key + ' ';
     inputString += this._DataTypes[tableObj[key][0]];
-    for (var i = 1, count = tableObj[key].length - 1; i < count; i++) {
-      inputString += tableObj[key][i];
+    if (Array.isArray(tableObj[key]) && tableObj[key].length > 1) {
+      for (var i = 1, count = tableObj[key].length; i < count; i++) {
+        item = tableObj[key][i];
+        if (typeof item === 'object') {
+          subKey = Object.keys(item);
+          valOperator = this._TableConstraints[subKey];
+          inputString += ' ' + valOperator + item[subKey];
+          console.log(valOperator);
+        } else {
+          inputString += ' ' + this._TableConstraints[item];
+        }
+      }
     }
   }
   // add foreign key
@@ -199,7 +217,7 @@ Postgres.dropColumn = function(table, column) {
  * @param {string} table
  */
 Postgres.dropTable = function(table) {
-  var inputString = 'DROP FUNCTION notify_trigger(); DROP TABLE IF EXISTS ' + table + ';';
+  var inputString = 'DROP FUNCTION IF EXISTS notify_trigger() CASCADE; DROP TABLE IF EXISTS ' + table + ' CASCADE;';
   // send request to postgresql database
   pg.connect(conString, function(err, client, done) {
     console.log(err);
