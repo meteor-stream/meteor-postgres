@@ -245,6 +245,8 @@ Postgres.dropTable = function(table) {
 Postgres.insert = function(table, insertObj) {
   // SQL: 'INSERT INTO table (insertFields) VALUES (insertValues);'
   // initialize input string parts
+  console.log('tablestable', table);
+  console.log('insertinside', insertObj);
   var inputString = 'INSERT INTO ' + table + ' (';
   var valueString = ') VALUES (';
   var keys = Object.keys(insertObj);
@@ -252,11 +254,12 @@ Postgres.insert = function(table, insertObj) {
   // iterate through array arguments to populate input string parts
   for (var i = 0, count = keys.length - 1; i < count; ) {
     inputString += keys[i] + ', ';
-    valueString += '$' + (++i) + ', ';
     insertArray.push(insertObj[keys[i]]);
+    valueString += '$' + (++i) + ', ';
   }
   // combine parts and close input string
   inputString += keys[keys.length-1] + valueString + '$' + keys.length + ');';
+  console.log(inputString);
   insertArray.push(insertObj[keys[keys.length-1]]);
   // send request to postgresql database
   console.log(inputString);
