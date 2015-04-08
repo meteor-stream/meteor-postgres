@@ -13,7 +13,8 @@ Postgres._DataTypes = {
   $string: 'varchar(255)',
   $json: 'json',
   $datetime: 'date',
-  $float: 'decimal'
+  $float: 'decimal',
+  $seq: 'serial'
 };
 
 Postgres._TableConstraints = {
@@ -21,7 +22,8 @@ Postgres._TableConstraints = {
   $check: 'check ', // + parens around a conditional
   $exclude: 'exclude', //
   $notnull: 'not null',
-  $default: 'default ' // + literal constant 'field data_type DEFAULT string/function'
+  $default: 'default ', // + literal constant 'field data_type DEFAULT string/function'
+  $primary: 'primary key'
 };
 
 Postgres._QueryOperators = {
@@ -60,14 +62,22 @@ Postgres._Joins = {
 //  class: ['$string', {$default: '2015'}]
 //});
 //CREATE TABLE students(id serial primary key not null, name varchar(255) not null, age integer, class varchar(255) default 2015,
+
+//Postgres.createTable('students', {
+//  name: ['$string', '$notnull'],
+//  age: ['$number'],
+//  class: ['$string', {$default: '2015'}],
+//  _id: ['$number', '$notnull', '$primary', '$unique']
+//});
+//CREATE TABLE students (name varchar(255) not null, age integer, class varchar(255) default 2015, _id integer not null primary unique,
 Postgres.createTable = function(table, tableObj, relTable) {
   // SQL: 'CREATE TABLE table (fieldName constraint);'
   // initialize input string parts
-  var inputString = 'CREATE TABLE ' + table + '(id serial primary key not null';
+  var inputString = 'CREATE TABLE ' + table + ' (';
   var item, subKey, valOperator;
   // iterate through array arguments to populate input string parts
   for (var key in tableObj) {
-    inputString += ', ' + key + ' ';
+    inputString += key + ' ';
     inputString += this._DataTypes[tableObj[key][0]];
     if (Array.isArray(tableObj[key]) && tableObj[key].length > 1) {
       for (var i = 1, count = tableObj[key].length; i < count; i++) {
@@ -82,13 +92,21 @@ Postgres.createTable = function(table, tableObj, relTable) {
         }
       }
     }
+    inputString += ', ';
   }
+  console.log(1234, inputString);
+  // check to see if id provided
+  if (inputString.indexOf('_id') === -1) {
+    inputString += '_id serial primary key not null';
+  }
+
   // add foreign key
   if(relTable) {
     inputString += ' ' + relTable + '_id' + ' integer references' + relTable;
   }
+
   // add notify functionality and close input string
-  inputString += ", created_at TIMESTAMPTZ default now()); " +
+  inputString += "created_at TIMESTAMPTZ default now()); " +
   "CREATE FUNCTION notify_trigger() RETURNS trigger AS $$ "+
   "DECLARE " +
   "BEGIN " +
@@ -99,7 +117,7 @@ Postgres.createTable = function(table, tableObj, relTable) {
   "CREATE TRIGGER watched_table_trigger AFTER INSERT ON "+ table +
   " FOR EACH ROW EXECUTE PROCEDURE notify_trigger();";
   // send request to postgresql database
-  console.log(inputString, 123890384902839408029381023984);
+  console.log(inputString, 'xyz');
   pg.connect(conString, function(err, client) {
     console.log(err);
     client.query(inputString, function(error, results) {

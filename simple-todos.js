@@ -55,13 +55,11 @@ if (Meteor.isClient) {
 }
 
 if (Meteor.isServer) {
-  //Postgres.dropTable('tasks');
-  //Postgres.createTable('tasks', {text: ['$string', '$notnull']});
-  //Postgres.dropTable('students');
   Postgres.createTable('students', {
     name: ['$string', '$notnull'],
     age: ['$number'],
-    class: ['$string', {$default: '2015'}]
+    class: ['$string', {$default: '2015'}],
+    _id: ['$seq', '$primary', '$notnull']
   });
   var cursor = Postgres.getCursor();
 
