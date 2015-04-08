@@ -25,7 +25,6 @@ Subscription = function(connection, name /* arguments */){
     name = connection;
     if(Meteor.isClient){
       connection = Meteor.connection;
-      //console.log(connection,456);
     }else if(Meteor.isServer){
       if(!selfConnection){
         selfConnection = DDP.connect(Meteor.absoluteUrl());
@@ -38,7 +37,6 @@ Subscription = function(connection, name /* arguments */){
   }
 
   Tracker.Dependency.call(self);
-  // Y U No give me subscriptionId, Meteor?!
   var subsBefore = _.keys(connection._subscriptions);
   _.extend(self, connection.subscribe.apply(connection, subscribeArgs));
   var subsNew = _.difference(_.keys(connection._subscriptions), subsBefore);
