@@ -58,12 +58,13 @@ if (Meteor.isClient) {
 }
 
 if (Meteor.isServer) {
-  Postgres.createTable('students', {
-    name: ['$string', '$notnull'],
-    age: ['$number'],
-    class: ['$string', {$default: '2015'}],
-    _id: ['$seq', '$primary', '$notnull']
-  });
+  //Postgres.createTable('students', {
+  //  name: ['$string', '$notnull'],
+  //  age: ['$number'],
+  //  class: ['$string', {$default: '2015'}],
+  //  _id: ['$seq', '$primary', '$notnull']
+  //});
+  Postgres.select('students');
   var cursor = Postgres.getCursor();
 
   Meteor.publish('tasks', function () {
