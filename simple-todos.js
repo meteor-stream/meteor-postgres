@@ -55,9 +55,17 @@ if (Meteor.isClient) {
 }
 
 if (Meteor.isServer) {
+  //Postgres.dropTable('tasks');
+  //Postgres.createTable('tasks', {text: ['$string', '$notnull']});
+  //Postgres.dropTable('students');
+  Postgres.createTable('students', {
+    name: ['$string', '$notnull'],
+    age: ['$number'],
+    class: ['$string', {$default: '2015'}]
+  });
   var cursor = Postgres.getCursor();
 
-  Meteor.publish('tasks', function(){
+  Meteor.publish('tasks', function () {
     return cursor;
   });
 }
