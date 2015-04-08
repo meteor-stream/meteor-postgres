@@ -199,7 +199,7 @@ Postgres.dropColumn = function(table, column) {
  * @param {string} table
  */
 Postgres.dropTable = function(table) {
-  var inputString = 'DROP TABLE IF EXISTS ' + table + ';';
+  var inputString = 'DROP FUNCTION notify_trigger(); DROP TABLE IF EXISTS ' + table + ';';
   // send request to postgresql database
   pg.connect(conString, function(err, client, done) {
     console.log(err);
