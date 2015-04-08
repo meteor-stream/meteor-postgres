@@ -148,27 +148,6 @@ Postgres.createRelationship = function(table1, table2) {
   });
 };
 
-//* @param {object} tableObj
-//* @param {string} tableObj key (field name)
-//* @param {array} tableObj value (type and constraints)
-// alterTable adds or updates fields in the table
-// currently only going to allow add or drop column
-// TODO: alter table
-// updateObj $add or $drop column
-Postgres.alterTable = function(table, updateObj) {
-  // SQL: 'ALTER TABLE table ADD COLUMN fieldName dataType constraint;'
-  // initialize input string parts
-  var inputString = 'ALTER TABLE ' + table + ' ';
-  // iterate through array arguments to populate input string parts
-  for (var key in tableObj) {
-    inputString += ', ' + key + ' ';
-    inputString += this._DataTypes[tableObj[key][0]] + ' ';
-    for (var i = 1, count = tableObj[key].length - 1; i < count; i++) {
-      inputString += tableObj[key][i] + ' ';
-    }
-  }
-};
-
 Postgres.addColumn = function(table, tableObj) {
   var inputString = 'ALTER TABLE ' + table + ' ADD COLUMN ';
   // iterate through array arguments to populate input string parts
@@ -292,6 +271,7 @@ Postgres.insert = function(table, insertObj) {
  * @param {object} optionsObj
  * @param {string} optionsObj key (option)
  * @param {number} optionsObj value (comparator)
+ * @param {object} joinObj
  */
 // Postgres.select(testScores); --> return ALL
 // Postgres.select(testScores, { score: { $gt: '70' } }); --> return all data for students with score of 70 or above
@@ -303,6 +283,15 @@ Postgres.insert = function(table, insertObj) {
 // Postgres.select({ testScores: 'student' }, { score: { $gt: '70' } }, { $gb: 'classTime' }, { $loj: 'class',  }); // $loj, $lij
 Postgres.select = function(tableObj, selectObj, optionsObj, joinObj) {
   // SQL: 'SELECT fields FROM table WHERE field operator comparator AND (more WHERE) GROUP BY field / LIMIT number / OFFSET number;'
+
+  function _emptyObject(obj) {
+    for (var prop in obj) {
+      if (Object.prototype.propertyIsEnumerable.call(obj, prop)) {
+        return false;
+      }
+    }
+    return true;
+  }
 
   // tableObj
   // contains the table name as key and the fields as a string
@@ -316,16 +305,61 @@ Postgres.select = function(tableObj, selectObj, optionsObj, joinObj) {
     returnFields = tableObj[table];
   }
 
+  function whereStatement (obj) {
+    var whereString = '', selectField, operator, comparator;
+    selectField = Object.keys(obj)[0];    // selectField = score
+    operator = Object.keys(obj[selectField])[0];    // operator = $gt
+    comparator = selectObj[selectField][operator];      // comparator = '70'
+    whereString += selectField + ' ' + operator + ' ' + comparator;
+    // WHERE score > 70
+    return whereString;
+  }
+
   // selectObj
   // contains the field as a key then another obj as the value with the operator and conditional values
+  //{ score: { $gt: '70' } } -> { $or: [ { score: { $gt: '70' } }, { pass: true } ] }
   var selectString = '';
-  if (Object.keys(selectObj).length === 0) {
-    var selectField, operator, comparator;
-    selectField = Object.keys(selectObj)[0];
-    operator = Object.keys(selectObj[selectField])[0];
-    comparator = selectObj[selectField][operator];
-    selectString += 'WHERE ' + selectField + ' ' + operator + ' ' + comparator;
+  if (!_emptyObject(selectObj)) {
+
+  var selectString = 'WHERE ';
+
+
+    //for (var key in selectObj) {
+    //  switch(key) {
+    //    case ('$and'):
+    //      for (var i=0; i<selectObj[key].length; i++) {
+    //
+    //      }
+    //      selectString += whereStatement(selectObj[key]) + ' ';
+    //      break;
+    //    case ('$or'):
+    //      return x;
+    //      break;
+    //    case ('$not'):
+    //      return y;
+    //      break;
+    //    case ('$nor'):
+    //      return z;
+    //      break;
+    //    default:
+    //      whereStatement(selectObj[key]);
+    //  }
+    //}
+
+
+
+
   }
+  // logical operators
+  // if key is $or or $and $not $nor
+  // if key is string
+
+  //switch (selectObj[key]) {
+  //  case '$or': return x;
+  //  case '$and':
+  //}
+
+
 
   var options = {
     $gb: 'GROUP BY ',
@@ -371,6 +405,48 @@ Postgres.select = function(tableObj, selectObj, optionsObj, joinObj) {
     });
   });
 };
+
+// commonly called with the document id or with a 'selector' which is an object with search values
+// should return null if no items found
+// db.bios.findOne({ $or: [ { 'name.first': /^G/ }, { birth: { $lt: new Date('01/01/1945') } } ] }); -->
+// db.bios.findOne( {}, { name: 1, contribs: 1 } ); --> first item in bios collection and returns name and contribs
+// content filters + column filters
+// table/column + content + options + join
+//Postgres.select({ testScores: 'student' }, { score: { $gt: '70' } }, { $gb: 'classTime' }, { $loj: 'class',  });
+//Postgres.findOne = function(query, projection) {
+//
+//  var inputString = '';
+//
+//  pg.connect(conString, function(err, client, done) {
+//    console.log(err);
+//    client.query(inputString, function(error, results) {
+//      if (error) {
+//        console.log("error in findOne " + table, error);
+//      } else {
+//        console.log("results in findOne " + table, results.rows);
+//      }
+//      done();
+//    });
+//  });
+//};
+//
+//Postgres.find = function(query, projection) {
+//
+//  var inputString = '';
+//
+//  pg.connect(conString, function(err, client, done) {
+//    console.log(err);
+//    client.query(inputString, function(error, results) {
+//      if (error) {
+//        console.log("error in findOne " + table, error);
+//      } else {
+//        console.log("results in findOne " + table, results.rows);
+//      }
+//      done();
+//    });
+//  });
+//};
+
 
 /**
  * TODO: OR to selectObj
