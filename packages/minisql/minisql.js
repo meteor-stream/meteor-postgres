@@ -46,7 +46,9 @@ db.select = function(name, object) {
   return alasql(initString);
 };
 
-db.insert = function(object, oject1, object2){
-  var insertText = "insert into tasks values (" + msg.tableId + ", " + msg.text + ", " + msg.createdAt + ");";
-  alasql(insertText)
+db.insert = function(object){
+  console.log('fire');
+  var insertText = "insert into tasks values (" + 86 + ", " + object + ");";
+  alasql(insertText);
+  Postgres.insert('tasks', {id: 86, text:text});
 };

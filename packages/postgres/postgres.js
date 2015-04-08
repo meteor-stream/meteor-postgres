@@ -317,7 +317,7 @@ Postgres.insert = function(table, insertObj) {
 // Postgres.select({ testScores: 'student' }, { score: { $gt: '70' } }, { $gb: 'classTime' }, { $roj: 'class' }); --> ids from both tables used for join
 // SQL: SELECT fields FROM table1 JOIN table2 ON table1.id = table2.id WHERE ... --when they are connected via foreign key in first table
 // Postgres.select({ testScores: 'student' }, { score: { $gt: '70' } }, { $gb: 'classTime' }, { $loj: 'class',  }); // $loj, $lij
-Postgres.select = function(tableObj, selectObj, optionsObj, joinObj) {
+Postgres.select = function(tableObj, callback, selectObj, optionsObj, joinObj) {
   // SQL: 'SELECT fields FROM table WHERE field operator comparator AND (more WHERE) GROUP BY field / LIMIT number / OFFSET number;'
 
   function _emptyObject(obj) {
@@ -437,6 +437,7 @@ Postgres.select = function(tableObj, selectObj, optionsObj, joinObj) {
       } else {
         console.log("results in select " + table, results.rows);
       }
+      callback(results.rows);
       done();
     });
   });
