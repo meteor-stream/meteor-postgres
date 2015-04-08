@@ -43,7 +43,7 @@ if (Meteor.isClient) {
       // This function is called when the new task form is submitted
       var text = event.target.text.value;
 
-      Meteor.add(text);
+      Meteor.call('add', text);
 
       // Clear form
       event.target.text.value = "";
