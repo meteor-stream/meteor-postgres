@@ -5,7 +5,10 @@ Meteor.methods({
     Template.body.tasks = alasql('select * from tasks');
   },
   add: function(text){
-    Postgres.insert('tasks', {id: 49, text:text});
+    Postgres.insert('tasks', {id: 86, text:text});
+  },
+  populate: function(){
+    Postgres.select('tasks')
   }
 });
 
@@ -17,24 +20,24 @@ if (Meteor.isClient) {
   //Template.body.helpers({
   //  tasks: tasks.update()
   //});
-  var newTable = {
-    id: ['int', 'not null'],
-    username: ['varchar (100)', 'not null'],
-    password: ['varchar (100)', 'not null'],
-    name: ['varchar (255)', 'not null']
-  };
+  //var newTable = {
+  //  id: ['int', 'not null'],
+  //  username: ['varchar (100)', 'not null'],
+  //  password: ['varchar (100)', 'not null'],
+  //  name: ['varchar (255)', 'not null']
+  //};
 
   var taskTable = {
     id: ['int', 'not null'],
     text: ['varchar (255)', 'not null']
   };
 
-  var a = db.createTable('users', newTable);
+  //var a = db.createTable('users', newTable);
   var b = db.createTable('tasks', taskTable);
 
   Template.body.helpers({
     tasks: function () {
-      return tasks.select('tasks', {});;
+      return tasks.select('tasks', {});
     }
   });
 
@@ -42,8 +45,8 @@ if (Meteor.isClient) {
     "submit .new-task": function (event) {
       // This function is called when the new task form is submitted
       var text = event.target.text.value;
-
-      Meteor.call('add', text);
+      console.log('inside event');
+      Meteor.methods.call('add', text);
 
       // Clear form
       event.target.text.value = "";
