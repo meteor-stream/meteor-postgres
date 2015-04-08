@@ -13,12 +13,12 @@ Tinytest.add("Postgres - basics", function (test) {
 
     // Version 1
     // var taskTable = {
-    //   text: [Postgres._DataTypes['$string'], Postgres._TableConstraints['$notnull']]
+    //   text: ['$string', '$notnull']
     // };
 
     // Varsion 2
     // var taskTable = {
-    //   text: [Postgres._DataTypes['$string'], 'not null']
+    //   text: ['$string', 'not null']
     // };
 
     // Postgres.createTable('tasks', taskTable);
