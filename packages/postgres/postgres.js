@@ -295,20 +295,20 @@ Postgres.insert = function(table, insertObj) {
 
 
 
-/**
- * TODO: Add right joins?, OR to selectObj, should work for all but tableObj to by empty
- * @param {object} tableObj
- * @param {string} tableObj key (table name)
- * @param {string} tableObj value (field name)
- * @param {object} selectObj
- * @param {string} selectObj key (field name)
- * @param {object} selectObj.fieldName key (operator)
- * @param {object} selectObj.fieldName value (comparator)
- * @param {object} optionsObj
- * @param {string} optionsObj key (option)
- * @param {number} optionsObj value (comparator)
- * @param {object} joinObj
- */
+///**
+// * TODO: Add right joins?, OR to selectObj, should work for all but tableObj to by empty
+// * @param {object} tableObj
+// * @param {string} tableObj key (table name)
+// * @param {string} tableObj value (field name)
+// * @param {object} selectObj
+// * @param {string} selectObj key (field name)
+// * @param {object} selectObj.fieldName key (operator)
+// * @param {object} selectObj.fieldName value (comparator)
+// * @param {object} optionsObj
+// * @param {string} optionsObj key (option)
+// * @param {number} optionsObj value (comparator)
+// * @param {object} joinObj
+// */
 // Postgres.select(testScores); --> return ALL
 // Postgres.select(testScores, { score: { $gt: '70' } }); --> return all data for students with score of 70 or above
 // Postgres.select({ testScores: 'student' }, { score: { $gt: '70' } }); --> return student names with score of 70+
@@ -319,6 +319,10 @@ Postgres.insert = function(table, insertObj) {
 // Postgres.select({ testScores: 'student' }, { score: { $gt: '70' } }, { $gb: 'classTime' }, { $loj: 'class',  }); // $loj, $lij
 Postgres.select = function(tableObj, callback, selectObj, optionsObj, joinObj) {
   // SQL: 'SELECT fields FROM table WHERE field operator comparator AND (more WHERE) GROUP BY field / LIMIT number / OFFSET number;'
+
+  callback = callback || function(rows) {
+    console.log('CB: ' + rows);
+  };
 
   function _emptyObject(obj) {
     for (var prop in obj) {
@@ -355,7 +359,7 @@ Postgres.select = function(tableObj, callback, selectObj, optionsObj, joinObj) {
   // contains the field as a key then another obj as the value with the operator and conditional values
   //{ score: { $gt: '70' } } -> { $or: [ { score: { $gt: '70' } }, { pass: true } ] }
   var selectString = '';
-  if (!_emptyObject(selectObj)) {
+  if (selectObj && !_emptyObject(selectObj)) {
 
   var selectString = 'WHERE ';
 
@@ -405,7 +409,7 @@ Postgres.select = function(tableObj, callback, selectObj, optionsObj, joinObj) {
   // optionsObj
   // object that can contain keys from SelectOptions and values of strings or integers or floats
   var optionString = '';
-  if (Object.keys(optionsObj).length === 0) {
+  if (optionsObj && Object.keys(optionsObj).length === 0) {
     for (var key in optionsObj) {
       optionString += ' ' + options[key] + ' ' + optionsObj[key];
     }
@@ -419,7 +423,7 @@ Postgres.select = function(tableObj, callback, selectObj, optionsObj, joinObj) {
   // SELECT * FROM table1 LEFT OUTER JOIN table2 ON table1(foreign_id) = table2(id)
   var joinString = '';
   var joinTable, joinType;
-  if (Object.keys(joinObj).length === 0) {
+  if (joinObj && Object.keys(joinObj).length === 0) {
     joinType = Object.keys(joinObj)[0]; // '$loj'
     joinTable = tableObj[joinType]; // 'class'
     joinString = Postgres._Joins(joinType); // ' LEFT OUTER JOIN class ON students.class_id = class(id);
@@ -428,7 +432,7 @@ Postgres.select = function(tableObj, callback, selectObj, optionsObj, joinObj) {
 
 
   var inputString = 'SELECT ' + returnFields + ' FROM ' + table + joinString + ' ' + selectString + ' ' + optionString + ';';
-  console.log(inputString);
+  console.log(inputString,'xyz');
   pg.connect(conString, function(err, client, done) {
     console.log(err);
     client.query(inputString, function(error, results) {
