@@ -1,7 +1,6 @@
 Meteor.methods({
   dbAdd: function(data, data1){
     var insertText = "INSERT INTO tasks VALUES (" + data + ", " + "'" + data1 + "'" + ")";
-    // console.log(insertText);
     alasql(insertText);
     Template.body.tasks = alasql('select * from tasks');
   },
@@ -14,7 +13,6 @@ tasks = new Subscription('tasks');
 
 
 if (Meteor.isClient) {
-  console.log(Meteor.subscribe(tasks));
   // This code only runs on the client
   //Template.body.helpers({
   //  tasks: tasks.update()
@@ -36,9 +34,7 @@ if (Meteor.isClient) {
 
   Template.body.helpers({
     tasks: function () {
-      var x = tasks;
-      console.log(x);
-      return x;
+      return tasks.fetch();
     }
   });
 

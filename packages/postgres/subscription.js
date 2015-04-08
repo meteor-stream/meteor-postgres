@@ -1,11 +1,14 @@
 var selfConnection;
 var buffer = [];
+var reactiveData = new Tracker.Dependency;
 
 Subscription = function(connection, name /* arguments */){
   var self = this;
 
+  this.data = [];
   this.fetch = function(){
-    return Session.get('data');
+    reactiveData.depend();
+    return this.data;
   }
 
   var subscribeArgs;
@@ -61,7 +64,8 @@ Subscription = function(connection, name /* arguments */){
     var text = msg.text;
     var insertText = "INSERT INTO tasks VALUES (" + tableId + ", " + "'" + text + "'" + ")";
     alasql(insertText);
-    Session.set('data', db.select('tasks', {}));
+    this.data = db.select('tasks', {});
+    reactiveData.changed();
   });
 
 };
