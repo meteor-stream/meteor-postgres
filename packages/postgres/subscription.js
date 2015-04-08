@@ -5,10 +5,9 @@ var reactiveData = new Tracker.Dependency;
 Subscription = function(connection, name /* arguments */){
   var self = this;
 
-  this.data = [];
-  this.fetch = function(){
+  this.select = function(name, args){
     reactiveData.depend();
-    return this.data;
+    return db.select(name, args);
   }
 
   var subscribeArgs;
@@ -62,7 +61,6 @@ Subscription = function(connection, name /* arguments */){
     var text = msg.text;
     var insertText = "INSERT INTO tasks VALUES (" + tableId + ", " + "'" + text + "'" + ")";
     alasql(insertText);
-    this.data = db.select('tasks', {});
     reactiveData.changed();
   });
 

@@ -34,7 +34,7 @@ if (Meteor.isClient) {
 
   Template.body.helpers({
     tasks: function () {
-      return tasks.fetch();
+      return tasks.select('tasks', {});;
     }
   });
 
