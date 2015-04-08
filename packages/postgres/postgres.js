@@ -9,11 +9,11 @@ Postgres = {};
 /* objects: DataTypes, TableConstraints, QueryOperators, SelectOptions, and Joins */
 
 Postgres._DataTypes = {
-  $number: 'int',
-  $string: 'varchar 255',
+  $number: 'integer',
+  $string: 'varchar(255)',
   $json: 'json',
-  $datetime: 'timestamp',
-  $float: 'float'
+  $datetime: 'date',
+  $float: 'decimal'
 };
 
 Postgres._TableConstraints = {
@@ -44,25 +44,25 @@ Postgres._Joins = {
 
 /* methods: createTable, createRelationship, alterTable, dropTable, insert, select, update, delete, autoSelect */
 
-/**
- * TODO: user accounts, role management, authentication
- * @param {string} table
- * @param {object} tableObj
- * @param {string} tableObj key (field name)
- * @param {array} tableObj value (type and constraints)
- * @param {string} relTable
- */
+///**
+// * TODO: user accounts, role management, authentication, IMPORTANT: add id option, default, add 'now'
+// * @param {string} table
+// * @param {object} tableObj
+// * @param {string} tableObj key (field name)
+// * @param {array} tableObj value (type and constraints)
+// * @param {string} [relTable]
+// */
 // Postgres.createTable('students', { name: [$string, $notnull], age: [$number] }, 'major');
 Postgres.createTable = function(table, tableObj, relTable) {
   // SQL: 'CREATE TABLE table (fieldName constraint);'
   // initialize input string parts
-  var inputString = 'CREATE TABLE ' + table + '( id serial primary key not null';
+  var inputString = 'CREATE TABLE ' + table + '(id serial primary key not null';
   // iterate through array arguments to populate input string parts
   for (var key in tableObj) {
     inputString += ', ' + key + ' ';
-    inputString += this._DataTypes[tableObj[key][0]] + ' ';
+    inputString += this._DataTypes[tableObj[key][0]];
     for (var i = 1, count = tableObj[key].length - 1; i < count; i++) {
-      inputString += tableObj[key][i] + ' ';
+      inputString += tableObj[key][i];
     }
   }
   // add foreign key
@@ -81,7 +81,7 @@ Postgres.createTable = function(table, tableObj, relTable) {
   "CREATE TRIGGER watched_table_trigger AFTER INSERT ON "+ table +
   " FOR EACH ROW EXECUTE PROCEDURE notify_trigger();";
   // send request to postgresql database
-  console.log(inputString);
+  console.log(inputString, 123890384902839408029381023984);
   pg.connect(conString, function(err, client) {
     console.log(err);
     client.query(inputString, function(error, results) {
