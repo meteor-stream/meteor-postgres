@@ -14,11 +14,11 @@ tasks = new Subscription('tasks');
 
 
 if (Meteor.isClient) {
+  console.log(Meteor.subscribe(tasks));
   // This code only runs on the client
   //Template.body.helpers({
   //  tasks: tasks.update()
   //});
-  Session.set('tasks',[]);
   var newTable = {
     id: ['int', 'not null'],
     username: ['varchar (100)', 'not null'],
@@ -36,10 +36,9 @@ if (Meteor.isClient) {
 
   Template.body.helpers({
     tasks: function () {
-      var x = db;
+      var x = tasks;
       console.log(x);
-      console.log('updating');
-      return Session.get('tasks');
+      return x;
     }
   });
 

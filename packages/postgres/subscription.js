@@ -3,6 +3,11 @@ var buffer = [];
 
 Subscription = function(connection, name /* arguments */){
   var self = this;
+
+  this.fetch = function(){
+    return Session.get('data');
+  }
+
   var subscribeArgs;
 
   if(!(self instanceof Subscription)){
@@ -56,7 +61,7 @@ Subscription = function(connection, name /* arguments */){
     var text = msg.text;
     var insertText = "INSERT INTO tasks VALUES (" + tableId + ", " + "'" + text + "'" + ")";
     alasql(insertText);
-    Session.set('tasks',db.select('tasks', {}));
+    Session.set('data', db.select('tasks', {}));
   });
 
 };
