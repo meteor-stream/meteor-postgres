@@ -2,7 +2,12 @@
  * Created by ppp on 4/3/2015.
  */
 //this file will generate the minisql on the client side necessary to match the postgres database
-db = {};
+db = {
+  data: [],
+  fetch: function(){
+    return data;
+  }
+};
 /**
  * TODO: create table
  * @param name

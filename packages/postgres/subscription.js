@@ -51,6 +51,14 @@ Subscription = function(connection, name /* arguments */){
     registerStore(connection, name);
   }
 
+  this.addEventListener('added', function(index, msg){
+    var tableId = msg.tableId;
+    var text = msg.text;
+    var insertText = "INSERT INTO tasks VALUES (" + tableId + ", " + "'" + text + "'" + ")";
+    alasql(insertText);
+    Session.set('tasks',db.select('tasks', {}));
+  });
+
 };
 
 var registerStore = function(connection, name){

@@ -11,20 +11,7 @@ Meteor.methods({
 });
 
 tasks = new Subscription('tasks');
-tasks.addEventListener('added', function(index, msg){
-  // console.log("fired");
-  // console.log("index", index);
-  // console.log("msg", msg);
-  // console.log('tableId', msg.tableId);
-  // console.log('text', msg.text);
-  var tableId = msg.tableId;
-  var text = msg.text;
-  //Meteor.apply('dbAdd', [tableId, text]);
-  var insertText = "INSERT INTO tasks VALUES (" + tableId + ", " + "'" + text + "'" + ")";
-  // console.log(insertText);
-  alasql(insertText);
-  Session.set('tasks',db.select('tasks', {}));
-});
+
 
 if (Meteor.isClient) {
   // This code only runs on the client
@@ -49,6 +36,8 @@ if (Meteor.isClient) {
 
   Template.body.helpers({
     tasks: function () {
+      var x = db;
+      console.log(x);
       console.log('updating');
       return Session.get('tasks');
     }
