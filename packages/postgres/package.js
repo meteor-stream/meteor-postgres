@@ -34,8 +34,8 @@ Package.onUse(function(api) {
 
 Package.onTest(function (api) {
   api.versionsFrom('1.1');
+  api.use(['spacebars', 'tinytest', 'test-helpers']);
   api.addFiles('postgres.js', 'server');
   api.export('Postgres', 'server');
-  api.use('tinytest');
   api.addFiles('postgres_tests.js', 'server');
 });

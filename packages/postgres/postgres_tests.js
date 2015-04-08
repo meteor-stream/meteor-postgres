@@ -3,3 +3,4 @@ Tinytest.add("Postgres - basics", function (test) {
   Postgres.dropTable("test");
   // then create table
 })
+
