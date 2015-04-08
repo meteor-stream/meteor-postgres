@@ -1,8 +1,16 @@
 var selfConnection;
 var buffer = [];
+var reactiveData = new Tracker.Dependency;
 
 Subscription = function(connection, name /* arguments */){
   var self = this;
+
+  this.data = [];
+  this.fetch = function(){
+    reactiveData.depend();
+    return this.data;
+  }
+
   var subscribeArgs;
 
   if(!(self instanceof Subscription)){
@@ -17,7 +25,6 @@ Subscription = function(connection, name /* arguments */){
     name = connection;
     if(Meteor.isClient){
       connection = Meteor.connection;
-      //console.log(connection,456);
     }else if(Meteor.isServer){
       if(!selfConnection){
         selfConnection = DDP.connect(Meteor.absoluteUrl());
@@ -30,7 +37,6 @@ Subscription = function(connection, name /* arguments */){
   }
 
   Tracker.Dependency.call(self);
-  // Y U No give me subscriptionId, Meteor?!
   var subsBefore = _.keys(connection._subscriptions);
   _.extend(self, connection.subscribe.apply(connection, subscribeArgs));
   var subsNew = _.difference(_.keys(connection._subscriptions), subsBefore);
@@ -50,6 +56,15 @@ Subscription = function(connection, name /* arguments */){
     }).length === 1){
     registerStore(connection, name);
   }
+
+  this.addEventListener('added', function(index, msg){
+    var tableId = msg.tableId;
+    var text = msg.text;
+    var insertText = "INSERT INTO tasks VALUES (" + tableId + ", " + "'" + text + "'" + ")";
+    alasql(insertText);
+    this.data = db.select('tasks', {});
+    reactiveData.changed();
+  });
 
 };
 
