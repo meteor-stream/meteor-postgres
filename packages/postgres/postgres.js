@@ -372,17 +372,24 @@ Postgres.select = function(tableObj, selectObj, optionsObj, joinObj, callback) {
 
   // optionsObj
   // object that can contain keys from SelectOptions and values of strings or integers or floats
-  var optionString = '';
+  //{ name: {$lm: 1}}
+  var optionsString = '';
+  console.log(optionsObj);
   if (optionsObj && Object.keys(optionsObj).length === 0) {
-    for (var key in optionsObj) {
-      optionString += ' ' + options[key] + ' ' + optionsObj[key];
-    }
+    var limit, group, offset, optionField;
+    optionField = Object.keys(optionsObj)[0];
+    console.log(optionField, 'abc');
+    group = optionsObj[optionField]['$gb'] ? ('GROUP BY ' + optionsObj[optionField]['$gb'] + ' ') : '';
+    offset = optionsObj[optionField]['$off'] ? ('OFFSET ' + optionsObj[optionField]['$off'] + ' ') : '';
+    limit = optionsObj[optionField]['$lm'] ? ('LIMIT ' + optionsObj[optionField]['$lm'] + ' ') : '' ;
+
+    optionsString += group + offset + limit;
+    console.log(optionsString);
+    //for (var key in optionsObj) {
+    //  optionString += ' ' + options[key] + ' ' + optionsObj[key];
+    //}
   }
-  var limit, group, offset;
-  //+ group + offset + limit;
-  //group = obj[selectField]['$gb'] ? ('GROUP BY ' + obj[selectField]['$gb'] + ' ') : '';
-  //offset = obj[selectField]['$off'] ? ('OFFSET ' + obj[selectField]['$off'] + ' ') : '';
-  //limit = obj[selectField]['$lm'] ? ('LIMIT ' + obj[selectField]['$lm'] + ' ') : '' ;
+
 
 
 
@@ -403,21 +410,21 @@ Postgres.select = function(tableObj, selectObj, optionsObj, joinObj, callback) {
   }
 
 
-  var inputString = 'SELECT ' + returnFields + ' FROM ' + table + joinString + selectString + optionString + ';';
+  var inputString = 'SELECT ' + returnFields + ' FROM ' + table + joinString + selectString + optionsString + ';';
   console.log(inputString,'xyz');
-  pg.connect(conString, function(err, client, done) {
-    console.log(err);
-    client.query(inputString, function(error, results) {
-      if (error) {
-        console.log("error in select " + table, error);
-      } else {
-        console.log("results in select " + table, results.rows);
-      }
-      return results.rows[0];
-      //callback(results.rows);
-      done();
-    });
-  });
+  //pg.connect(conString, function(err, client, done) {
+  //  console.log(err);
+  //  client.query(inputString, function(error, results) {
+  //    if (error) {
+  //      console.log("error in select " + table, error);
+  //    } else {
+  //      console.log("results in select " + table, results.rows);
+  //    }
+  //    return results.rows[0];
+  //    //callback(results.rows);
+  //    done();
+  //  });
+  //});
 };
 
 // commonly called with the document id or with a 'selector' which is an object with search values
