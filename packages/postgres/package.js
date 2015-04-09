@@ -38,7 +38,7 @@ Package.onTest(function (api) {
   api.addFiles('postgres.js', 'server');
   api.export('Postgres', 'server');
   api.addFiles('postgres_tests.js', 'server');
-  api.addFiles('subscription.js', ['client', 'server']);
-  api.export('Subscription');
-  api.addFiles('subscription_tests.js', 'server');
+  // api.addFiles('subscription.js', ['client', 'server']);
+  // api.export('Subscription');
+  // api.addFiles('subscription_tests.js', 'server');
 });
