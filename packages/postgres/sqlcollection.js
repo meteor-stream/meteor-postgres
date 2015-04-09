@@ -25,12 +25,12 @@ SQLCollection = function(connection, name /* arguments */){
 
   this.update = function(dataObj){
     minisql.update(tableName, dataObj);
-    Meteor.update(tableName, dataObj, selectObject);
+    Meteor.call('update', tableName, dataObj, selectObject);
   };
 
   this.remove = function(dataObj){
     minisql.remove(tableName, dataObj);
-    Meteor.remove(tableName, dataObj);
+    Meteor.call('remove',tableName, dataObj);
   };
 
   var subscribeArgs;
