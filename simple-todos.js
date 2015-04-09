@@ -1,18 +1,20 @@
-tasks = new Subscription('tasks');
+tasks = new SQLCollection('tasks');
 
 
 if (Meteor.isClient) {
 
+  // TODO: Move the table definition into SQLCollection
+  // To mirror the Mongo interface we should make it so taht 1 collection is 1 table
   var taskTable = {
     id: ['int', 'not null'],
     text: ['varchar (255)', 'not null']
   };
+  tasks.createTable('tasks', taskTable);
 
-  var b = db.createTable('tasks', taskTable);
 
   Template.body.helpers({
     tasks: function () {
-      return tasks.select('tasks', {});
+      return tasks.select({});
     }
   });
 
@@ -20,7 +22,9 @@ if (Meteor.isClient) {
     "submit .new-task": function (event) {
       // This function is called when the new task form is submitted
       var text = event.target.text.value;
-      Meteor.call('add','tasks', text);
+      tasks.insert({
+        text:text
+      })
 
       // Clear form
       event.target.text.value = "";

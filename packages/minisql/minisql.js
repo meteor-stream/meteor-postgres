@@ -2,7 +2,7 @@
  * Created by ppp on 4/3/2015.
  */
 //this file will generate the minisql on the client side necessary to match the postgres database
-db = {};
+minisql = {};
 /**
  * TODO: create table
  * @param name
@@ -10,7 +10,7 @@ db = {};
  * @param {dataType} object.field[0]
  * @param {constraint} object.field[1]
  */
-db.createTable = function(name, object) {
+minisql.createTable = function(name, object) {
   var initString = 'CREATE TABLE ' + name + '( ';
   for (var key in object) {
     if (key === 'id'){
@@ -34,7 +34,7 @@ db.createTable = function(name, object) {
  * @param {limit}  object.limit
  * @param {offset}  object.offset
  */
-db.select = function(name, object) {
+minisql.select = function(name, object) {
   // 'SELECT data FROM table WHERE parameters GROUP BY LIMIT OFFSET'
   // data parameters options (name directly passed in)
   var columnNames = object.columnNames || '*';
@@ -45,7 +45,7 @@ db.select = function(name, object) {
   return alasql(initString);
 };
 
-db.insert = function(text){
+minisql.insert = function(text){
   // MAKE THIS INSERT INTO ALASQL
   console.log('I WILL INSERT INTO ALASQL');
 };
