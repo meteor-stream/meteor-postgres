@@ -106,7 +106,7 @@ Postgres.createTable = function(table, tableObj, relTable) {
   }
 
   // add notify functionality and close input string
-  inputString += "created_at TIMESTAMPTZ default now()); " +
+  inputString += " created_at TIMESTAMPTZ default now()); " +
   "CREATE FUNCTION notify_trigger() RETURNS trigger AS $$ "+
   "DECLARE " +
   "BEGIN " +
@@ -317,7 +317,7 @@ Postgres.insert = function(table, insertObj) {
 // Postgres.select({ testScores: 'student' }, { score: { $gt: '70' } }, { $gb: 'classTime' }, { $roj: 'class' }); --> ids from both tables used for join
 // SQL: SELECT fields FROM table1 JOIN table2 ON table1.id = table2.id WHERE ... --when they are connected via foreign key in first table
 // Postgres.select({ testScores: 'student' }, { score: { $gt: '70' } }, { $gb: 'classTime' }, { $loj: 'class',  }); // $loj, $lij
-Postgres.select = function(tableObj, callback, selectObj, optionsObj, joinObj) {
+Postgres.select = function(tableObj, selectObj, optionsObj, joinObj, callback) {
   // SQL: 'SELECT fields FROM table WHERE field operator comparator AND (more WHERE) GROUP BY field / LIMIT number / OFFSET number;'
 
   callback = callback || function(rows) {
