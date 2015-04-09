@@ -71,6 +71,7 @@ if (Meteor.isServer) {
   //});
   Postgres.select('students');
   Postgres.select({students: ['name', 'age']});
+  Postgres.select({students: ['name', 'age']}, {$lm: 1});
   var cursor = Postgres.getCursor();
 
   Meteor.publish('tasks', function () {
