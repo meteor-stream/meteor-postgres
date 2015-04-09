@@ -8,7 +8,7 @@ SQLCollection = function(connection, name /* arguments */){
 
   this.createTable = function(tableName, tableDefinition){
     // TODO: MAKE SURE THIS HANDLES TABLES THAT ALREADY EXIST (mini sql doesn't perssist data so shouldn't be an issue)
-    minisql.createTable('tasks', tableDefinition);
+    minisql.createTable(tableName, tableDefinition);
   };
 
   this.select = function(args){
@@ -17,7 +17,9 @@ SQLCollection = function(connection, name /* arguments */){
   };
 
   this.insert = function(dataObj){
-    //minisql.insert(tableName, dataObj);
+    console.log(tableName);
+    console.log(dataObj);
+    minisql.insert(tableName, dataObj);
     Meteor.call('add', tableName, dataObj);
   };
 
@@ -100,6 +102,9 @@ SQLCollection = function(connection, name /* arguments */){
       var tableId = msg.tableId;
       var text = msg.text;
       var insertText = "INSERT INTO tasks VALUES (" + tableId + ", " + "'" + text + "'" + ")";
+      var deleteText = "DELETE FROM tasks WHERE text = " + msg.text + ";";
+      console.log(deleteText);
+      alasql("DELETE FROM tasks WHERE text = ?", [msg.text]);
       alasql(insertText);
       reactiveData.changed();
     });
