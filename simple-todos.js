@@ -64,9 +64,10 @@ if (Meteor.isServer) {
   //  class: ['$string', {$default: '2015'}],
   //  _id: ['$seq', '$primary', '$notnull']
   //});
-  Postgres.select('students');
-  Postgres.select({students: ['name', 'age']});
-  //Postgres.select({students: ['name', 'age']},{$lm: 1});
+  //Postgres.select('students');
+  //Postgres.select({students: ['name', 'age']});
+  //Postgres.select({students: ['name', 'age']}, {age: {$gt: 18}});
+  //Postgres.select({students: ['name', 'age']},{ name: {$lm: 1}});
   var cursor = Postgres.getCursor();
 
   Meteor.publish('tasks', function () {
