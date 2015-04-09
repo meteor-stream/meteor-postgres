@@ -5,7 +5,8 @@ Meteor.methods({
     Template.body.tasks = alasql('select * from tasks');
   },
   add: function(text){
-    db.insert('tasks', text);
+    console.log("add", text);
+    db.insert(text);
   }
   //populate: function(){
   //  var newValues = Postgres.select('tasks');
