@@ -69,6 +69,7 @@ if (Meteor.isServer) {
   //  class: ['$string', {$default: '2015'}],
   //  _id: ['$seq', '$primary', '$notnull']
   //});
+  Postgres.select('students');
   Postgres.select({students: ['name', 'age']});
   var cursor = Postgres.getCursor();
 
