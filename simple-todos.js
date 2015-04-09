@@ -72,7 +72,10 @@ if (Meteor.isServer) {
   //  class: ['$string', {$default: '2015'}],
   //  _id: ['$seq', '$primary', '$notnull']
   //});
+<<<<<<< HEAD
   //KATE TESTING
+=======
+>>>>>>> 09ae8e03401ff59ef3263624fef33ab3ee64b972
   //Postgres.select('students');
   //Postgres.select({students: ['name', 'age']});
   //Postgres.select({students: ['name', 'age']}, {age: {$gt: 18}});
