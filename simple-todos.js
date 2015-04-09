@@ -67,20 +67,20 @@ if (Meteor.isClient) {
 }
 
 if (Meteor.isServer) {
+  // KATE TESTS //
   //Postgres.createTable('students', {
   //  name: ['$string', '$notnull'],
   //  age: ['$number'],
   //  class: ['$string', {$default: '2015'}],
   //  _id: ['$seq', '$primary', '$notnull']
   //});
-  Postgres.select('students');
-  Postgres.select({students: ['name', 'age']});
-  Postgres.select({students: ['name', 'age']}, {age: {$gt: 18}});
-  Postgres.select({students: ['name', 'age']},{age: {$gt: 18}},{ name: {$lm: 1}});
+  //Postgres.select('students');
+  //Postgres.select({students: ['name', 'age']});
+  //Postgres.select({students: ['name', 'age']}, {age: {$gt: 18}});
+  //Postgres.select({students: ['name', 'age']},{age: {$gt: 18}},{ name: {$lm: 1}});
+  var cursor = Postgres.getCursor();
 
-  //var cursor = Postgres.getCursor();
-  //
-  //Meteor.publish('tasks', function () {
-  //  return cursor;
-  //});
+  Meteor.publish('tasks', function () {
+    return cursor;
+  });
 }

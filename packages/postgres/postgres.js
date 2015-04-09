@@ -86,7 +86,6 @@ Postgres.createTable = function(table, tableObj, relTable) {
           subKey = Object.keys(item);
           valOperator = this._TableConstraints[subKey];
           inputString += ' ' + valOperator + item[subKey];
-          console.log(valOperator);
         } else {
           inputString += ' ' + this._TableConstraints[item];
         }
@@ -94,7 +93,6 @@ Postgres.createTable = function(table, tableObj, relTable) {
     }
     inputString += ', ';
   }
-  console.log(1234, inputString);
   // check to see if id provided
   if (inputString.indexOf('_id') === -1) {
     inputString += '_id serial primary key not null,';
@@ -117,14 +115,13 @@ Postgres.createTable = function(table, tableObj, relTable) {
   "CREATE TRIGGER watched_table_trigger AFTER INSERT ON "+ table +
   " FOR EACH ROW EXECUTE PROCEDURE notify_trigger();";
   // send request to postgresql database
-  console.log(inputString, 'xyz');
   pg.connect(conString, function(err, client) {
     console.log(err);
     client.query(inputString, function(error, results) {
       if (error) {
-        console.log("error in create table " + table, error);
+        //console.log("error in create table " + table, error);
       } else {
-        console.log("results in create table " + table, results);
+        //console.log("results in create table " + table, results);
       }
     });
     client.on('notification', function(msg) {
@@ -144,7 +141,7 @@ Postgres.createTable = function(table, tableObj, relTable) {
         if (error) {
           console.log("error in create table " + table, error);
         } else {
-          console.log("results in create table ", results.rows);
+          //console.log("results in create table ", results.rows);
         }
       });
 
@@ -174,7 +171,7 @@ Postgres.createRelationship = function(table1, table2) {
       if (error) {
         console.log("error in create relationship " + table, error);
       } else {
-        console.log("results in create relationship " + table, results);
+        //console.log("results in create relationship " + table, results);
       }
     });
     client.on('notification', function(msg) {
@@ -201,7 +198,7 @@ Postgres.addColumn = function(table, tableObj) {
       if (error) {
         console.log("error in create relationship " + table, error);
       } else {
-        console.log("results in create relationship " + table, results);
+        //console.log("results in create relationship " + table, results);
       }
     });
     client.on('notification', function(msg) {
@@ -220,7 +217,7 @@ Postgres.dropColumn = function(table, column) {
       if (error) {
         console.log("error in create relationship " + table, error);
       } else {
-        console.log("results in create relationship " + table, results);
+        //console.log("results in create relationship " + table, results);
       }
     });
     client.on('notification', function(msg) {
@@ -243,7 +240,7 @@ Postgres.dropTable = function(table) {
       if (error) {
         console.log("error in drop " + table, error);
       } else {
-        console.log("results in drop " + table, results);
+        //console.log("results in drop " + table, results);
       }
       done();
     });
@@ -260,8 +257,6 @@ Postgres.dropTable = function(table) {
 Postgres.insert = function(table, insertObj) {
   // SQL: 'INSERT INTO table (insertFields) VALUES (insertValues);'
   // initialize input string parts
-  console.log('tablestable', table);
-  console.log('insertinside', insertObj);
   var inputString = 'INSERT INTO ' + table + ' (';
   var valueString = ') VALUES (';
   var keys = Object.keys(insertObj);
@@ -274,18 +269,15 @@ Postgres.insert = function(table, insertObj) {
   }
   // combine parts and close input string
   inputString += keys[keys.length-1] + valueString + '$' + keys.length + ');';
-  console.log(inputString);
   insertArray.push(insertObj[keys[keys.length-1]]);
   // send request to postgresql database
-  console.log(inputString);
-  console.log(insertArray);
   pg.connect(conString, function(err, client, done) {
     console.log(err);
     client.query(inputString, insertArray, function(error, results) {
       if (error) {
         console.log("error in insert " + table, error);
       } else {
-        console.log("results in insert " + table, results);
+        //console.log("results in insert " + table, results);
       }
       done();
     });
@@ -300,7 +292,7 @@ Postgres._SelectAddons = {
 
 
 ///**
-// * TODO: Add right joins?, OR to selectObj, should work for all but tableObj to by empty
+// * TODO: JOINS, LOGICAL OPERATORS AND / OR, REGEX
 // * @param {object} tableObj
 // * @param {string} tableObj key (table name)
 // * @param {array} tableObj value (field names)
@@ -313,18 +305,8 @@ Postgres._SelectAddons = {
 // * @param {number} optionsObj value (comparator)
 // * @param {object} joinObj
 // */
-// Postgres.select(testScores); --> return ALL
-// Postgres.select(testScores, { score: { $gt: '70' } }); --> return all data for students with score of 70 or above
-// Postgres.select({ testScores: 'student' }, { score: { $gt: '70' } }); --> return student names with score of 70+
-// Postgres.select({ testScores: 'student' }, { score: { $gt: '70' } }, { $gb: 'classTime' }); --> return student names with score of 70+ grouped by classTime
-// SQL: SELECT fields FROM table1 JOIN table2 ON table1.id = table2.id WHERE ... --when they are connected via helper table
-// Postgres.select({ testScores: 'student' }, { score: { $gt: '70' } }, { $gb: 'classTime' }, { $roj: 'class' }); --> ids from both tables used for join
-// SQL: SELECT fields FROM table1 JOIN table2 ON table1.id = table2.id WHERE ... --when they are connected via foreign key in first table
-// Postgres.select({ testScores: 'student' }, { score: { $gt: '70' } }, { $gb: 'classTime' }, { $loj: 'class',  }); // $loj, $lij
 Postgres.select = function(tableObj, selectObj, optionsObj, joinObj, callback) {
   // SQL: 'SELECT fields FROM table WHERE field operator comparator AND (more WHERE) GROUP BY field / LIMIT number / OFFSET number;'
-
-  console.log(callback);
 
   callback = callback || function(rows) {
     console.log('CB: ' + rows);
@@ -374,25 +356,14 @@ Postgres.select = function(tableObj, selectObj, optionsObj, joinObj, callback) {
   // object that can contain keys from SelectOptions and values of strings or integers or floats
   //{ name: {$lm: 1}}
   var optionsString = '';
-  console.log(optionsObj);
-  if (optionsObj && Object.keys(optionsObj).length === 0) {
+  if (optionsObj && !_emptyObject(optionsObj)) {
     var limit, group, offset, optionField;
     optionField = Object.keys(optionsObj)[0];
-    console.log(optionField, 'abc');
-    group = optionsObj[optionField]['$gb'] ? ('GROUP BY ' + optionsObj[optionField]['$gb'] + ' ') : '';
-    offset = optionsObj[optionField]['$off'] ? ('OFFSET ' + optionsObj[optionField]['$off'] + ' ') : '';
-    limit = optionsObj[optionField]['$lm'] ? ('LIMIT ' + optionsObj[optionField]['$lm'] + ' ') : '' ;
-
+    group = optionsObj[optionField]['$gb'] ? (' GROUP BY ' + optionsObj[optionField]['$gb']) : '';
+    offset = optionsObj[optionField]['$off'] ? (' OFFSET ' + optionsObj[optionField]['$off']) : '';
+    limit = optionsObj[optionField]['$lm'] ? (' LIMIT ' + optionsObj[optionField]['$lm']) : '' ;
     optionsString += group + offset + limit;
-    console.log(optionsString);
-    //for (var key in optionsObj) {
-    //  optionString += ' ' + options[key] + ' ' + optionsObj[key];
-    //}
   }
-
-
-
-
 
   // joinObj
   // object contains keys from join and values of table names
@@ -409,65 +380,22 @@ Postgres.select = function(tableObj, selectObj, optionsObj, joinObj, callback) {
     joinString += joinTable + ' ON '+ table + '.' + joinTable + '_id = ' + joinTable + '(id)' + ' ';
   }
 
-
   var inputString = 'SELECT ' + returnFields + ' FROM ' + table + joinString + selectString + optionsString + ';';
   console.log(inputString,'xyz');
-  //pg.connect(conString, function(err, client, done) {
-  //  console.log(err);
-  //  client.query(inputString, function(error, results) {
-  //    if (error) {
-  //      console.log("error in select " + table, error);
-  //    } else {
-  //      console.log("results in select " + table, results.rows);
-  //    }
-  //    return results.rows[0];
-  //    //callback(results.rows);
-  //    done();
-  //  });
-  //});
+  pg.connect(conString, function(err, client, done) {
+    console.log(err);
+    client.query(inputString, function(error, results) {
+      if (error) {
+        console.log("error in select " + table, error);
+      } else {
+        //console.log("results in select " + table, results.rows);
+      }
+      return results.rows[0];
+      //callback(results.rows);
+      done();
+    });
+  });
 };
-
-// commonly called with the document id or with a 'selector' which is an object with search values
-// should return null if no items found
-// db.bios.findOne({ $or: [ { 'name.first': /^G/ }, { birth: { $lt: new Date('01/01/1945') } } ] }); -->
-// db.bios.findOne( {}, { name: 1, contribs: 1 } ); --> first item in bios collection and returns name and contribs
-// content filters + column filters
-// table/column + content + options + join
-//Postgres.select({ testScores: 'student' }, { score: { $gt: '70' } }, { $gb: 'classTime' }, { $loj: 'class',  });
-//Postgres.findOne = function(query, projection) {
-//
-//  var inputString = '';
-//
-//  pg.connect(conString, function(err, client, done) {
-//    console.log(err);
-//    client.query(inputString, function(error, results) {
-//      if (error) {
-//        console.log("error in findOne " + table, error);
-//      } else {
-//        console.log("results in findOne " + table, results.rows);
-//      }
-//      done();
-//    });
-//  });
-//};
-//
-//Postgres.find = function(query, projection) {
-//
-//  var inputString = '';
-//
-//  pg.connect(conString, function(err, client, done) {
-//    console.log(err);
-//    client.query(inputString, function(error, results) {
-//      if (error) {
-//        console.log("error in findOne " + table, error);
-//      } else {
-//        console.log("results in findOne " + table, results.rows);
-//      }
-//      done();
-//    });
-//  });
-//};
-
 
 /**
  * TODO: OR to selectObj
@@ -509,14 +437,13 @@ Postgres.update = function(tableObj, updateObj, selectObj) {
   }
 
   var inputString = 'UPDATE ' + table + ' SET ' + updateString + ' ' + selectString + ';';
-  console.log(inputString);
   pg.connect(conString, function(err, client, done) {
     console.log(err);
     client.query(inputString, function(error, results) {
       if (error) {
         console.log("error in update " + table, error);
       } else {
-        console.log("results in update " + table, results.rows);
+        //console.log("results in update " + table, results.rows);
       }
       done();
     });
@@ -549,7 +476,7 @@ Postgres.delete = function (table, selectObj) {
       if (error) {
       console.log("error in delete " + table, error);
       } else {
-        console.log("results in delete " + table, results.rows);
+        //console.log("results in delete " + table, results.rows);
       }
       done();
     });
