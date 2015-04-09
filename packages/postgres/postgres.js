@@ -97,7 +97,7 @@ Postgres.createTable = function(table, tableObj, relTable) {
   console.log(1234, inputString);
   // check to see if id provided
   if (inputString.indexOf('_id') === -1) {
-    inputString += '_id serial primary key not null,';
+    inputString += '_id serial primary key not null';
   }
 
   // add foreign key
@@ -106,7 +106,7 @@ Postgres.createTable = function(table, tableObj, relTable) {
   }
 
   // add notify functionality and close input string
-  inputString += " created_at TIMESTAMP default now()); " +
+  inputString += " created_at TIMESTAMPTZ default now()); " +
   "CREATE FUNCTION notify_trigger() RETURNS trigger AS $$ "+
   "DECLARE " +
   "BEGIN " +
