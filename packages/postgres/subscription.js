@@ -152,6 +152,11 @@ Subscription.prototype.addEventListener = function(eventName, listener){
   });
 };
 
+Subscription.prototype.initialValue = function(eventName, listener){
+  var result = Postgres.select('tasks');
+  return result;
+};
+
 // @param {string} eventName - Remove events of this name, pass without suffix
 //                             to remove all events matching root.
 Subscription.prototype.removeEventListener = function(eventName){

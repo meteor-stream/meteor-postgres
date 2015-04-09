@@ -320,6 +320,8 @@ Postgres.insert = function(table, insertObj) {
 Postgres.select = function(tableObj, selectObj, optionsObj, joinObj, callback) {
   // SQL: 'SELECT fields FROM table WHERE field operator comparator AND (more WHERE) GROUP BY field / LIMIT number / OFFSET number;'
 
+  console.log(callback);
+
   callback = callback || function(rows) {
     console.log('CB: ' + rows);
   };
@@ -444,7 +446,8 @@ Postgres.select = function(tableObj, selectObj, optionsObj, joinObj, callback) {
       } else {
         console.log("results in select " + table, results.rows);
       }
-      callback(results.rows);
+      return results.rows[0];
+      //callback(results.rows);
       done();
     });
   });
