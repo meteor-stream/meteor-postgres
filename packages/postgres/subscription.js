@@ -168,11 +168,6 @@ Subscription.prototype.dispatchEvent = function(eventName /* arguments */){
   var self = this;
   var listenerArgs = Array.prototype.slice.call(arguments, 1);
   var listeners = self._selectEvents(eventName);
-  // console.log("in dispatchEvent");
-  // console.log(eventName, "event name");
-  // console.log(this, "this");
-  // console.log(listeners, "listeners");
-  // console.log(listenerArgs, "listenerArgs");
   // Newest to oldest
   for(var i = listeners.length - 1; i >= 0; i--){
     // Return false to stop further handling
