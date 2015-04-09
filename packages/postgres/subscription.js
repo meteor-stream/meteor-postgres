@@ -48,7 +48,7 @@ Subscription = function(connection, name /* arguments */){
     subscriptionId: self.subscriptionId,
     instance: self
   });
-
+  connection._serverDocuments['a'] = [{"a":1},{"b":2}];
   // If first store for this subscription name, register it!
   if(_.filter(buffer, function(sub){
       return sub.name === name && sub.connection === connection;
@@ -56,19 +56,33 @@ Subscription = function(connection, name /* arguments */){
     registerStore(connection, name);
   }
 
-  this.addEventListener('added', function(index, msg){
-    var tableId = msg.tableId;
-    var text = msg.text;
-    var insertText = "INSERT INTO tasks VALUES (" + tableId + ", " + "'" + text + "'" + ")";
-    alasql(insertText);
-    reactiveData.changed();
-  });
+  if (Meteor.isServer) {
+    Meteor.methods({
+      add: function(table, text){
+        console.log("in add");
+        Postgres.insert(table, {text:text});
+      }
+    });
+  }
 
+
+  if (Meteor.isClient) {
+    this.addEventListener('added', function(index, msg){
+      var tableId = msg.tableId;
+      var text = msg.text;
+      var insertText = "INSERT INTO tasks VALUES (" + tableId + ", " + "'" + text + "'" + ")";
+      alasql(insertText);
+      reactiveData.changed();
+    });
+  }
 };
 
 var registerStore = function(connection, name){
+  console.log(connection);
   connection.registerStore(name, {
-    beginUpdate: function(batchSize, reset){},
+    beginUpdate: function(batchSize, reset){
+      console.log(batchSize, reset, 12345);
+    },
     update: function(msg){
       var idSplit = msg.id.split(':');
       var sub = _.filter(buffer, function(sub){
@@ -85,6 +99,7 @@ var registerStore = function(connection, name){
         sub.dispatchEvent('update', index, msg);
         switch(msg.msg){
           case 'added':
+            console.log('in added');
             sub.splice(index, 0, msg.fields);
             sub.dispatchEvent(msg.msg, index, msg.fields);
             break;
@@ -153,6 +168,7 @@ Subscription.prototype.addEventListener = function(eventName, listener){
 };
 
 Subscription.prototype.initialValue = function(eventName, listener){
+  console.log("in initial");
   var result = Postgres.select('tasks');
   return result;
 };
@@ -160,6 +176,7 @@ Subscription.prototype.initialValue = function(eventName, listener){
 // @param {string} eventName - Remove events of this name, pass without suffix
 //                             to remove all events matching root.
 Subscription.prototype.removeEventListener = function(eventName){
+  console.log("in remove");
   var self = this;
   self._events = self._selectEvents(eventName, true);
 };
@@ -177,6 +194,7 @@ Subscription.prototype.dispatchEvent = function(eventName /* arguments */){
 };
 
 Subscription.prototype.reactive = function(){
+  console.log("in reactive");
   var self = this;
   self.depend();
   return self;

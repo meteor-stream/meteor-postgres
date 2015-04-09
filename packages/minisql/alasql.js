@@ -72,6 +72,7 @@
    */
 
   var alasql = function(sql, params, cb, scope) {
+    console.log("IN ALASQL");
     if (typeof importScripts != 'function' && alasql.webworker) {
       var id = alasql.lastid++;
       alasql.buffer[id] = cb;
@@ -102,7 +103,7 @@
           // to run multiline functions
           sql = sql.toString().slice(14, -3);
         }
-        // Run SQL			
+        // Run SQL
         return alasql.exec(sql, params, cb, scope);
       }
     }
@@ -1680,7 +1681,7 @@
           case 351:
 
             this.$ = new yy.CreateTable({table: $$[$0 - 4]});
-            //yy.extend(this.$,$$[$0-6]); 
+            //yy.extend(this.$,$$[$0-6]);
             yy.extend(this.$, $$[$0 - 5]);
             yy.extend(this.$, $$[$0 - 2]);
 
@@ -12178,7 +12179,7 @@
             };
             fileReader.readAsText(file);
           });
-          // });          
+          // });
         });
       });
 
@@ -12202,11 +12203,11 @@
        reader.readAsText(file);
        });
        });
-       });    
+       });
        */
     } else {
       // if(typeof path == "string") {
-      // } 
+      // }
       if (typeof path == "string") {
         // For browser read from tag
         if ((path.substr(0, 1) == '#') && (typeof document != 'undefined')) {
@@ -12343,9 +12344,9 @@
           cb(false);
         });
       });
-      /*        
+      /*
        function fail(){
-       callback(false);            
+       callback(false);
        }
        try {
        // Cordova
@@ -12432,7 +12433,7 @@
          if(cb) cb();
          };
          //                        console.log("ok, in theory i worked");
-         });          
+         });
          */
         /*
          // Corodva
@@ -12478,7 +12479,7 @@
 //         var data = fs.writeFileSync(path,data);
 //     } else {
 //         var blob = new Blob([data], {type: "text/plain;charset=utf-8"});
-//         saveAs(blob, path);        
+//         saveAs(blob, path);
 //     }
 // };
 
@@ -13125,7 +13126,7 @@
     var ast = alasql.parse(sql); // Create AST
     if (ast.statements.length == 1) {
       return ast.statements[0].compile(databaseid);
-      /*		
+      /*
        if(kind == 'value') {
        return function(params,cb) {
        var res = statementfn(params);
@@ -13173,7 +13174,7 @@
        res = arrayOfArrays(res);
        if(cb) cb(res);
        return res;
-       };				
+       };
        } else if(kind == 'collection') {
        return statementfn;
        } else {
@@ -13204,7 +13205,7 @@
    alasql.query = function (sql, params, cb) {
    var res = this.exec(sql, params);
    if(cb) cb(res);
-   return res;	
+   return res;
    };
 
    alasql.queryArray = function (sql, params, cb) {
@@ -13416,7 +13417,7 @@
 
 // 		statement = this.sqlcache[hh]= ast.compile(self);
 
-// 		// Memory leak prevention 
+// 		// Memory leak prevention
 // 		this.sqlcachesize++;
 // 		if(this.sqlcachesize > alasql.MAXSQLCACHESIZE) {
 // 			this.resetSqlCache();
@@ -13466,7 +13467,7 @@
     return this;
   };
 
-// Main class 
+// Main class
 
 
 // Commit
@@ -13757,7 +13758,7 @@
 //			console.log(A,B);
 // console.log(q);
         q.query.params = query.params;
-//			query.queriesdata[idx] = 
+//			query.queriesdata[idx] =
 
         if (false) {
           queryfn(q.query, query.oldscope, queryfn2, (-idx - 1), query);
@@ -13802,7 +13803,7 @@
 // constructions like this.queriesdata['test'].
 // I can elimite it with source.srcwherefn.bind(this)()
 // but it may be slow.
-// 
+//
       source.queriesdata = query.queriesdata;
     });
     if (slen == 0) result = queryfn3(query);
@@ -13912,7 +13913,7 @@
     }
     ;
 
-    // Remove distinct values	
+    // Remove distinct values
     doDistinct(query);
 
 
@@ -13962,11 +13963,11 @@
     // if(query.explain) {
     // 	if(query.cb) query.cb(query.explaination,query.A, query.B);
     // 	return query.explaination;
-    // } else 
+    // } else
 //console.log(190,query.intofns);
     if (query.intoallfn) {
 //		console.log(161);
-//		var res = query.intoallfn(query.columns,query.cb,query.A, query.B, alasql); 
+//		var res = query.intoallfn(query.columns,query.cb,query.A, query.B, alasql);
       var res = query.intoallfn(query.columns, query.cb, query.alasql);
 //		console.log(1163,res);
 //		if(query.cb) res = query.cb(res,query.A, query.B);
@@ -14063,7 +14064,7 @@
             // Prepare scope for indexation
             scope[source.alias || source.tableid] = dataw;
 
-            // Check if it apply to where function 
+            // Check if it apply to where function
             if (source.srcwherefn(scope, query.params, alasql)) {
               // Create index entry for each address
               var addr = source.onrightfn(scope, query.params, alasql);
@@ -14076,7 +14077,7 @@
             i++;
           }
           if (source.databaseid && alasql.databases[source.databaseid].tables[source.tableid]) {
-            // Save index to original table				
+            // Save index to original table
             alasql.databases[source.databaseid].tables[source.tableid].indices[hash(source.onrightfns + '`' + source.srcwherefns)] = source.ix;
           }
           ;
@@ -14179,7 +14180,7 @@
 
 
 //
-// Join all lines over sources 
+// Join all lines over sources
 //
 
   function doJoin(query, scope, h) {
@@ -14335,13 +14336,13 @@
               scope[nextsource.alias] = dataw;
               doJoin(query, scope, h + 2);
             } else {
-              //dataw._rightjoin = undefined;	
+              //dataw._rightjoin = undefined;
               delete dataw._rightjoin;
             }
             j++;
           }
 //				console.table(nextsource.data);
-//				debugger;	
+//				debugger;
 
         }
         ;
@@ -14355,7 +14356,7 @@
        if(h+1 < query.sources.length) {
        var nextsource = query.sources[h+1];
 
-       if(nextsource.joinmode == "OUTER" || nextsource.joinmode == "RIGHT" 
+       if(nextsource.joinmode == "OUTER" || nextsource.joinmode == "RIGHT"
        || nextsource.joinmode == "ANTI") {
 
 
@@ -14369,7 +14370,7 @@
        //debugger;
        //				var source = query.sources[h];
 
-       //				var tableid = source.alias || source.tableid; 
+       //				var tableid = source.alias || source.tableid;
        //				var data = source.data;
 
        // Reduce data for looping if there is optimization hint
@@ -14399,7 +14400,7 @@
        //						scope[tableid] = {};
        console.log(scope);
        doJoin(query,scope,h+2);
-       }	
+       }
        };
 
        // Additional join for LEFT JOINS
@@ -14669,11 +14670,11 @@
         /*
          query.intofns = 'alasql.into[\''+this.into.funcid+'\'](';
          var ss = ['r','i'];
-         if(this.into.args && this.into.args.length>0 ) 	
+         if(this.into.args && this.into.args.length>0 )
          this.into.args.forEach(function(arg){
          ss.push(arg.toJavaScript());
          });
-         query.intofns += ss.join(',')+')';	
+         query.intofns += ss.join(',')+')';
          */
         var qs = 'alasql.into[\'' + this.into.funcid.toUpperCase() + '\'](';
         if (this.into.args && this.into.args.length > 0) {
@@ -14687,12 +14688,12 @@
           qs += 'null, null,'
         }
         query.intoallfns = qs + 'this.data,columns,cb)';
-//console.log('999');		
+//console.log('999');
 
 
       } else if (this.into instanceof yy.ParamValue) {
 //			console.log(184);
-//			query.intofns = 'params[\''+this.into.param+"\'](r)";	
+//			query.intofns = 'params[\''+this.into.param+"\'](r)";
         query.intofns = "params['" + this.into.param + "'].push(r)";
 
       }
@@ -15206,7 +15207,7 @@
           // } else {
           // 	source.datafn = function(query, params, cb, idx, alasql) {
           // 		return source.subquery(query.params, null, cb, idx);
-          // 	}				
+          // 	}
           // }
           query.aliases[source.alias] = {type: 'subquery'};
         } else if (jn.param) {
@@ -15672,7 +15673,7 @@
 //			console.log(colid,'ok');
         } else {
 //			if(colid.indexOf())
-//			console.log(colid,'bad');	
+//			console.log(colid,'bad');
           var tmpid = 'default';
           if (query.sources.length > 0) tmpid = query.sources[0].alias;
 //			console.log(new yy.Column({columnid:colid}).toJavaScript('p',query.sources[0].alias));
@@ -15755,17 +15756,17 @@
             || col.aggregatorid == 'FIRST'
             || col.aggregatorid == 'LAST'
 //					|| col.aggregatorid == 'AVG'
-//				) { return '\''+col.as+'\':r[\''+col.as+'\'],'; }//f.field.arguments[0].toJavaScript(); 	
+//				) { return '\''+col.as+'\':r[\''+col.as+'\'],'; }//f.field.arguments[0].toJavaScript();
           ) {
             return '\'' + colas + '\':' + colexp + ',';
-          }//f.field.arguments[0].toJavaScript(); 	
+          }//f.field.arguments[0].toJavaScript();
           else if (col.aggregatorid == 'ARRAY') {
             return '\'' + colas + '\':[' + colexp + '],';
           } else if (col.aggregatorid == 'COUNT') {
             if (col.expression.columnid == '*') {
               return '\'' + colas + '\':1,';
             } else {
-//						return '\''+colas+'\':(typeof '+colexp+' != "undefined")?1:0,';  
+//						return '\''+colas+'\':(typeof '+colexp+' != "undefined")?1:0,';
 //					} else {
               return '\'' + colas + '\':(typeof ' + colexp + ' != "undefined")?1:0,';
             }
@@ -15803,13 +15804,13 @@
        //			if(f.constructor.name == 'LiteralValue') return '';
 
 
-       if (col instanceof yy.AggrValue) { 
-       if (col.aggregatorid == 'SUM') { srg.push("'"+col.as+'\':0'); }//f.field.arguments[0].toJavaScript(); 	
+       if (col instanceof yy.AggrValue) {
+       if (col.aggregatorid == 'SUM') { srg.push("'"+col.as+'\':0'); }//f.field.arguments[0].toJavaScript();
        else if(col.aggregatorid == 'COUNT') {srg.push( "'"+col.as+'\':0'); }
        else if(col.aggregatorid == 'MIN') { srg.push( "'"+col.as+'\':Infinity'); }
        else if(col.aggregatorid == 'MAX') { srg.push( "'"+col.as+'\':-Infinity'); }
        //			else if(col.aggregatorid == 'AVG') { srg.push(col.as+':0'); }
-       //				return 'group.'+f.name.value+'=+(+group.'+f.name.value+'||0)+'+f.field.arguments[0].toJavaScript('rec','')+';'; //f.field.arguments[0].toJavaScript(); 	
+       //				return 'group.'+f.name.value+'=+(+group.'+f.name.value+'||0)+'+f.field.arguments[0].toJavaScript('rec','')+';'; //f.field.arguments[0].toJavaScript();
        };
 
        });
@@ -15862,7 +15863,7 @@
           }
           if (col.aggregatorid == 'SUM') {
             return pre + 'g[\'' + colas + '\']+=' + colexp + ';' + post;
-          }//f.field.arguments[0].toJavaScript(); 	
+          }//f.field.arguments[0].toJavaScript();
           else if (col.aggregatorid == 'COUNT') {
 //					console.log(221,col.expression.columnid == '*');
             if (col.expression.columnid == '*') return pre + 'g[\'' + colas + '\']++;' + post;
@@ -15904,11 +15905,11 @@
       //	s += selectFields.map(function(f){
       //			console.log(f);
       //			if(f.constructor.name == 'LiteralValue') return '';
-      //			if (f.field instanceof SQLParser.nodes.FunctionValue 
+      //			if (f.field instanceof SQLParser.nodes.FunctionValue
       //				&& (f.field.name.toUpperCase() == 'SUM' || f.field.name.toUpperCase() == 'COUNT')) {
-      //				return 'group.'+f.name.value+'=+(+group.'+f.name.value+'||0)+'+f.field.arguments[0].toJavaScript('rec','')+';'; //f.field.arguments[0].toJavaScript(); 	
-      //				return 'group.'+f.name.value+'+='+f.field.arguments[0].toJavaScript('rec','')+';'; //f.field.arguments[0].toJavaScript(); 	
-      //				return 'group.'+f.name.value+'+=rec.'+f.name.value+';'; //f.field.arguments[0].toJavaScript(); 	
+      //				return 'group.'+f.name.value+'=+(+group.'+f.name.value+'||0)+'+f.field.arguments[0].toJavaScript('rec','')+';'; //f.field.arguments[0].toJavaScript();
+      //				return 'group.'+f.name.value+'+='+f.field.arguments[0].toJavaScript('rec','')+';'; //f.field.arguments[0].toJavaScript();
+      //				return 'group.'+f.name.value+'+=rec.'+f.name.value+';'; //f.field.arguments[0].toJavaScript();
       //			};
       //			return '';
       //		}).join('');
@@ -15971,7 +15972,7 @@
         query.xcolumns[coldef.columnid] = coldef;
 
       });
-//console.log(999,columns);			
+//console.log(999,columns);
     } else {
       // if column not exists, then copy all
       sp += 'var w=p["' + alias + '"];for(var k in w){r[k]=w[k]};';
@@ -15995,7 +15996,7 @@
     var ss = [];
 
     this.columns.forEach(function(col) {
-//console.log(col);		
+//console.log(col);
       if (col instanceof yy.Column) {
         if (col.columnid == '*') {
           if (col.func) {
@@ -16014,7 +16015,7 @@
               sp += ret.sp;
             }
             // TODO Remove these lines
-            // In case of no information 
+            // In case of no information
             // sp += 'for(var k1 in p){var w=p[k1];'+
             // 			'for(k2 in w) {r[k2]=w[k2]}}'
           }
@@ -16059,7 +16060,7 @@
               query.dirtyColumns = true;
             }
           } else {
-            // This is a subquery? 
+            // This is a subquery?
             // throw new Error('There is now such table \''+col.tableid+'\'');
           }
           ;
@@ -16195,7 +16196,7 @@
 //				s += 'g[\''+col.toString()+'\'];';
 
 //				console.log(col);
-        // var kg = col.toJavaScript('g','')+';';				
+        // var kg = col.toJavaScript('g','')+';';
         // for(var i=0;i<query.removeKeys.length;i++) {
         // 	// THis part should be intellectual
         // 	if(query.removeKeys[i] == colas) {
@@ -16419,7 +16420,7 @@
           res = res.map(function(r) {
             return r.concat(gv[t].nick + '\t' + gv[t].toJavaScript('p', query.sources[0].alias, query.defcols))
           });
-//		 		res = res.map(function(r){return r.concat(gv[t].columnid)}); 	
+//		 		res = res.map(function(r){return r.concat(gv[t].columnid)});
         } else if (gv[t] instanceof yy.FuncValue) {
           query.groupColumns[escapeq(gv[t].toString())] = escapeq(gv[t].toString());
           res = res.map(function(r) {
@@ -16450,13 +16451,13 @@
         ;
 
         // switch(gv[t].t) {
-        // 	case 'plain': 
-        // 		res = res.map(function(r){return r.concat(gv[t].p)}); 
+        // 	case 'plain':
+        // 		res = res.map(function(r){return r.concat(gv[t].p)});
 
-        // 	break; 
-        // 	case 'rollup': res = cartes(res,rollup(gv[t].p)); break; 
-        // 	case 'cube': res = cartes(res,cube(gv[t].p)); break; 
-        // 	case 'groupingsets': res = cartes(res,groupingsets(gv[t].p)); break; 
+        // 	break;
+        // 	case 'rollup': res = cartes(res,rollup(gv[t].p)); break;
+        // 	case 'cube': res = cartes(res,cube(gv[t].p)); break;
+        // 	case 'groupingsets': res = cartes(res,groupingsets(gv[t].p)); break;
         // 	default: res = res.concat(gv[t]);
         // }
       }
@@ -16475,16 +16476,16 @@
     } else {
       query.groupColumns[escapeq(gv.toString())] = escapeq(gv.toString());
       return [escapeq(gv.toString()) + '\t' + gv.toJavaScript('p', query.sources[0].alias, query.defcols)];
-//			throw new Error('Single argument in the group without array');			
+//			throw new Error('Single argument in the group without array');
     }
     ;
 
 
     // switch(gv.t) {
     // 	case 'plain': return gv.p; break;
-    // 	case 'rollup': return rollup(gv.p); break; 
-    // 	case 'cube': return cube(gv.p); break; 
-    // 	case 'groupingsets':  return groupingsets(gv.p); break; 
+    // 	case 'rollup': return rollup(gv.p); break;
+    // 	case 'cube': return cube(gv.p); break;
+    // 	case 'groupingsets':  return groupingsets(gv.p); break;
     // 	default: return [gv];//return decartes(gv.p);
     // }
     // return gv;
@@ -17225,7 +17226,7 @@
 //			if(this.columnid != '') {
         s = context + '[\'' + this.columnid + '\']';
 //			} else {
-//				s = context;				
+//				s = context;
 //			}
       } else {
         if (this.columnid != '_') {
@@ -17279,7 +17280,7 @@
 
     var found = false;
 
-    /*	
+    /*
      for(var i=0;i<query.selectGroup.length;i++){
      if(query.selectGroup[i].nick==colas) {
      colas = colas+':'+i;
@@ -17324,7 +17325,7 @@
 //	s += ')';
 //	if(this.alias) s += ' AS '+this.alias;
 //	return s;
-//	var s = ''; 
+//	var s = '';
 //if(this.as) console.log(499,this.as);
 //	var colas = this.as;
     var colas = this.nick;
@@ -17474,7 +17475,7 @@
     self.order = [];
 
     if (arguments.length == 0) {
-//		self.order.push(new yy.OrderExpression({expression: new yy.Column({columnid:"_"}), direction:'ASC'}));		
+//		self.order.push(new yy.OrderExpression({expression: new yy.Column({columnid:"_"}), direction:'ASC'}));
       args = ["_"];
     } else if (arguments.length > 1) {
       args = Array.prototype.slice.call(arguments);
@@ -17638,14 +17639,14 @@
 // 	return s;
 // };
 
-// 
+//
 // SQL FUNCTIONS COMPILERS
 // Based on SQLite functions
 
 // IMPORTANT: These are compiled functions
 
 //alasql.fn = {}; // Keep for compatibility
-//alasql.userlib = alasql.fn; 
+//alasql.userlib = alasql.fn;
 
   var stdlib = alasql.stdlib = {}
   var stdfn = alasql.stdfn = {}
@@ -17747,7 +17748,7 @@
   };
 
 
-// 
+//
 //
 // SQL and JS DateTime functions
 //
@@ -18220,7 +18221,7 @@
 //		console.log(101,db.engineid);
       return alasql.engines[db.engineid].createTable(this.table.databaseid || databaseid, tableid, this.ifnotexists, cb);
 //		console.log('createtable',res1);
-//		return res1; 
+//		return res1;
     }
 
 //	}
@@ -18306,7 +18307,7 @@
 
 //
 // Date functions
-// 
+//
 // (c) 2014, Andrey Gershun
 //
 
@@ -18363,7 +18364,7 @@
 // stdfn.GETDATE = function(){
 // 	var d = new Date();
 // 	var s = d.getFullYear()+"."+("0"+(d.getMonth()+1)).substr(-2)+"."+("0"+d.getDate()).substr(-2);
-// 	return s;	
+// 	return s;
 // }
 
 
@@ -19044,7 +19045,7 @@
                 q += values[idx].toJavaScript();
               }
 
-              // if(table.xcolumns && table.xcolumns[col.columnid] && 
+              // if(table.xcolumns && table.xcolumns[col.columnid] &&
               //  (table.xcolumns[col.columnid].dbtypeid == "DATE" ||
               // table.xcolumns[col.columnid].dbtypeid == "DATETIME"
               //  )) {
@@ -19068,7 +19069,7 @@
               //			if(rec[fld.fldid] == "NULL") rec[fld.fldid] = undefined;
 
               //			if(table.xflds[fld.fldid].dbtypeid == "INT") rec[fld.fldid] = +rec[fld.fldid]|0;
-              //			else if(table.xflds[fld.fldid].dbtypeid == "FLOAT" || table.xflds[fld.fldid].dbtypeid == "MONEY" ) 
+              //			else if(table.xflds[fld.fldid].dbtypeid == "FLOAT" || table.xflds[fld.fldid].dbtypeid == "MONEY" )
               //				rec[fld.fldid] = +rec[fld.fldid];
             });
           } else {
@@ -19992,12 +19993,12 @@
 // 	};
 // 	if(res instanceof Array) {
 // 		if(console.table) {
-// 			console.table(res);		
+// 			console.table(res);
 // 		} else {
 // 			console.log(res);
 // 		}
 // 	} else {
-// 		console.log(res);				
+// 		console.log(res);
 // 	}
 // };
 
@@ -20134,7 +20135,7 @@
   }
 
   function loghtml(res) {
-//	console.log(res); 
+//	console.log(res);
     var s = '';
     if (typeof res == 'undefined') {
       s += 'undefined';
@@ -20646,7 +20647,7 @@
       // data.forEach(function(d){
       // 	s += columns.map(function(col){
       // 		return d[col.columnid];
-      // 	}).join(opts.separator)+'\n';	
+      // 	}).join(opts.separator)+'\n';
       // });
       // alasql.utils.saveFile(filename,s);
       if (cb) res = cb(res);
@@ -20913,7 +20914,7 @@
        res[i] = b;
        }
        //				console.log(res[0]);
-       }	
+       }
        } else {
        for(var i=0, ilen=res.length; i<ilen;i++) {
        res[i] = res[i].split(opt.separator);
@@ -21278,7 +21279,7 @@
 
 //
 // 91websql.js
-// 
+//
 //
 //
 
@@ -21722,7 +21723,7 @@
         }
       }
       ;
-//		console.log(999,ls.databases,ls.databases[lsdbid], lsdbid);	
+//		console.log(999,ls.databases,ls.databases[lsdbid], lsdbid);
       if (ls.databases && !ls.databases[lsdbid]) {
         throw new Error('localStorage: Cannot drop database "' + lsdbid + '" because there is no such database');
       }
@@ -22034,7 +22035,7 @@
    if(typeof s == "undefined") return;
    var v = undefined;
    try {
-   v = JSON.parse(s); 
+   v = JSON.parse(s);
    } catch(err) {
    throw new Error('Cannot parse JSON '+s);
    }
@@ -22043,7 +22044,7 @@
 
    LS.set = function(key, value){
    if(typeof value == 'undefined') localStorage.removeItem(key);
-   else localStorage.setItem(key,JSON.stringify(value)); 
+   else localStorage.setItem(key,JSON.stringify(value));
    }
    */
 
@@ -22142,7 +22143,7 @@
    res = res.filter(function(d){
    return d.databaseid.match(relike);
    });
-   }		
+   }
    };
    if(cb) cb(res);
    return res;

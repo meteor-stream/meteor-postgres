@@ -20,7 +20,7 @@ if (Meteor.isClient) {
     "submit .new-task": function (event) {
       // This function is called when the new task form is submitted
       var text = event.target.text.value;
-      Meteor.call('add', text);
+      Meteor.call('add','tasks', text);
 
       // Clear form
       event.target.text.value = "";
@@ -32,17 +32,6 @@ if (Meteor.isClient) {
 }
 
 if (Meteor.isServer) {
-  Meteor.methods({
-    dbAdd: function(data, data1){
-      var insertText = "INSERT INTO tasks VALUES (" + data + ", " + "'" + data1 + "'" + ")";
-      alasql(insertText);
-      Template.body.tasks = alasql('select * from tasks');
-    },
-    add: function(text){
-      console.log("add", text);
-      db.insert(text);
-    }
-  });
   var cursor = Postgres.getCursor();
 
   Meteor.publish('tasks', function () {
