@@ -40,7 +40,6 @@ if (Meteor.isClient) {
 }
 
 if (Meteor.isServer) {
-
   Meteor.methods({
     dbAdd: function(data, data1){
       var insertText = "INSERT INTO tasks VALUES (" + data + ", " + "'" + data1 + "'" + ")";
