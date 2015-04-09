@@ -46,5 +46,6 @@ db.select = function(name, object) {
 };
 
 db.insert = function(text){
-  Postgres.insert('tasks', {text:text});
+  // MAKE THIS INSERT INTO ALASQL
+  console.log('I WILL INSERT INTO ALASQL');
 };
