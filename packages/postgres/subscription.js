@@ -4,10 +4,15 @@ var reactiveData = new Tracker.Dependency;
 
 Subscription = function(connection, name /* arguments */){
   var self = this;
+  var tableName = connection;
 
   this.select = function(name, args){
     reactiveData.depend();
     return db.select(name, args);
+  }
+
+  this.insert = function(dataObj){
+    Meteor.call('add', tableName, dataObj);
   }
 
   var subscribeArgs;
@@ -48,7 +53,6 @@ Subscription = function(connection, name /* arguments */){
     subscriptionId: self.subscriptionId,
     instance: self
   });
-  connection._serverDocuments['a'] = [{"a":1},{"b":2}];
   // If first store for this subscription name, register it!
   if(_.filter(buffer, function(sub){
       return sub.name === name && sub.connection === connection;
@@ -58,9 +62,9 @@ Subscription = function(connection, name /* arguments */){
 
   if (Meteor.isServer) {
     Meteor.methods({
-      add: function(table, text){
+      add: function(table, paramObj){
         console.log("in add");
-        Postgres.insert(table, {text:text});
+        Postgres.insert(table, paramObj);
       }
     });
   }
@@ -78,10 +82,8 @@ Subscription = function(connection, name /* arguments */){
 };
 
 var registerStore = function(connection, name){
-  console.log(connection);
   connection.registerStore(name, {
     beginUpdate: function(batchSize, reset){
-      console.log(batchSize, reset, 12345);
     },
     update: function(msg){
       var idSplit = msg.id.split(':');
