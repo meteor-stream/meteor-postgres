@@ -100,9 +100,9 @@ Postgres.createTable = function(table, tableObj, relTable) {
 
   // add foreign key
   if(relTable) {
-    inputString += ' ' + relTable + '_id' + ' integer references' + relTable;
+    inputString += ' ' + relTable + '_id' + ' integer references ' + relTable + ' (_id)';
   }
-
+  //inputString += ');';
   // add notify functionality and close input string
   inputString += " created_at TIMESTAMP default now()); " +
   "CREATE FUNCTION notify_trigger() RETURNS trigger AS $$ "+
@@ -121,9 +121,9 @@ Postgres.createTable = function(table, tableObj, relTable) {
     }
     client.query(inputString, function(error, results) {
       if (error) {
-        //console.log("error in create table " + table, error);
+        console.log("error in create table " + table, error);
       } else {
-        //console.log("results in create table " + table, results);
+        console.log("results in create table " + table); //, results
       }
     });
     client.on('notification', function(msg) {
@@ -389,6 +389,7 @@ Postgres.select = function(tableObj, selectObj, optionsObj, joinObj, callback) {
   }
 
   var inputString = 'SELECT ' + returnFields + ' FROM ' + table + joinString + selectString + optionsString + ';';
+  console.log(inputString);
   pg.connect(conString, function(err, client, done) {
     if (err){
       console.log(err);
