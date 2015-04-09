@@ -6,7 +6,7 @@ if (Meteor.isClient) {
   // TODO: Move the table definition into SQLCollection
   // To mirror the Mongo interface we should make it so taht 1 collection is 1 table
   var taskTable = {
-    id: ['int', 'not null'],
+    id: ['int', 'PRIMARY KEY'],
     text: ['varchar (255)', 'not null']
   };
   tasks.createTable('tasks', taskTable);
@@ -24,7 +24,7 @@ if (Meteor.isClient) {
       var text = event.target.text.value;
       tasks.insert({
         text:text
-      })
+      });
 
       // Clear form
       event.target.text.value = "";
@@ -37,6 +37,10 @@ if (Meteor.isClient) {
 
 if (Meteor.isServer) {
   var cursor = Postgres.getCursor();
+
+  Postgres.select('tasks', []);
+
+  Postgres.update('tasks', "text = 'hello world' WHERE id = 5");
 
   Meteor.publish('tasks', function () {
     return cursor;

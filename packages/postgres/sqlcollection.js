@@ -9,8 +9,6 @@ SQLCollection = function(connection, name /* arguments */){
   this.createTable = function(tableName, tableDefinition){
     // TODO: MAKE SURE THIS HANDLES TABLES THAT ALREADY EXIST (mini sql doesn't perssist data so shouldn't be an issue)
     minisql.createTable('tasks', tableDefinition);
-    // We need postgres to error out if table exists or else there will be several other errors. (but will try a workaround)
-    Postgres.createTable(tableName, tableDefinition);
   };
 
   this.select = function(args){
@@ -19,18 +17,18 @@ SQLCollection = function(connection, name /* arguments */){
   };
 
   this.insert = function(dataObj){
-    minisql.insert(table, dataObj);
+    //minisql.insert(tableName, dataObj);
     Meteor.call('add', tableName, dataObj);
   };
 
   this.update = function(dataObj){
-    minisql.update(table, dataObj);
-    Meteor.update(table, dataObj, selectObject);
+    minisql.update(tableName, dataObj);
+    Meteor.update(tableName, dataObj, selectObject);
   };
 
   this.remove = function(dataObj){
-    minisql.remove(table, dataObj);
-    Meteor.remove(table, dataObj);
+    minisql.remove(tableName, dataObj);
+    Meteor.remove(tableName, dataObj);
   };
 
   var subscribeArgs;
@@ -96,6 +94,9 @@ SQLCollection = function(connection, name /* arguments */){
 
   if (Meteor.isClient) {
     this.addEventListener('added', function(index, msg){
+      console.log('fire');
+      console.log(self);
+      console.log(tableName);
       var tableId = msg.tableId;
       var text = msg.text;
       var insertText = "INSERT INTO tasks VALUES (" + tableId + ", " + "'" + text + "'" + ")";
