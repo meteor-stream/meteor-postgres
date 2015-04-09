@@ -365,7 +365,7 @@ Postgres.select = function(tableObj, selectObj, optionsObj, joinObj, callback) {
   if (selectObj && !_emptyObject(selectObj)) {
 
   var selectString = 'WHERE ';
-  selectString += whereStatement(selectObj);
+  //selectString += whereStatement(selectObj);
 
     //for (var key in selectObj) {
     //  switch(key) {
