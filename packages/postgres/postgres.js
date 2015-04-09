@@ -373,19 +373,23 @@ Postgres.select = function(tableObj, selectObj, optionsObj, joinObj, callback) {
     optionsString += group + offset + limit;
   }
 
-  // joinObj
+  // joinObj TODO: helper table joins
   // object contains keys from join and values of table names
-  //JOIN table2 ON table1.id = table2.id --> { $roj: 'class' }
-  // foreign key will always be foreignTable_id because of code in createTable
-  // foreign key:
-  // SELECT * FROM table1 LEFT OUTER JOIN table2 ON table1(foreign_id) = table2(id)
+  // for foreign key it will be table1 join table2 on table1.table2_id = table2._id
+  // {$fk: [$loj, 'contacts']}
   var joinString = '';
-  var joinTable, joinType;
-  if (joinObj && Object.keys(joinObj).length === 0) {
-    joinType = Object.keys(joinObj)[0]; // '$loj'
-    joinTable = tableObj[joinType]; // 'class'
-    joinString = Postgres._Joins(joinType); // ' LEFT OUTER JOIN class ON students.class_id = class(id);
-    joinString += joinTable + ' ON '+ table + '.' + joinTable + '_id = ' + joinTable + '(id)' + ' ';
+  if (joinObj && !_emptyObject(joinObj)) {
+    var joinTable, joinType, tableField, joinField;
+    var type = Object.keys(joinObj)[0];
+    joinType = this._Joins[joinObj[type][0]];
+    joinTable = joinObj[type][1];
+    if (type === '$fk') {
+      tableField = table + '.' + joinTable + '_id';
+      joinField = joinTable + '._id';
+    }
+    //else if (type === '$tb') {
+    //}
+    joinString += joinType + joinTable + ' ON '+ tableField + ' = ' + joinField;
   }
 
   var inputString = 'SELECT ' + returnFields + ' FROM ' + table + joinString + selectString + optionsString + ';';
@@ -398,7 +402,7 @@ Postgres.select = function(tableObj, selectObj, optionsObj, joinObj, callback) {
       if (error) {
         console.log("error in select " + table, error);
       } else {
-        //console.log("results in select " + table, results.rows);
+        console.log("results in select " + table, results.rows);
       }
       return results.rows[0];
       //callback(results.rows);
