@@ -292,7 +292,11 @@ Postgres.insert = function(table, insertObj) {
   });
 };
 
-
+Postgres._SelectAddons = {
+  $gb: 'GROUP BY ',
+  $lim: 'LIMIT ',
+  $off: 'OFFSET '
+};
 
 
 ///**
@@ -350,67 +354,22 @@ Postgres.select = function(tableObj, selectObj, optionsObj, joinObj, callback) {
     }
   }
 
-  function whereStatement (obj) {
-    var whereString = '', selectField, operator, comparator;
-    selectField = Object.keys(obj)[0];    // selectField = score
-    operator = Object.keys(obj[selectField])[0];    // operator = $gt
-    comparator = selectObj[selectField][operator];      // comparator = '70'
-    whereString += selectField + ' ' + operator + ' ' + comparator;
-    // WHERE score > 70
-    return whereString;
-  }
-
   // selectObj
   // contains the field as a key then another obj as the value with the operator and conditional values
-  //{ score: { $gt: '70' } } -> { $or: [ { score: { $gt: '70' } }, { pass: true } ] }
+  //  Postgres.select({students: ['name', 'age']}, {age: {$gt: 18}}); -> WHERE age > 18
   var selectString = '';
   if (selectObj && !_emptyObject(selectObj)) {
-
-  var selectString = 'WHERE ';
-  //selectString += whereStatement(selectObj);
-
-    //for (var key in selectObj) {
-    //  switch(key) {
-    //    case ('$and'):
-    //      for (var i=0; i<selectObj[key].length; i++) {
-    //
-    //      }
-    //      selectString += whereStatement(selectObj[key]) + ' ';
-    //      break;
-    //    case ('$or'):
-    //      return x;
-    //      break;
-    //    case ('$not'):
-    //      return y;
-    //      break;
-    //    case ('$nor'):
-    //      return z;
-    //      break;
-    //    default:
-    //      whereStatement(selectObj[key]);
-    //  }
-    //}
-
-
-
-
+    var selectField, operator, comparator, key;
+    selectField = Object.keys(selectObj)[0];
+    key = Object.keys(selectObj[selectField])[0];
+    operator = this._QueryOperators[key];
+    comparator = selectObj[selectField][key];
+    selectString += ' WHERE ' + selectField + ' ' + operator + ' ' + comparator;
   }
   // logical operators
   // if key is $or or $and $not $nor
   // if key is string
 
-  //switch (selectObj[key]) {
-  //  case '$or': return x;
-  //  case '$and':
-  //}
-
-
-
-  var options = {
-    $gb: 'GROUP BY ',
-    $lim: 'LIMIT ',
-    $off: 'OFFSET '
-  };
   // optionsObj
   // object that can contain keys from SelectOptions and values of strings or integers or floats
   var optionString = '';
@@ -419,6 +378,14 @@ Postgres.select = function(tableObj, selectObj, optionsObj, joinObj, callback) {
       optionString += ' ' + options[key] + ' ' + optionsObj[key];
     }
   }
+  var limit, group, offset;
+  //+ group + offset + limit;
+  //group = obj[selectField]['$gb'] ? ('GROUP BY ' + obj[selectField]['$gb'] + ' ') : '';
+  //offset = obj[selectField]['$off'] ? ('OFFSET ' + obj[selectField]['$off'] + ' ') : '';
+  //limit = obj[selectField]['$lm'] ? ('LIMIT ' + obj[selectField]['$lm'] + ' ') : '' ;
+
+
+
 
   // joinObj
   // object contains keys from join and values of table names
@@ -432,11 +399,11 @@ Postgres.select = function(tableObj, selectObj, optionsObj, joinObj, callback) {
     joinType = Object.keys(joinObj)[0]; // '$loj'
     joinTable = tableObj[joinType]; // 'class'
     joinString = Postgres._Joins(joinType); // ' LEFT OUTER JOIN class ON students.class_id = class(id);
-    joinString += joinTable + ' ON '+ table + '.' + joinTable + '_id = ' + joinTable + '(id)' + ';';
+    joinString += joinTable + ' ON '+ table + '.' + joinTable + '_id = ' + joinTable + '(id)' + ' ';
   }
 
 
-  var inputString = 'SELECT ' + returnFields + ' FROM ' + table + joinString + ' ' + selectString + ' ' + optionString + ';';
+  var inputString = 'SELECT ' + returnFields + ' FROM ' + table + joinString + selectString + optionString + ';';
   console.log(inputString,'xyz');
   pg.connect(conString, function(err, client, done) {
     console.log(err);
