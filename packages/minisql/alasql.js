@@ -72,7 +72,6 @@
    */
 
   var alasql = function(sql, params, cb, scope) {
-    console.log("IN ALASQL");
     if (typeof importScripts != 'function' && alasql.webworker) {
       var id = alasql.lastid++;
       alasql.buffer[id] = cb;

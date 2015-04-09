@@ -6,9 +6,15 @@ SQLCollection = function(connection, name /* arguments */){
   var self = this;
   var tableName = connection;
 
+  this.createTable = function(tableName, tableDefinition){
+    // TODO: MAKE SURE THIS HANDLES TABLES THAT ALREADY EXIST
+    minisql.createTable('tasks', tableDefinition);
+    // TODO: ADD POSTGRES.CREATETABLE
+  }
+
   this.select = function(args){
     reactiveData.depend();
-    return db.select(tableName, args);
+    return minisql.select(tableName, args);
   }
 
   this.insert = function(dataObj){
