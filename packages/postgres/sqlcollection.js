@@ -2,11 +2,11 @@ var selfConnection;
 var buffer = [];
 var reactiveData = new Tracker.Dependency;
 
-Subscription = function(connection, name /* arguments */){
+SQLCollection = function(connection, name /* arguments */){
   var self = this;
   var tableName = connection;
 
-  this.select = function(name, args){
+  this.select = function(args){
     reactiveData.depend();
     return db.select(tableName, args);
   }
@@ -25,8 +25,8 @@ Subscription = function(connection, name /* arguments */){
 
   var subscribeArgs;
 
-  if(!(self instanceof Subscription)){
-    throw new Error('use "new" to construct a Subscription');
+  if(!(self instanceof SQLCollection)){
+    throw new Error('use "new" to construct a SQLCollection');
   }
 
   self._events = [];
@@ -44,7 +44,7 @@ Subscription = function(connection, name /* arguments */){
       connection = selfConnection;
     }
   }else{
-    // Subscription arguments does not use the first argument (the connection)
+    // SQLCollection arguments does not use the first argument (the connection)
     subscribeArgs = Array.prototype.slice.call(arguments, 1);
   }
 
@@ -134,15 +134,15 @@ var registerStore = function(connection, name){
 };
 
 // Inherit from Array and Tracker.Dependency
-Subscription.prototype = new Array;
-_.extend(Subscription.prototype, Tracker.Dependency.prototype);
+SQLCollection.prototype = new Array;
+_.extend(SQLCollection.prototype, Tracker.Dependency.prototype);
 
 
-Subscription.prototype._eventRoot = function(eventName){
+SQLCollection.prototype._eventRoot = function(eventName){
   return eventName.split('.')[0];
 };
 
-Subscription.prototype._selectEvents = function(eventName, invert){
+SQLCollection.prototype._selectEvents = function(eventName, invert){
   var self = this;
   var eventRoot, testKey, testVal;
   if(!(eventName instanceof RegExp)){
@@ -166,7 +166,7 @@ Subscription.prototype._selectEvents = function(eventName, invert){
   });
 };
 
-Subscription.prototype.addEventListener = function(eventName, listener){
+SQLCollection.prototype.addEventListener = function(eventName, listener){
   var self = this;
   if(typeof listener !== 'function')
     throw new Error('invalid-listener');
@@ -177,7 +177,7 @@ Subscription.prototype.addEventListener = function(eventName, listener){
   });
 };
 
-Subscription.prototype.initialValue = function(eventName, listener){
+SQLCollection.prototype.initialValue = function(eventName, listener){
   console.log("in initial");
   var result = Postgres.select('tasks');
   return result;
@@ -185,13 +185,13 @@ Subscription.prototype.initialValue = function(eventName, listener){
 
 // @param {string} eventName - Remove events of this name, pass without suffix
 //                             to remove all events matching root.
-Subscription.prototype.removeEventListener = function(eventName){
+SQLCollection.prototype.removeEventListener = function(eventName){
   console.log("in remove");
   var self = this;
   self._events = self._selectEvents(eventName, true);
 };
 
-Subscription.prototype.dispatchEvent = function(eventName /* arguments */){
+SQLCollection.prototype.dispatchEvent = function(eventName /* arguments */){
   var self = this;
   var listenerArgs = Array.prototype.slice.call(arguments, 1);
   var listeners = self._selectEvents(eventName);
@@ -203,7 +203,7 @@ Subscription.prototype.dispatchEvent = function(eventName /* arguments */){
   return true;
 };
 
-Subscription.prototype.reactive = function(){
+SQLCollection.prototype.reactive = function(){
   console.log("in reactive");
   var self = this;
   self.depend();

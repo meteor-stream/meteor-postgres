@@ -37,6 +37,7 @@ db.createTable = function(name, object) {
 db.select = function(name, object) {
   // 'SELECT data FROM table WHERE parameters GROUP BY LIMIT OFFSET'
   // data parameters options (name directly passed in)
+  console.log(object);
   var columnNames = object.columnNames || '*';
   var groupBy = object.groupBy ? ' GROUP BY ' + object.groupBy : '';
   var limit = object.limit ? ' LIMIT ' + object.limit : '';

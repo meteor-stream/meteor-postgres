@@ -1,4 +1,4 @@
-tasks = new Subscription('tasks');
+tasks = new SQLCollection('tasks');
 
 
 if (Meteor.isClient) {
