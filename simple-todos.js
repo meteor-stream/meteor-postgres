@@ -12,7 +12,7 @@ if (Meteor.isClient) {
 
   Template.body.helpers({
     tasks: function () {
-      return tasks.select('tasks', {});
+      return tasks.select({});
     }
   });
 

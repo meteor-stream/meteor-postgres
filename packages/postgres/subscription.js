@@ -8,11 +8,19 @@ Subscription = function(connection, name /* arguments */){
 
   this.select = function(name, args){
     reactiveData.depend();
-    return db.select(name, args);
+    return db.select(tableName, args);
   }
 
   this.insert = function(dataObj){
     Meteor.call('add', tableName, dataObj);
+  }
+
+  this.update = function(dataObj){
+    // TODO
+  }
+
+  this.remove = function(dataObj){
+    // TODO
   }
 
   var subscribeArgs;
