@@ -299,7 +299,7 @@ Postgres.insert = function(table, insertObj) {
 // * TODO: Add right joins?, OR to selectObj, should work for all but tableObj to by empty
 // * @param {object} tableObj
 // * @param {string} tableObj key (table name)
-// * @param {string} tableObj value (field name)
+// * @param {array} tableObj value (field names)
 // * @param {object} selectObj
 // * @param {string} selectObj key (field name)
 // * @param {object} selectObj.fieldName key (operator)
@@ -343,6 +343,9 @@ Postgres.select = function(tableObj, selectObj, optionsObj, joinObj, callback) {
   } else if (Object.keys(tableObj).length === 1) {
     table = Object.keys(tableObj)[0];
     returnFields = tableObj[table];
+    if (Array.isArray(returnFields)) {
+      returnFields = '(' + returnFields.join(', ') + ')';
+    }
   }
 
   function whereStatement (obj) {
@@ -362,7 +365,7 @@ Postgres.select = function(tableObj, selectObj, optionsObj, joinObj, callback) {
   if (selectObj && !_emptyObject(selectObj)) {
 
   var selectString = 'WHERE ';
-
+  selectString += whereStatement(selectObj);
 
     //for (var key in selectObj) {
     //  switch(key) {
