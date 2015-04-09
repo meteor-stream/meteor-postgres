@@ -8,10 +8,7 @@ Meteor.methods({
     Postgres.insert('tasks', {id: 86, text:text});
   },
   populate: function(){
-    var run = function(results){
-      console.log(results);
-    };
-    Postgres.select('tasks', run);
+    Postgres.select('tasks')
   }
 });
 
@@ -37,8 +34,6 @@ if (Meteor.isClient) {
 
   //var a = db.createTable('users', newTable);
   var b = db.createTable('tasks', taskTable);
-
-  Meteor.call('populate');
 
   Template.body.helpers({
     tasks: function () {
@@ -69,7 +64,9 @@ if (Meteor.isServer) {
   //  class: ['$string', {$default: '2015'}],
   //  _id: ['$seq', '$primary', '$notnull']
   //});
+  Postgres.select('students');
   Postgres.select({students: ['name', 'age']});
+  Postgres.select({students: ['name', 'age']},{$lm: 1});
   var cursor = Postgres.getCursor();
 
   Meteor.publish('tasks', function () {
