@@ -45,7 +45,14 @@ minisql.select = function(name, object) {
   return alasql(initString);
 };
 
-minisql.insert = function(text){
-  // MAKE THIS INSERT INTO ALASQL
-  console.log('I WILL INSERT INTO ALASQL');
+minisql.insert = function(name, params){
+  alasql("INSERT INTO " + name + " values (" + params.id + ", " + params.text + ");");
+};
+
+minisql.update = function(name, params){
+  alasql("UPDATE " + name + " SET " + params.column + " = " + params.value + " WHERE ID = " + params.id);
+};
+
+minisql.delete = function(name, params){
+  alasql("DELETE FROM " + name + " WHERE id = " + params.id);
 };

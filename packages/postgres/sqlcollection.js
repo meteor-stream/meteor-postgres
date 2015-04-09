@@ -7,27 +7,31 @@ SQLCollection = function(connection, name /* arguments */){
   var tableName = connection;
 
   this.createTable = function(tableName, tableDefinition){
-    // TODO: MAKE SURE THIS HANDLES TABLES THAT ALREADY EXIST
+    // TODO: MAKE SURE THIS HANDLES TABLES THAT ALREADY EXIST (mini sql doesn't perssist data so shouldn't be an issue)
     minisql.createTable('tasks', tableDefinition);
-    // TODO: ADD POSTGRES.CREATETABLE
-  }
+    // We need postgres to error out if table exists or else there will be several other errors. (but will try a workaround)
+    Postgres.createTable(tableName, tableDefinition);
+  };
 
   this.select = function(args){
     reactiveData.depend();
     return minisql.select(tableName, args);
-  }
+  };
 
   this.insert = function(dataObj){
+    minisql.insert(table, dataObj);
     Meteor.call('add', tableName, dataObj);
-  }
+  };
 
   this.update = function(dataObj){
-    // TODO
-  }
+    minisql.update(table, dataObj);
+    Meteor.update(table, dataObj, selectObject);
+  };
 
   this.remove = function(dataObj){
-    // TODO
-  }
+    minisql.remove(table, dataObj);
+    Meteor.remove(table, dataObj);
+  };
 
   var subscribeArgs;
 
@@ -79,6 +83,12 @@ SQLCollection = function(connection, name /* arguments */){
       add: function(table, paramObj){
         console.log("in add");
         Postgres.insert(table, paramObj);
+      },
+      update: function(table, paramObj, selectObj){
+        Postgres.update(table, paramObj, selectObj);
+      },
+      delete: function(table, paramObj){
+        Postgres.delete(table, paramObj);
       }
     });
   }
