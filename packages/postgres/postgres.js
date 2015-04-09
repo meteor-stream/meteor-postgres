@@ -277,6 +277,8 @@ Postgres.insert = function(table, insertObj) {
   inputString += keys[keys.length-1] + valueString + '$' + keys.length + ');';
   insertArray.push(insertObj[keys[keys.length-1]]);
   // send request to postgresql database
+  console.log(inputString);
+  console.log(insertArray);
   pg.connect(conString, function(err, client, done) {
     if (err){
       console.log(err);
@@ -313,12 +315,8 @@ Postgres._SelectAddons = {
 // * @param {number} optionsObj value (comparator)
 // * @param {object} joinObj
 // */
-Postgres.select = function(tableObj, selectObj, optionsObj, joinObj, callback) {
+Postgres.select = function(tableName, returnFields, selectObj, optionsObj, joinObj) {
   // SQL: 'SELECT fields FROM table WHERE field operator comparator AND (more WHERE) GROUP BY field / LIMIT number / OFFSET number;'
-
-  callback = callback || function(rows) {
-    console.log('CB: ' + rows);
-  };
 
   function _emptyObject(obj) {
     for (var prop in obj) {
@@ -332,16 +330,12 @@ Postgres.select = function(tableObj, selectObj, optionsObj, joinObj, callback) {
   // tableObj
   // contains the table name as key and the fields as a string
   // for all fields user can pass in the table name as a string (need to insert * into the inputString)
-  var table, returnFields;
-  if (typeof tableObj === 'string') {
-    table = tableObj;
+  var table = tableName;
+  if (returnFields.length === 0) {
     returnFields = ' * ';
-  } else if (Object.keys(tableObj).length === 1) {
-    table = Object.keys(tableObj)[0];
-    returnFields = tableObj[table];
-    if (Array.isArray(returnFields)) {
+  }
+  else {
       returnFields = '(' + returnFields.join(', ') + ')';
-    }
   }
 
   // selectObj
@@ -404,18 +398,17 @@ Postgres.select = function(tableObj, selectObj, optionsObj, joinObj, callback) {
       } else {
         console.log("results in select " + table, results.rows);
       }
+      done();
       return results.rows[0];
       //callback(results.rows);
-      done();
     });
   });
 };
 
 /**
  * TODO: OR to selectObj
- * @param {object} tableObj
- * @param {string} tableObj key (table name)
- * @param {string} tableObj value (field name) -> to update
+ * @param {string} tableName
+ * @param {string} selectName  -> field to update
  * @param {object} selectObj
  * @param {string} selectObj key (field name)
  * @param {object} selectObj.fieldName key (operator)
@@ -424,15 +417,15 @@ Postgres.select = function(tableObj, selectObj, optionsObj, joinObj, callback) {
  * @param {string} updateObj key (field name)
  * @param {number} updateObj value (updated data) -> updates
  */
-Postgres.update = function(tableObj, updateObj, selectObj) {
+Postgres.update = function(tableName, selectName, updateObj, selectObj) {
   // SQL: 'SELECT fields FROM table WHERE field operator comparator AND (more WHERE) GROUP BY field / LIMIT number / OFFSET number;'
 
   // tableObj
   // contains the table name as key and the fields as a string
   // for all fields user can pass in the table name as a string (need to insert * into the inputString)
   var table, toUpdateFields;
-  table = Object.keys(tableObj)[0];
-  toUpdateFields = tableObj[table];
+  table = tableName;
+  toUpdateFields = selectName;
 
   // selectObj
   // contains the field as a key then another obj as the value with the operator and conditional values
@@ -445,21 +438,22 @@ Postgres.update = function(tableObj, updateObj, selectObj) {
     selectString += 'WHERE ' + selectField + ' ' + operator + ' ' + comparator;
   }
 
-  var updateString = '';
-  for (var key in updateObj) {
-    updateString += ' ' + options[key] + ' ' + optionsObj[key];
-  }
+  //var updateString = '';
+  //for (var key in updateObj) {
+  //  updateString += ' ' + options[key] + ' ' + optionsObj[key];
+  //}
 
-  var inputString = 'UPDATE ' + table + ' SET ' + updateString + ' ' + selectString + ';';
+  var inputString = 'UPDATE ' + table + ' SET ' + toUpdateFields + ' ' + selectString + ';';
   pg.connect(conString, function(err, client, done) {
     if (err){
       console.log(err);
     }
+    console.log(inputString);
     client.query(inputString, function(error, results) {
       if (error) {
         console.log("error in update " + table, error);
       } else {
-        //console.log("results in update " + table, results.rows);
+        console.log("results in update " + table, results.rows);
       }
       done();
     });
