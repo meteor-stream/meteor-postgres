@@ -116,7 +116,9 @@ Postgres.createTable = function(table, tableObj, relTable) {
   " FOR EACH ROW EXECUTE PROCEDURE notify_trigger();";
   // send request to postgresql database
   pg.connect(conString, function(err, client) {
-    console.log(err);
+    if (err){
+      console.log(err);
+    }
     client.query(inputString, function(error, results) {
       if (error) {
         //console.log("error in create table " + table, error);
@@ -125,11 +127,7 @@ Postgres.createTable = function(table, tableObj, relTable) {
       }
     });
     client.on('notification', function(msg) {
-      console.log(msg.payload);
       var returnMsg = eval("(" + msg.payload + ")");
-      console.log(returnMsg);
-      console.log(typeof returnMsg);
-      console.log(returnMsg.tasks);
       var k = '';
       var v = '';
       for (var key in returnMsg){
@@ -166,7 +164,9 @@ Postgres.createRelationship = function(table1, table2) {
       table2 + '_id int not null references ' + table2 + '(id) on delete cascade,' + ');';
   // send request to postgresql database
   pg.connect(conString, function(err, client) {
-    console.log(err);
+    if (err){
+      console.log(err);
+    }
     client.query(inputString, function(error, results) {
       if (error) {
         console.log("error in create relationship " + table, error);
@@ -174,9 +174,9 @@ Postgres.createRelationship = function(table1, table2) {
         //console.log("results in create relationship " + table, results);
       }
     });
-    client.on('notification', function(msg) {
-      console.log(msg);
-    });
+    // client.on('notification', function(msg) {
+    //   console.log(msg);
+    // });
     var query = client.query("LISTEN watchers");
   });
 };
@@ -193,7 +193,9 @@ Postgres.addColumn = function(table, tableObj) {
   }
   inputString += ';';
   pg.connect(conString, function(err, client) {
-    console.log(err);
+    if (err){
+      console.log(err);
+    }
     client.query(inputString, function(error, results) {
       if (error) {
         console.log("error in create relationship " + table, error);
@@ -201,9 +203,9 @@ Postgres.addColumn = function(table, tableObj) {
         //console.log("results in create relationship " + table, results);
       }
     });
-    client.on('notification', function(msg) {
-      console.log(msg);
-    });
+    // client.on('notification', function(msg) {
+    //   console.log(msg);
+    // });
     var query = client.query("LISTEN watchers");
   });
 };
@@ -212,7 +214,9 @@ Postgres.dropColumn = function(table, column) {
   var inputString = 'ALTER TABLE ' + table + ' DROP COLUMN ' + column;
   inputString += ';';
   pg.connect(conString, function(err, client) {
-    console.log(err);
+    if (err){
+      console.log(err);
+    }
     client.query(inputString, function(error, results) {
       if (error) {
         console.log("error in create relationship " + table, error);
@@ -220,9 +224,9 @@ Postgres.dropColumn = function(table, column) {
         //console.log("results in create relationship " + table, results);
       }
     });
-    client.on('notification', function(msg) {
-      console.log(msg);
-    });
+    // client.on('notification', function(msg) {
+    //   console.log(msg);
+    // });
     var query = client.query("LISTEN watchers");
   });
 };
@@ -235,7 +239,9 @@ Postgres.dropTable = function(table) {
   var inputString = 'DROP FUNCTION IF EXISTS notify_trigger() CASCADE; DROP TABLE IF EXISTS ' + table + ' CASCADE;';
   // send request to postgresql database
   pg.connect(conString, function(err, client, done) {
-    console.log(err);
+    if (err){
+      console.log(err);
+    }
     client.query(inputString, function(error, results) {
       if (error) {
         console.log("error in drop " + table, error);
@@ -272,7 +278,9 @@ Postgres.insert = function(table, insertObj) {
   insertArray.push(insertObj[keys[keys.length-1]]);
   // send request to postgresql database
   pg.connect(conString, function(err, client, done) {
-    console.log(err);
+    if (err){
+      console.log(err);
+    }
     client.query(inputString, insertArray, function(error, results) {
       if (error) {
         console.log("error in insert " + table, error);
@@ -381,9 +389,10 @@ Postgres.select = function(tableObj, selectObj, optionsObj, joinObj, callback) {
   }
 
   var inputString = 'SELECT ' + returnFields + ' FROM ' + table + joinString + selectString + optionsString + ';';
-  console.log(inputString,'xyz');
   pg.connect(conString, function(err, client, done) {
-    console.log(err);
+    if (err){
+      console.log(err);
+    }
     client.query(inputString, function(error, results) {
       if (error) {
         console.log("error in select " + table, error);
@@ -438,7 +447,9 @@ Postgres.update = function(tableObj, updateObj, selectObj) {
 
   var inputString = 'UPDATE ' + table + ' SET ' + updateString + ' ' + selectString + ';';
   pg.connect(conString, function(err, client, done) {
-    console.log(err);
+    if (err){
+      console.log(err);
+    }
     client.query(inputString, function(error, results) {
       if (error) {
         console.log("error in update " + table, error);
@@ -471,7 +482,9 @@ Postgres.delete = function (table, selectObj) {
   inputString += selectString + ';';
 
   pg.connect(conString, function(err, client, done) {
-    console.log(err);
+    if (err){
+      console.log(err);
+    }
     client.query(inputString, function(error, results) {
       if (error) {
       console.log("error in delete " + table, error);
@@ -487,12 +500,7 @@ Postgres.autoSelect = function (sub) {
   pg.connect(conString, function(err, client) {
     var query = client.query("LISTEN watchers");
     client.on('notification', function(msg) {
-      console.log(msg.payload);
       var returnMsg = eval("(" + msg.payload + ")");
-      console.log("IN autoSelect");
-      console.log(returnMsg);
-      console.log(typeof returnMsg);
-      console.log(returnMsg.tasks);
       var k = '';
       var v = '';
       for (var key in returnMsg) {
@@ -504,9 +512,6 @@ Postgres.autoSelect = function (sub) {
         if (error) {
           console.log("error in auto select " + table, error);
         } else {
-          console.log(this);
-          console.log("results in auto select ", results.rows);
-          console.log(results.rows);
           sub._session.send({
             msg: 'added',
             collection: sub._name,

@@ -8,7 +8,6 @@ if (Meteor.isClient) {
     text: ['varchar (255)', 'not null']
   };
 
-  //var a = db.createTable('users', newTable);
   var b = db.createTable('tasks', taskTable);
 
   Template.body.helpers({
@@ -17,17 +16,10 @@ if (Meteor.isClient) {
     }
   });
 
-  //var initialResults = tasks.initialValue();
-  //
-  //db.insert(initialResults);
-  //
-  //console.log(initialResults);
-
   Template.body.events({
     "submit .new-task": function (event) {
       // This function is called when the new task form is submitted
       var text = event.target.text.value;
-      console.log('inside event');
       Meteor.call('add', text);
 
       // Clear form

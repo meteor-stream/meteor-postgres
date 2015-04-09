@@ -22,7 +22,6 @@ db.createTable = function(name, object) {
   }
   // closes string
   initString += ");";
-  console.log(initString);
   alasql(initString);
 };
 
@@ -47,7 +46,5 @@ db.select = function(name, object) {
 };
 
 db.insert = function(text){
-  console.log('fire');
-  console.log('insert', text);
   Postgres.insert('tasks', {text:text});
 };
