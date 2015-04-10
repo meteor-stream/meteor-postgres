@@ -1,4 +1,4 @@
-tasks = new SQLCollection('tasks');
+ tasks = new SQLCollection('tasks');
 
 
 if (Meteor.isClient) {
@@ -33,6 +33,13 @@ if (Meteor.isClient) {
 
       // Prevent default form submit
       return false;
+    },
+    "click .toggle-checked": function () {
+      // Set the checked property to the opposite of its current value
+      tasks.update(this._id, {$set: {checked: ! this.checked}});
+    },
+    "click .delete": function () {
+      tasks.remove(this._id);
     }
   });
 }
