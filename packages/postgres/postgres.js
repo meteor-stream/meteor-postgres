@@ -14,7 +14,8 @@ Postgres._DataTypes = {
   $json: 'json',
   $datetime: 'date',
   $float: 'decimal',
-  $seq: 'serial'
+  $seq: 'serial',
+  $bool: 'boolean'
 };
 
 Postgres._TableConstraints = {
@@ -27,7 +28,6 @@ Postgres._TableConstraints = {
 };
 
 Postgres._QueryOperators = {
-  // TODO: not currently in use
   $eq: ' = ',
   $gt: ' > ',
   $lt: ' < '
@@ -62,7 +62,7 @@ Postgres._SelectAddons = {
 // * @param {array} tableObj value (type and constraints)
 // * @param {string} [relTable]
 // */
-
+// TODO: CREATE TABLE EXAMPLES. The first element in the array must be the data type from the _DataType object above
 //Postgres.createTable('students', {
 //  name: ['$string', '$notnull'],
 //  age: ['$number'],
@@ -115,23 +115,24 @@ Postgres.createTable = function(table, tableObj, relTable) {
   inputString += " created_at TIMESTAMP default now()); " +
   "CREATE OR REPLACE FUNCTION notify_trigger() RETURNS trigger AS $$" +
   "BEGIN" +
-  "IF (TG_OP = 'DELETE') THEN" +
-  "PERFORM pg_notify('watchers', '[{' || TG_TABLE_NAME || ':' || OLD.id || '}, { operation: " + insertQuote +
-  "' || TG_OP || '"+ insertQuote +"}]');" +
+  " IF (TG_OP = 'DELETE') THEN " +
+  "PERFORM pg_notify('watchers', '[{' || TG_TABLE_NAME || ':' || OLD.id || '}, { operation: " +
+  "' || TG_OP || '}]');" +
   "RETURN old;" +
-  "ELSIF (TG_OP = 'INSERT') THEN + " +
-  "PERFORM pg_notify('watchers', '[{' || TG_TABLE_NAME || ':' || NEW.id || '}, { operation: " + insertQuote +
-  "' || TG_OP || '"+ insertQuote +"}]');" +
+  "ELSIF (TG_OP = 'INSERT') THEN " +
+  "PERFORM pg_notify('watchers', '[{' || TG_TABLE_NAME || ':' || NEW.id || '}, { operation: " +
+  "' || TG_OP || '}]');" +
   "RETURN new; " +
   "ELSIF (TG_OP = 'UPDATE') THEN " +
-  "PERFORM pg_notify('watchers', '[{' || TG_TABLE_NAME || ':' || NEW.id || '}, { operation: " + insertQuote +
-  "' || TG_OP || '"+ insertQuote +"}]');" +
+  "PERFORM pg_notify('watchers', '[{' || TG_TABLE_NAME || ':' || NEW.id || '}, { operation: " +
+  "' || TG_OP || '}]');" +
   "RETURN new; " +
   "END IF; " +
   "END; " +
   "$$ LANGUAGE plpgsql; " +
   "CREATE TRIGGER watched_table_trigger AFTER INSERT ON "+ table +
   " FOR EACH ROW EXECUTE PROCEDURE notify_trigger();";
+  console.log(inputString);
   // send request to postgresql database
   pg.connect(conString, function(err, client) {
     if (err){
