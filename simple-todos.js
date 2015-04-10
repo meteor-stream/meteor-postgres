@@ -11,6 +11,8 @@ if (Meteor.isClient) {
   };
   tasks.createTable('tasks', taskTable);
 
+  //tasks.loadData('tasks');
+
 
   Template.body.helpers({
     tasks: function () {
