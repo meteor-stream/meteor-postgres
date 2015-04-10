@@ -2,63 +2,61 @@ var selfConnection;
 var buffer = [];
 var reactiveData = new Tracker.Dependency;
 
-SQLCollection = function(connection, name /* arguments */){
+SQLCollection = function(connection, name /* arguments */) {
   var self = this;
   var tableName = connection;
-  var unvalidated = '';
-  this.createTable = function(tableName, tableDefinition){
+  var initiated = false;
+  var unvalidated = true;
+  this.createTable = function(tableName, tableDefinition) {
     // TODO: MAKE SURE THIS HANDLES TABLES THAT ALREADY EXIST (mini sql doesn't perssist data so shouldn't be an issue)
     minisql.createTable(tableName, tableDefinition);
   };
 
-  this.select = function(args){
+  this.select = function(args) {
     reactiveData.depend();
     return minisql.select(tableName, args);
   };
 
-  this.insertData = function(data){
-    console.log(data);
-  };
-
-  this.insert = function(dataObj){
+  this.insert = function(dataObj) {
     console.log(tableName);
     console.log(dataObj);
     minisql.insert(tableName, dataObj);
+    reactiveData.changed();
     unvalidated = dataObj.text;
     Meteor.call('add', tableName, dataObj);
   };
 
-  this.update = function(dataObj){
+  this.update = function(dataObj) {
     minisql.update(tableName, dataObj);
     Meteor.call('update', tableName, dataObj, selectObject);
   };
 
-  this.remove = function(dataObj){
+  this.remove = function(dataObj) {
     minisql.remove(tableName, dataObj);
-    Meteor.call('remove',tableName, dataObj);
+    Meteor.call('remove', tableName, dataObj);
   };
 
   var subscribeArgs;
 
-  if(!(self instanceof SQLCollection)){
+  if (!(self instanceof SQLCollection)) {
     throw new Error('use "new" to construct a SQLCollection');
   }
 
   self._events = [];
 
-  if(typeof connection === 'string'){
+  if (typeof connection === 'string') {
     // Using default connection
     subscribeArgs = Array.prototype.slice.call(arguments, 0);
     name = connection;
-    if(Meteor.isClient){
+    if (Meteor.isClient) {
       connection = Meteor.connection;
-    }else if(Meteor.isServer){
-      if(!selfConnection){
+    } else if (Meteor.isServer) {
+      if (!selfConnection) {
         selfConnection = DDP.connect(Meteor.absoluteUrl());
       }
       connection = selfConnection;
     }
-  }else{
+  } else {
     // SQLCollection arguments does not use the first argument (the connection)
     subscribeArgs = Array.prototype.slice.call(arguments, 1);
   }
@@ -71,7 +69,7 @@ SQLCollection = function(connection, name /* arguments */){
   var subsBefore = _.keys(connection._subscriptions);
   _.extend(self, connection.subscribe.apply(connection, subscribeArgs));
   var subsNew = _.difference(_.keys(connection._subscriptions), subsBefore);
-  if(subsNew.length !== 1) throw new Error('Subscription failed!');
+  if (subsNew.length !== 1) throw new Error('Subscription failed!');
   self.subscriptionId = subsNew[0];
 
   buffer.push({
@@ -81,96 +79,95 @@ SQLCollection = function(connection, name /* arguments */){
     instance: self
   });
   // If first store for this subscription name, register it!
-  if(_.filter(buffer, function(sub){
+  if (_.filter(buffer, function(sub) {
       return sub.name === name && sub.connection === connection;
-    }).length === 1){
+    }).length === 1) {
     registerStore(connection, name);
   }
   if (Meteor.isServer) {
     Meteor.methods({
-      add: function(table, paramObj){
+      add: function(table, paramObj) {
         console.log("in add");
         Postgres.insert(table, paramObj);
       },
-      update: function(table, paramObj, selectObj){
+      update: function(table, paramObj, selectObj) {
         Postgres.update(table, paramObj, selectObj);
       },
-      delete: function(table, paramObj){
+      delete: function(table, paramObj) {
         Postgres.delete(table, paramObj);
-      },
-      loadData: function(table, self){
-        Postgres.loadData(table, self);
       }
     });
   }
 
 
   if (Meteor.isClient) {
-    this.addEventListener('added', function(index, msg){
+    this.addEventListener('added', function(index, msg) {
       console.log(msg.results);
       console.log(msg.results[0]);
       var tableId = msg.results[0].id;
       var text = msg.results[0].text;
       //if (unvalidated === text) {
-        alasql("DELETE FROM " + tableName);
-        unvalidated = "";
+      alasql("DELETE FROM " + tableName);
+      unvalidated = "";
       //}
-      for (var x = 0; x<10; x++) {
+      for (var x = 9; x >= 0 ; x--) {
         alasql("INSERT INTO tasks VALUES (?,?)", [msg.results[x].id, msg.results[x].text]);
       }
-
       reactiveData.changed();
     });
-
-    this.addEventListener('loaded', function(index, msg){
-      console.log('fire');
-      console.log(msg);
-      //if (unvalidated === text) {
-      //  alasql("DELETE FROM " + tableName + " WHERE text = ?", [text]);
-      //  unvalidated = "";
-      //}
-      //alasql("INSERT INTO " + tableName + " VALUES ( ?, ?);", [tableId, text]);
-      //reactiveData.changed();
-    });
-    Meteor.methods({
-      insertData: function(results){
-        console.log(results)
+    this.addEventListener('changed', function(index, msg) {
+      console.log(msg.id);
+      console.log(msg.text);
+      console.log('fired');
+      var tableId = msg.tableId;
+      var text = msg.text;
+      if (unvalidated !== "") {
+        console.log(text);
+        alasql("UPDATE " + tableName + " SET id = ? WHERE text= " + "'" + text + "'", [tableId]);
+        unvalidated = "";
       }
-    }
-
-    )
+      else {
+        alasql("INSERT INTO " + tableName + "VALUES (?,?)", [tableId, text]);
+      }
+      reactiveData.changed();
+    })
   }
 };
 
-var registerStore = function(connection, name){
+var registerStore = function(connection, name) {
   connection.registerStore(name, {
-    beginUpdate: function(batchSize, reset){
+    beginUpdate: function(batchSize, reset) {
     },
-    update: function(msg){
+    update: function(msg) {
       var idSplit = msg.id.split(':');
-      var sub = _.filter(buffer, function(sub){
+      var sub = _.filter(buffer, function(sub) {
         return sub.subscriptionId === idSplit[0];
       })[0].instance;
-      if(idSplit.length === 1 && msg.msg === 'added' &&
-        msg.fields && msg.fields.reset === true){
+      if (idSplit.length === 1 && msg.msg === 'added' &&
+        msg.fields && msg.fields.reset === true) {
         // This message indicates a reset of a result set
         sub.dispatchEvent('reset', msg);
         sub.splice(0, sub.length);
-      }else{
+      } else {
         var index = parseInt(idSplit[1], 10);
         var oldRow;
         sub.dispatchEvent('update', index, msg);
-        switch(msg.msg){
+        switch (msg.msg) {
           case 'added':
             console.log('in added');
             sub.splice(index, 0, msg.fields);
             sub.dispatchEvent(msg.msg, index, msg.fields);
             break;
           case 'changed':
-            oldRow = _.clone(sub[index]);
-            sub[index] = _.extend(sub[index], msg.fields);
-            sub.dispatchEvent(msg.msg, index, oldRow, sub[index]);
+            console.log('changed');
+            sub.splice(index, 0, msg.fields);
+            sub.dispatchEvent(msg.msg, index, msg.fields);
             break;
+          //case 'changed':
+          //  oldRow = _.clone(sub[index]);
+          //  sub[index] = _.extend(sub[index], msg.fields);
+          //  sub.dispatchEvent(msg.msg, index, oldRow, sub[index]);
+          //  break;
           case 'removed':
             oldRow = _.clone(sub[index]);
             sub.splice(index, 1);
@@ -180,9 +177,12 @@ var registerStore = function(connection, name){
       }
       sub.changed();
     },
-    endUpdate: function(){},
-    saveOriginals: function(){},
-    retrieveOriginals: function(){}
+    endUpdate: function() {
+    },
+    saveOriginals: function() {
+    },
+    retrieveOriginals: function() {
+    }
   });
 };
 
@@ -191,37 +191,37 @@ SQLCollection.prototype = new Array;
 _.extend(SQLCollection.prototype, Tracker.Dependency.prototype);
 
 
-SQLCollection.prototype._eventRoot = function(eventName){
+SQLCollection.prototype._eventRoot = function(eventName) {
   return eventName.split('.')[0];
 };
 
-SQLCollection.prototype._selectEvents = function(eventName, invert){
+SQLCollection.prototype._selectEvents = function(eventName, invert) {
   var self = this;
   var eventRoot, testKey, testVal;
-  if(!(eventName instanceof RegExp)){
+  if (!(eventName instanceof RegExp)) {
     eventRoot = self._eventRoot(eventName);
-    if(eventName === eventRoot){
+    if (eventName === eventRoot) {
       testKey = 'root';
       testVal = eventRoot;
-    }else{
+    } else {
       testKey = 'name';
       testVal = eventName;
     }
   }
-  return _.filter(self._events, function(event){
+  return _.filter(self._events, function(event) {
     var pass;
-    if(eventName instanceof RegExp){
+    if (eventName instanceof RegExp) {
       pass = event.name.match(eventName);
-    }else{
+    } else {
       pass = event[testKey] === testVal;
     }
     return invert ? !pass : pass;
   });
 };
 
-SQLCollection.prototype.addEventListener = function(eventName, listener){
+SQLCollection.prototype.addEventListener = function(eventName, listener) {
   var self = this;
-  if(typeof listener !== 'function')
+  if (typeof listener !== 'function')
     throw new Error('invalid-listener');
   self._events.push({
     name: eventName,
@@ -230,7 +230,7 @@ SQLCollection.prototype.addEventListener = function(eventName, listener){
   });
 };
 
-SQLCollection.prototype.initialValue = function(eventName, listener){
+SQLCollection.prototype.initialValue = function(eventName, listener) {
   console.log("in initial");
   var result = Postgres.select('tasks');
   return result;
@@ -238,25 +238,25 @@ SQLCollection.prototype.initialValue = function(eventName, listener){
 
 // @param {string} eventName - Remove events of this name, pass without suffix
 //                             to remove all events matching root.
-SQLCollection.prototype.removeEventListener = function(eventName){
+SQLCollection.prototype.removeEventListener = function(eventName) {
   console.log("in remove");
   var self = this;
   self._events = self._selectEvents(eventName, true);
 };
 
-SQLCollection.prototype.dispatchEvent = function(eventName /* arguments */){
+SQLCollection.prototype.dispatchEvent = function(eventName /* arguments */) {
   var self = this;
   var listenerArgs = Array.prototype.slice.call(arguments, 1);
   var listeners = self._selectEvents(eventName);
   // Newest to oldest
-  for(var i = listeners.length - 1; i >= 0; i--){
+  for (var i = listeners.length - 1; i >= 0; i--) {
     // Return false to stop further handling
-    if(listeners[i].listener.apply(self, listenerArgs) === false) return false;
+    if (listeners[i].listener.apply(self, listenerArgs) === false) return false;
   }
   return true;
 };
 
-SQLCollection.prototype.reactive = function(){
+SQLCollection.prototype.reactive = function() {
   console.log("in reactive");
   var self = this;
   self.depend();

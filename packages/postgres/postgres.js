@@ -543,18 +543,22 @@ Postgres.autoSelect = function (sub) {
         k = key;
         v = returnMsg[key];
       }
-      var selectString = "select id, text from " + k + " ORDER BY id DESC LIMIT 10;";
+      var selectString = "select * from " + k + " where id = " + v + ";";
       client.query(selectString, function(error, results) {
+        console.log("changed");
         if (error) {
           console.log("error in auto select " + table, error);
         } else {
+          console.log(results.rows[0]);
           sub._session.send({
-            msg: 'added',
+            msg: 'changed',
             collection: sub._name,
             id: sub._subscriptionId,
             fields: {
               reset: false,
-              results: results.rows
+              tableId: results.rows[0].id,
+              text: results.rows[0].text,
+              createdAt: results.rows[0].created_at
             }
           });
           return results.rows;
@@ -572,28 +576,4 @@ Postgres.getCursor = function(){
   };
   cursor.autoSelect = this.autoSelect;
   return cursor;
-};
-
-Postgres.loadData = function(table, sub){
-  console.log('postgres sub', sub.instance);
-  pg.connect(conString, function(err, client) {
-    client.query("select * from " + table, function(error, results) {
-      if (error) {
-        console.log("error in auto select " + table, error);
-      } else {
-        //console.log(results.rows);
-        //sub.instance._session.send({
-        //  msg: 'loaded',
-        //  collection: sub._name,
-        //  id: sub._subscriptionId,
-        //  fields: {
-        //    reset: false,
-        //    results: results.rows
-        //  }
-        //});
-        sub.instance.insertData(results.rows);
-        return results.rows;
-      }
-    });
-  });
 };
