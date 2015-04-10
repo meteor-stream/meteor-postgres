@@ -56,6 +56,6 @@ minisql.update = function(name, params){
   alasql("UPDATE " + name + " SET " + params.column + " = " + params.value + " WHERE ID = " + params.id);
 };
 
-minisql.delete = function(name, params){
-  alasql("DELETE FROM " + name + " WHERE id = " + params.id);
+minisql.remove = function(name, params){
+  alasql("DELETE FROM " + name + " WHERE id = " + params);
 };
