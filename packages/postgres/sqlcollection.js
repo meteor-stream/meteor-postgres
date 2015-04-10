@@ -111,10 +111,10 @@ SQLCollection = function(connection, name /* arguments */){
       console.log(msg.results[0]);
       var tableId = msg.results[0].id;
       var text = msg.results[0].text;
-      if (unvalidated === text) {
+      //if (unvalidated === text) {
         alasql("DELETE FROM " + tableName);
         unvalidated = "";
-      }
+      //}
       for (var x = 0; x<10; x++) {
         alasql("INSERT INTO tasks VALUES (?,?)", [msg.results[x].id, msg.results[x].text]);
       }
