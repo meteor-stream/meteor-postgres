@@ -315,47 +315,16 @@ Postgres.insert = function(table, insertObj) {
 // * @param {number} optionsObj value (comparator)
 // * @param {object} joinObj
 // */
-Postgres.select = function(tableName, returnFields, selectObj, optionsObj, joinObj) {
+Postgres.select = function(table, returnFields, selectObj, optionsObj, joinObj) {
   // SQL: 'SELECT fields FROM table WHERE field operator comparator AND (more WHERE) GROUP BY field / LIMIT number / OFFSET number;'
 
-  function _emptyObject(obj) {
-    for (var prop in obj) {
-      if (Object.prototype.propertyIsEnumerable.call(obj, prop)) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  // tableObj
-  // contains the table name as key and the fields as a string
-  // for all fields user can pass in the table name as a string (need to insert * into the inputString)
-  var table = tableName;
-  if (returnFields.length === 0) {
+  if (!returnFields || returnFields.length === 0) {
     returnFields = ' * ';
   }
   else {
-      returnFields = '(' + returnFields.join(', ') + ')';
+    returnFields = '(' + returnFields.join(', ') + ')';
   }
 
-  // selectObj
-  // contains the field as a key then another obj as the value with the operator and conditional values
-  //  Postgres.select({students: ['name', 'age']}, {age: {$gt: 18}}); -> WHERE age > 18
-  var selectString = '';
-  if (selectObj && !_emptyObject(selectObj)) {
-    var selectField, operator, comparator, key;
-    selectField = Object.keys(selectObj)[0];
-    key = Object.keys(selectObj[selectField])[0];
-    operator = this._QueryOperators[key];
-    comparator = selectObj[selectField][key];
-    selectString += ' WHERE ' + selectField + operator + comparator;
-  }
-  // logical operators
-  // if key is $or or $and $not $nor
-  // if key is string
-
-  // optionsObj
-  // object that can contain keys from SelectOptions and values of strings or integers or floats
   //{ name: {$lm: 1}}
   var optionsString = '';
   if (optionsObj && !_emptyObject(optionsObj)) {
@@ -367,8 +336,7 @@ Postgres.select = function(tableName, returnFields, selectObj, optionsObj, joinO
     optionsString += group + offset + limit;
   }
 
-  // joinObj TODO: helper table joins
-  // object contains keys from join and values of table names
+  // joinObj TODO: helper table joins && better interface for $fk/$tb
   // for foreign key it will be table1 join table2 on table1.table2_id = table2._id
   // {$fk: [$loj, 'contacts']}
   var joinString = '';
@@ -381,12 +349,12 @@ Postgres.select = function(tableName, returnFields, selectObj, optionsObj, joinO
       tableField = table + '.' + joinTable + '_id';
       joinField = joinTable + '._id';
     }
-    //else if (type === '$tb') {
-    //}
+    else if (type === '$tb') {
+    }
     joinString += joinType + joinTable + ' ON '+ tableField + ' = ' + joinField;
   }
 
-  var inputString = 'SELECT ' + returnFields + ' FROM ' + table + joinString + selectString + optionsString + ';';
+  var inputString = 'SELECT ' + returnFields + ' FROM ' + table + joinString + _where(selectObj) + optionsString + ';';
   console.log(inputString);
   pg.connect(conString, function(err, client, done) {
     if (err){
@@ -415,26 +383,6 @@ Postgres.select = function(tableName, returnFields, selectObj, optionsObj, joinO
 //UPDATE students SET (class, age) = ('senior', 30) WHERE age > 18
 Postgres.update = function(table, updateObj, selectObj) {
   // SQL: 'UPDATE table SET fields VALUE values WHERE fields operator comparator;'
-  var inputString = 'UPDATE ' + table + ' SET ';
-
-  function _emptyObject(obj) {
-    for (var prop in obj) {
-      if (Object.prototype.propertyIsEnumerable.call(obj, prop)) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  var selectString = '';
-  if (selectObj && !_emptyObject(selectObj)) {
-    var selectField, operator, comparator, key;
-    selectField = Object.keys(selectObj)[0];
-    key = Object.keys(selectObj[selectField])[0];
-    operator = this._QueryOperators[key];
-    comparator = selectObj[selectField][key];
-    selectString += ' WHERE ' + selectField + operator + comparator;
-  }
 
   var updateString = ''; // fields VALUE values {'class': 'senior'}
   if (updateObj && !_emptyObject(updateObj)) {
@@ -453,7 +401,7 @@ Postgres.update = function(table, updateObj, selectObj) {
     updateString += updateField + ') = ' + updateValue + ')';
   }
 
-  inputString += ' ' + updateString + selectString + ';';
+  var inputString = 'UPDATE ' + table + ' SET ' + updateString + _where(selectObj) + ';';
   pg.connect(conString, function(err, client, done) {
     if (err){
       console.log(err);
@@ -476,39 +424,18 @@ Postgres.update = function(table, updateObj, selectObj) {
  * @param selectObj
  */
 Postgres.remove = function (table, selectObj) {
-  // SQL: 'DELETE FROM table * WHERE field operator comparator;'
-  var inputString = 'DELETE FROM ' + table;
+  // SQL: 'DELETE FROM table WHERE field operator comparator;'
+  var inputString = 'DELETE FROM ' + table + _where(selectObj) + ';';
 
-  function _emptyObject(obj) {
-    for (var prop in obj) {
-      if (Object.prototype.propertyIsEnumerable.call(obj, prop)) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  var selectString = '';
-  if (selectObj && !_emptyObject(selectObj)) {
-    var selectField, operator, comparator, key;
-    selectField = Object.keys(selectObj)[0];
-    key = Object.keys(selectObj[selectField])[0];
-    operator = this._QueryOperators[key];
-    comparator = selectObj[selectField][key];
-    selectString += ' WHERE ' + selectField + operator + comparator;
-  }
-
-  inputString += selectString + ';';
-  console.log(inputString);
   pg.connect(conString, function(err, client, done) {
     if (err){
       console.log(err);
     }
     client.query(inputString, function(error, results) {
       if (error) {
-      console.log("error in remove " + table, error);
+        console.log("error in remove " + table, error);
       } else {
-        //console.log("results in remove " + table, results.rows);
+        console.log("results in remove " + table, results.rows);
       }
       done();
     });
@@ -518,22 +445,22 @@ Postgres.remove = function (table, selectObj) {
 Postgres.autoSelect = function (sub) {
   pg.connect(conString, function(err, client) {
     var selectString = "select id, text from " + "tasks" + " ORDER BY id DESC LIMIT 10;";
-    client.query(selectString, function(error, results) {
-      if (error) {
-        console.log("error in auto select " + table, error);
-      } else {
-        sub._session.send({
-          msg: 'added',
-          collection: sub._name,
-          id: sub._subscriptionId,
-          fields: {
-            reset: false,
-            results: results.rows
-          }
-        });
-        return results.rows;
-      }
-    });
+    //client.query(selectString, function(error, results) {
+    //  if (error) {
+    //    console.log("error in auto select " + table, error);
+    //  } else {
+    //    sub._session.send({
+    //      msg: 'added',
+    //      collection: sub._name,
+    //      id: sub._subscriptionId,
+    //      fields: {
+    //        reset: false,
+    //        results: results.rows
+    //      }
+    //    });
+    //    return results.rows;
+    //  }
+    //});
     var query = client.query("LISTEN watchers");
     client.on('notification', function(msg) {
       var returnMsg = eval("(" + msg.payload + ")");
@@ -597,3 +524,26 @@ Postgres.loadData = function(table, sub){
     });
   });
 };
+
+// TODO: Accept AND / OR statements
+function _where(selectObj) {
+  if (selectObj && !_emptyObject(selectObj)) {
+    var selectField, operator, comparator, key;
+    selectField = Object.keys(selectObj)[0];
+    key = Object.keys(selectObj[selectField])[0];
+    operator = Postgres._QueryOperators[key];
+    comparator = selectObj[selectField][key];
+    return ' WHERE ' + selectField + operator + comparator;
+  } else {
+    return '';
+  }
+}
+
+function _emptyObject(obj) {
+  for (var prop in obj) {
+    if (Object.prototype.propertyIsEnumerable.call(obj, prop)) {
+      return false;
+    }
+  }
+  return true;
+}
