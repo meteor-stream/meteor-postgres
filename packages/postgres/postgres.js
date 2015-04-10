@@ -348,7 +348,7 @@ Postgres.select = function(tableName, returnFields, selectObj, optionsObj, joinO
     key = Object.keys(selectObj[selectField])[0];
     operator = this._QueryOperators[key];
     comparator = selectObj[selectField][key];
-    selectString += ' WHERE ' + selectField + ' ' + operator + ' ' + comparator;
+    selectString += ' WHERE ' + selectField + operator + comparator;
   }
   // logical operators
   // if key is $or or $and $not $nor
@@ -405,45 +405,75 @@ Postgres.select = function(tableName, returnFields, selectObj, optionsObj, joinO
   });
 };
 
-/**
- * TODO: OR to selectObj
- * @param {string} tableName
- * @param {string} selectName  -> field to update
- * @param {object} selectObj
- * @param {string} selectObj key (field name)
- * @param {object} selectObj.fieldName key (operator)
- * @param {object} selectObj.fieldName value (comparator) -> filters
- * @param {object} updateObj
- * @param {string} updateObj key (field name)
- * @param {number} updateObj value (updated data) -> updates
- */
-Postgres.update = function(tableName, selectName, updateObj, selectObj) {
-  // SQL: 'SELECT fields FROM table WHERE field operator comparator AND (more WHERE) GROUP BY field / LIMIT number / OFFSET number;'
-
-  // tableObj
-  // contains the table name as key and the fields as a string
-  // for all fields user can pass in the table name as a string (need to insert * into the inputString)
-  var table, toUpdateFields;
-  table = tableName;
-  toUpdateFields = selectName;
-
-  // selectObj
-  // contains the field as a key then another obj as the value with the operator and conditional values
+Postgres.newUpdate = function(table, updateObj, selectObj) {
+  var inputString;
   var selectString = '';
-  if (selectObj) {
-    var selectField, operator, comparator;
+  if (selectObj && !_emptyObject(selectObj)) {
+    var selectField, operator, comparator, key;
     selectField = Object.keys(selectObj)[0];
-    operator = Object.keys(selectObj[selectField])[0];
-    comparator = selectObj[selectField][operator];
-    selectString += 'WHERE ' + selectField + ' ' + operator + ' ' + comparator;
+    key = Object.keys(selectObj[selectField])[0];
+    operator = this._QueryOperators[key];
+    comparator = selectObj[selectField][key];
+    selectString += ' WHERE ' + selectField + ' ' + operator + ' ' + comparator;
+  }
+  // UPDATE table SET fields VALUE values WHERE fields operator comparator
+  inputString += selectString + ';';
+
+};
+
+///**
+// * TODO: OR to selectObj
+// * @param {string} tableName
+// * @param {string} selectName  -> field to update
+// * @param {object} selectObj
+// * @param {string} selectObj key (field name)
+// * @param {object} selectObj.fieldName key (operator)
+// * @param {object} selectObj.fieldName value (comparator) -> filters
+// * @param {object} updateObj
+// * @param {string} updateObj key (field name)
+// * @param {number} updateObj value (updated data) -> updates
+// */
+Postgres.update = function(table, updateObj, selectObj) {
+  // SQL: 'UPDATE table SET fields VALUE values WHERE fields operator comparator;'
+  var inputString = 'UPDATE ' + table + ' SET ';
+
+  function _emptyObject(obj) {
+    for (var prop in obj) {
+      if (Object.prototype.propertyIsEnumerable.call(obj, prop)) {
+        return false;
+      }
+    }
+    return true;
   }
 
-  //var updateString = '';
-  //for (var key in updateObj) {
-  //  updateString += ' ' + options[key] + ' ' + optionsObj[key];
-  //}
+  var selectString = '';
+  if (selectObj && !_emptyObject(selectObj)) {
+    var selectField, operator, comparator, key;
+    selectField = Object.keys(selectObj)[0];
+    key = Object.keys(selectObj[selectField])[0];
+    operator = this._QueryOperators[key];
+    comparator = selectObj[selectField][key];
+    selectString += ' WHERE ' + selectField + operator + comparator;
+  }
 
-  var inputString = 'UPDATE ' + table + ' SET ' + toUpdateFields + ' ' + selectString + ';';
+  var updateString = ''; // fields VALUE values {'class': 'senior'}
+  if (updateObj && !_emptyObject(updateObj)) {
+    var updateField = '(', updateValue = '(', keys = Object.keys(updateObj);
+    if (keys.length > 1) {
+      for (var i = 0, count = keys.length-1; i < count; i++) {
+        updateField += keys[i] + ', ';
+        updateValue += "'" + updateObj[keys[i]] + "', ";
+      }
+      updateField += keys[keys.length - 1];
+      updateValue += "'" + updateObj[keys[keys.length - 1]] + "'";
+    } else {
+      updateField += keys[0];
+      updateValue += "'" + updateObj[keys[0]] + "'";
+    }
+    updateString += updateField + ') = ' + updateValue + ')';
+  }
+
+  inputString += ' ' + updateString + selectString + ';';
   pg.connect(conString, function(err, client, done) {
     if (err){
       console.log(err);
