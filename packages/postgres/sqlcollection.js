@@ -5,7 +5,7 @@ var reactiveData = new Tracker.Dependency;
 SQLCollection = function(connection, name /* arguments */){
   var self = this;
   var tableName = connection;
-
+  var unvalidated = '';
   this.createTable = function(tableName, tableDefinition){
     // TODO: MAKE SURE THIS HANDLES TABLES THAT ALREADY EXIST (mini sql doesn't perssist data so shouldn't be an issue)
     minisql.createTable(tableName, tableDefinition);
@@ -16,10 +16,15 @@ SQLCollection = function(connection, name /* arguments */){
     return minisql.select(tableName, args);
   };
 
+  this.insertData = function(data){
+    console.log(data);
+  };
+
   this.insert = function(dataObj){
     console.log(tableName);
     console.log(dataObj);
     minisql.insert(tableName, dataObj);
+    unvalidated = dataObj.text;
     Meteor.call('add', tableName, dataObj);
   };
 
@@ -57,7 +62,12 @@ SQLCollection = function(connection, name /* arguments */){
     // SQLCollection arguments does not use the first argument (the connection)
     subscribeArgs = Array.prototype.slice.call(arguments, 1);
   }
+  //Meteor.call('loadData', 'tasks', connection);
 
+  //this.loadData = function(tableName){
+  //  Meteor.call('loadData', tableName, connection);
+  //};
+  console.log('connection==============', connection._subscriptions);
   Tracker.Dependency.call(self);
   var subsBefore = _.keys(connection._subscriptions);
   _.extend(self, connection.subscribe.apply(connection, subscribeArgs));
@@ -77,7 +87,6 @@ SQLCollection = function(connection, name /* arguments */){
     }).length === 1){
     registerStore(connection, name);
   }
-
   if (Meteor.isServer) {
     Meteor.methods({
       add: function(table, paramObj){
@@ -89,6 +98,9 @@ SQLCollection = function(connection, name /* arguments */){
       },
       delete: function(table, paramObj){
         Postgres.delete(table, paramObj);
+      },
+      loadData: function(table, self){
+        Postgres.loadData(table, self);
       }
     });
   }
@@ -101,23 +113,46 @@ SQLCollection = function(connection, name /* arguments */){
       console.log(tableName);
       var tableId = msg.tableId;
       var text = msg.text;
-      var insertText = "INSERT INTO tasks VALUES (" + tableId + ", " + "'" + text + "'" + ")";
-      var deleteText = "DELETE FROM tasks WHERE text = " + msg.text + ";";
-      console.log(deleteText);
-      alasql("DELETE FROM tasks WHERE text = ?", [msg.text]);
-      alasql(insertText);
+      if (unvalidated === text) {
+        alasql("DELETE FROM " + tableName + " WHERE text = ?", [text]);
+        unvalidated = "";
+      }
+      alasql("INSERT INTO " + tableName + " VALUES ( ?, ?);", [tableId, text]);
       reactiveData.changed();
     });
+
+    this.addEventListener('loaded', function(index, msg){
+      console.log('fire');
+      console.log(msg);
+      //if (unvalidated === text) {
+      //  alasql("DELETE FROM " + tableName + " WHERE text = ?", [text]);
+      //  unvalidated = "";
+      //}
+      //alasql("INSERT INTO " + tableName + " VALUES ( ?, ?);", [tableId, text]);
+      //reactiveData.changed();
+    });
+    Meteor.methods({
+      insertData: function(results){
+        console.log(results)
+      }
+    }
+
+    )
   }
 };
 
 var registerStore = function(connection, name){
+  var sub = _.filter(buffer, function(sub){
+    Postgres.loadData('tasks', sub);
+    return 0;
+  });
   connection.registerStore(name, {
     beginUpdate: function(batchSize, reset){
     },
     update: function(msg){
       var idSplit = msg.id.split(':');
       var sub = _.filter(buffer, function(sub){
+        Postgres.loadData('tasks', connection);
         return sub.subscriptionId === idSplit[0];
       })[0].instance;
       if(idSplit.length === 1 && msg.msg === 'added' &&

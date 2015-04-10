@@ -568,3 +568,27 @@ Postgres.getCursor = function(){
   cursor.autoSelect = this.autoSelect;
   return cursor;
 };
+
+Postgres.loadData = function(table, sub){
+  console.log('postgres sub', sub.instance);
+  pg.connect(conString, function(err, client) {
+    client.query("select * from " + table, function(error, results) {
+      if (error) {
+        console.log("error in auto select " + table, error);
+      } else {
+        //console.log(results.rows);
+        //sub.instance._session.send({
+        //  msg: 'loaded',
+        //  collection: sub._name,
+        //  id: sub._subscriptionId,
+        //  fields: {
+        //    reset: false,
+        //    results: results.rows
+        //  }
+        //});
+        sub.instance.insertData(results.rows);
+        return results.rows;
+      }
+    });
+  });
+};
