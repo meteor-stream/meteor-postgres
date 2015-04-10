@@ -111,12 +111,23 @@ Postgres.createTable = function(table, tableObj, relTable) {
   }
   //inputString += ');';
   // add notify functionality and close input string
+  var insertQuote = '"';
   inputString += " created_at TIMESTAMP default now()); " +
-  "CREATE FUNCTION notify_trigger() RETURNS trigger AS $$ "+
-  "DECLARE " +
-  "BEGIN " +
-  "PERFORM pg_notify('watchers', '{' || TG_TABLE_NAME || ':' || NEW.id || '}'); " +
+  "CREATE OR REPLACE FUNCTION notify_trigger() RETURNS trigger AS $$" +
+  "BEGIN" +
+  "IF (TG_OP = 'DELETE') THEN" +
+  "PERFORM pg_notify('watchers', '[{' || TG_TABLE_NAME || ':' || OLD.id || '}, { operation: " + insertQuote +
+  "' || TG_OP || '"+ insertQuote +"}]');" +
+  "RETURN old;" +
+  "ELSIF (TG_OP = 'INSERT') THEN + " +
+  "PERFORM pg_notify('watchers', '[{' || TG_TABLE_NAME || ':' || NEW.id || '}, { operation: " + insertQuote +
+  "' || TG_OP || '"+ insertQuote +"}]');" +
   "RETURN new; " +
+  "ELSIF (TG_OP = 'UPDATE') THEN " +
+  "PERFORM pg_notify('watchers', '[{' || TG_TABLE_NAME || ':' || NEW.id || '}, { operation: " + insertQuote +
+  "' || TG_OP || '"+ insertQuote +"}]');" +
+  "RETURN new; " +
+  "END IF; " +
   "END; " +
   "$$ LANGUAGE plpgsql; " +
   "CREATE TRIGGER watched_table_trigger AFTER INSERT ON "+ table +
