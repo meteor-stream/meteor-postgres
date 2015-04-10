@@ -45,7 +45,14 @@ Postgres._Joins = {
   $lij: ' LEFT INNER JOIN '
 };
 
-/* methods: createTable, createRelationship, alterTable, dropTable, insert, select, update, delete, autoSelect */
+Postgres._SelectAddons = {
+  $gb: 'GROUP BY ',
+  $lim: 'LIMIT ',
+  $off: 'OFFSET '
+};
+
+
+/* methods: createTable, createRelationship, alterTable, dropTable, insert, select, update, remove, autoSelect */
 
 ///**
 // * TODO: user accounts, role management, authentication, IMPORTANT: add id option, default, add 'now'
@@ -294,13 +301,6 @@ Postgres.insert = function(table, insertObj) {
   });
 };
 
-Postgres._SelectAddons = {
-  $gb: 'GROUP BY ',
-  $lim: 'LIMIT ',
-  $off: 'OFFSET '
-};
-
-
 ///**
 // * TODO: JOINS, LOGICAL OPERATORS AND / OR, REGEX
 // * @param {object} tableObj
@@ -405,34 +405,14 @@ Postgres.select = function(tableName, returnFields, selectObj, optionsObj, joinO
   });
 };
 
-Postgres.newUpdate = function(table, updateObj, selectObj) {
-  var inputString;
-  var selectString = '';
-  if (selectObj && !_emptyObject(selectObj)) {
-    var selectField, operator, comparator, key;
-    selectField = Object.keys(selectObj)[0];
-    key = Object.keys(selectObj[selectField])[0];
-    operator = this._QueryOperators[key];
-    comparator = selectObj[selectField][key];
-    selectString += ' WHERE ' + selectField + ' ' + operator + ' ' + comparator;
-  }
-  // UPDATE table SET fields VALUE values WHERE fields operator comparator
-  inputString += selectString + ';';
-
-};
-
-///**
-// * TODO: OR to selectObj
-// * @param {string} tableName
-// * @param {string} selectName  -> field to update
-// * @param {object} selectObj
-// * @param {string} selectObj key (field name)
-// * @param {object} selectObj.fieldName key (operator)
-// * @param {object} selectObj.fieldName value (comparator) -> filters
-// * @param {object} updateObj
-// * @param {string} updateObj key (field name)
-// * @param {number} updateObj value (updated data) -> updates
-// */
+/**
+ *
+ * @param {string} table
+ * @param {object} updateObj: key, value = fieldToUpdate, valueToUpdate
+ * @param {object} selectObj: key, value = fieldToSelect, comparisonObject -> use QueryOperators for key
+ */
+//Postgres.update('students',{'class': 'senior', age: 30},{age: {$gt: 18}});
+//UPDATE students SET (class, age) = ('senior', 30) WHERE age > 18
 Postgres.update = function(table, updateObj, selectObj) {
   // SQL: 'UPDATE table SET fields VALUE values WHERE fields operator comparator;'
   var inputString = 'UPDATE ' + table + ' SET ';
@@ -495,30 +475,40 @@ Postgres.update = function(table, updateObj, selectObj) {
  * @param table
  * @param selectObj
  */
-Postgres.delete = function (table, selectObj) {
+Postgres.remove = function (table, selectObj) {
   // SQL: 'DELETE FROM table * WHERE field operator comparator;'
   var inputString = 'DELETE FROM ' + table;
 
+  function _emptyObject(obj) {
+    for (var prop in obj) {
+      if (Object.prototype.propertyIsEnumerable.call(obj, prop)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   var selectString = '';
-  if (selectObj) {
-    var selectField, operator, comparator;
+  if (selectObj && !_emptyObject(selectObj)) {
+    var selectField, operator, comparator, key;
     selectField = Object.keys(selectObj)[0];
-    operator = Object.keys(selectObj[selectField])[0];
-    comparator = selectObj[selectField][operator];
-    selectString += 'WHERE ' + selectField + ' ' + operator + ' ' + comparator;
+    key = Object.keys(selectObj[selectField])[0];
+    operator = this._QueryOperators[key];
+    comparator = selectObj[selectField][key];
+    selectString += ' WHERE ' + selectField + operator + comparator;
   }
 
   inputString += selectString + ';';
-
+  console.log(inputString);
   pg.connect(conString, function(err, client, done) {
     if (err){
       console.log(err);
     }
     client.query(inputString, function(error, results) {
       if (error) {
-      console.log("error in delete " + table, error);
+      console.log("error in remove " + table, error);
       } else {
-        //console.log("results in delete " + table, results.rows);
+        //console.log("results in remove " + table, results.rows);
       }
       done();
     });
