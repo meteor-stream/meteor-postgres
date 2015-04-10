@@ -1,3 +1,13 @@
+  //Postgres.select('students');
+  //Postgres.select('students',['name', 'age']);
+  //Postgres.select('students',['name', 'age'],{age: {$gt: 18}});
+  //Postgres.select('students',['name', 'age'],{age: {$gt: 18}},{ name: {$lm: 1}});
+  //Postgres.select('contacts',['address'],{},{ address: {$lm: 1}},{$fk: ['$loj', 'students']});
+  //Postgres.update('students',{'class': 'senior', age: 30},{age: {$gt: 18}});
+  //Postgres.remove('students', {age: {$gt: 20}});
+
+
+
 ## Helper Objects
 
 > Limit the functions available to the user 
