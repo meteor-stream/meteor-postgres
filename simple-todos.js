@@ -8,6 +8,7 @@ if (Meteor.isClient) {
   var taskTable = {
     id: ['INT', 'AUTO_INCREMENT'],
     text: ['varchar (255)', 'not null'],
+    checked: ['BOOL', 'DEFAULT false']
   };
   tasks.createTable('tasks', taskTable);
 
@@ -25,7 +26,8 @@ if (Meteor.isClient) {
       // This function is called when the new task form is submitted
       var text = event.target.text.value;
       tasks.insert({
-        text:text
+        text:text,
+        checked:false
       });
 
       // Clear form
@@ -36,7 +38,12 @@ if (Meteor.isClient) {
     },
     "click .toggle-checked": function () {
       // Set the checked property to the opposite of its current value
-      tasks.update(this._id, {$set: {checked: ! this.checked}});
+      if (this.checked) {
+        tasks.update('tasks', {id: this.id, column: "checked", value: false});
+      }
+      else {
+        tasks.update('tasks', {id: this.id, column: "checked", value: true});
+      }
     },
     "click .delete": function () {
       console.log(this);
