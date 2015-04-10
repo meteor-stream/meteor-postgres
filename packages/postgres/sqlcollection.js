@@ -18,8 +18,6 @@ SQLCollection = function(connection, name /* arguments */) {
   };
 
   this.insert = function(dataObj) {
-    console.log(tableName);
-    console.log(dataObj);
     minisql.insert(tableName, dataObj);
     reactiveData.changed();
     unvalidated = dataObj.text;
@@ -33,6 +31,7 @@ SQLCollection = function(connection, name /* arguments */) {
 
   this.remove = function(dataObj) {
     minisql.remove(tableName, dataObj);
+    reactiveData.changed();
     Meteor.call('remove', tableName, dataObj);
   };
 
@@ -87,14 +86,13 @@ SQLCollection = function(connection, name /* arguments */) {
   if (Meteor.isServer) {
     Meteor.methods({
       add: function(table, paramObj) {
-        console.log("in add");
         Postgres.insert(table, paramObj);
       },
       update: function(table, paramObj, selectObj) {
         Postgres.update(table, paramObj, selectObj);
       },
-      delete: function(table, paramObj) {
-        Postgres.delete(table, paramObj);
+      remove: function(table, paramObj) {
+        Postgres.remove(table, {"id":{$eq:paramObj}});
       }
     });
   }
@@ -102,35 +100,41 @@ SQLCollection = function(connection, name /* arguments */) {
 
   if (Meteor.isClient) {
     this.addEventListener('added', function(index, msg) {
-      console.log(msg.results);
-      console.log(msg.results[0]);
       var tableId = msg.results[0].id;
       var text = msg.results[0].text;
       //if (unvalidated === text) {
       alasql("DELETE FROM " + tableName);
       unvalidated = "";
       //}
-      for (var x = 9; x >= 0 ; x--) {
+      for (var x = msg.results.length-1; x >= 0 ; x--) {
         alasql("INSERT INTO tasks VALUES (?,?)", [msg.results[x].id, msg.results[x].text]);
       }
       reactiveData.changed();
     });
     this.addEventListener('changed', function(index, msg) {
-      console.log(msg.id);
-      console.log(msg.text);
-      console.log('fired');
-      var tableId = msg.tableId;
-      var text = msg.text;
-      if (unvalidated !== "") {
-        console.log(text);
-        alasql("UPDATE " + tableName + " SET id = ? WHERE text= " + "'" + text + "'", [tableId]);
-        unvalidated = "";
+      if (msg.removed){
+        var tableId = msg.tableId;
+        minisql.remove(msg.name, tableId);
       }
       else {
-        alasql("INSERT INTO " + tableName + "VALUES (?,?)", [tableId, text]);
+        var tableId = msg.tableId;
+        var text = msg.text;
+        if (unvalidated !== "") {
+          alasql("UPDATE " + tableName + " SET id = ? WHERE text= " + "'" + text + "'", [tableId]);
+          unvalidated = "";
+        }
+        else {
+          alasql("INSERT INTO " + tableName + " VALUES (?,?)", [tableId, text]);
+        }
       }
       reactiveData.changed();
-    })
+    });
+
+    //this.addEventListener('removed', function(index, msg) {
+    //  var tableId = msg.tableId;
+    //  minisql.remove(msg.name, tableId);
+    //  reactiveData.changed();
+    //});
   }
 };
 
@@ -154,12 +158,10 @@ var registerStore = function(connection, name) {
         sub.dispatchEvent('update', index, msg);
         switch (msg.msg) {
           case 'added':
-            console.log('in added');
             sub.splice(index, 0, msg.fields);
             sub.dispatchEvent(msg.msg, index, msg.fields);
             break;
           case 'changed':
-            console.log('changed');
             sub.splice(index, 0, msg.fields);
             sub.dispatchEvent(msg.msg, index, msg.fields);
             break;
@@ -168,10 +170,14 @@ var registerStore = function(connection, name) {
           //  sub[index] = _.extend(sub[index], msg.fields);
           //  sub.dispatchEvent(msg.msg, index, oldRow, sub[index]);
           //  break;
-          case 'removed':
-            oldRow = _.clone(sub[index]);
-            sub.splice(index, 1);
-            sub.dispatchEvent(msg.msg, index, oldRow);
+          //case 'removed':
+          //  oldRow = _.clone(sub[index]);
+          //  sub.splice(index, 1);
+          //  sub.dispatchEvent(msg.msg, index, oldRow);
+          //  break;
+          //case 'removed':
+          //  sub.splice(index, 0, msg.fields);
+          //  sub.dispatchEvent(msg.msg, index, msg.fields);
             break;
         }
       }
@@ -231,7 +237,6 @@ SQLCollection.prototype.addEventListener = function(eventName, listener) {
 };
 
 SQLCollection.prototype.initialValue = function(eventName, listener) {
-  console.log("in initial");
   var result = Postgres.select('tasks');
   return result;
 };
@@ -239,7 +244,6 @@ SQLCollection.prototype.initialValue = function(eventName, listener) {
 // @param {string} eventName - Remove events of this name, pass without suffix
 //                             to remove all events matching root.
 SQLCollection.prototype.removeEventListener = function(eventName) {
-  console.log("in remove");
   var self = this;
   self._events = self._selectEvents(eventName, true);
 };
@@ -257,7 +261,6 @@ SQLCollection.prototype.dispatchEvent = function(eventName /* arguments */) {
 };
 
 SQLCollection.prototype.reactive = function() {
-  console.log("in reactive");
   var self = this;
   self.depend();
   return self;

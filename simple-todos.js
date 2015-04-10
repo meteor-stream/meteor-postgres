@@ -39,7 +39,8 @@ if (Meteor.isClient) {
       tasks.update(this._id, {$set: {checked: ! this.checked}});
     },
     "click .delete": function () {
-      tasks.remove(this._id);
+      console.log(this);
+      tasks.remove(this.id);
     }
   });
 }

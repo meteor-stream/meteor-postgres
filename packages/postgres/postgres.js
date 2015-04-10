@@ -447,7 +447,6 @@ Postgres.autoSelect = function (sub) {
     var selectString = "select id, text from " + "tasks" + " ORDER BY id DESC LIMIT 10;";
     client.query(selectString, function(error, results) {
       if (error) {
-        console.log("error in auto select " + table, error);
       } else {
         sub._session.send({
           msg: 'added',
@@ -464,29 +463,43 @@ Postgres.autoSelect = function (sub) {
     var query = client.query("LISTEN watchers");
     client.on('notification', function(msg) {
       var returnMsg = eval("(" + msg.payload + ")");
-      var k = '';
-      var v = '';
-      for (var key in returnMsg) {
-        k = key;
-        v = returnMsg[key];
+      var k = sub._name;
+      if(returnMsg[1].operation === "DELETE"){
+        var tableId = parseInt(returnMsg[0][k]);
+        sub._session.send({
+          msg: 'changed',
+          collection: sub._name,
+          id: sub._subscriptionId,
+          index: tableId,
+          fields: {
+            removed: true,
+            reset: false,
+            tableId: tableId,
+            name: sub._name
+          }
+        });
       }
-      var selectString = "select id, text from " + k + " ORDER BY id DESC LIMIT 10;";
-      client.query(selectString, function(error, results) {
-        if (error) {
-          console.log("error in auto select " + table, error);
-        } else {
-          sub._session.send({
-            msg: 'added',
-            collection: sub._name,
-            id: sub._subscriptionId,
-            fields: {
-              reset: false,
-              results: results.rows
-            }
-          });
-          return results.rows;
-        }
-      });
+      else {
+        var selectString = "select * from " + sub._name + " WHERE id = " + returnMsg[0][sub._name] + ";";
+        client.query(selectString, function(error, results) {
+          if (error) {
+          } else {
+            sub._session.send({
+              msg: 'changed',
+              collection: sub._name,
+              id: sub._subscriptionId,
+              fields: {
+                removed: false,
+                reset: false,
+                tableId: results.rows[0].id,
+                text: results.rows[0].text,
+                createdAt: results.rows[0].created_at
+              }
+            });
+            return results.rows;
+          }
+        });
+      }
     });
   });
 };
@@ -501,29 +514,6 @@ Postgres.getCursor = function(){
   return cursor;
 };
 
-Postgres.loadData = function(table, sub){
-  console.log('postgres sub', sub.instance);
-  pg.connect(conString, function(err, client) {
-    client.query("select * from " + table, function(error, results) {
-      if (error) {
-        console.log("error in auto select " + table, error);
-      } else {
-        //console.log(results.rows);
-        //sub.instance._session.send({
-        //  msg: 'loaded',
-        //  collection: sub._name,
-        //  id: sub._subscriptionId,
-        //  fields: {
-        //    reset: false,
-        //    results: results.rows
-        //  }
-        //});
-        sub.instance.insertData(results.rows);
-        return results.rows;
-      }
-    });
-  });
-};
 
 // TODO: Accept AND / OR statements
 function _where(selectObj) {
