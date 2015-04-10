@@ -67,7 +67,6 @@ SQLCollection = function(connection, name /* arguments */){
   //this.loadData = function(tableName){
   //  Meteor.call('loadData', tableName, connection);
   //};
-  console.log('connection==============', connection._subscriptions);
   Tracker.Dependency.call(self);
   var subsBefore = _.keys(connection._subscriptions);
   _.extend(self, connection.subscribe.apply(connection, subscribeArgs));
@@ -108,16 +107,18 @@ SQLCollection = function(connection, name /* arguments */){
 
   if (Meteor.isClient) {
     this.addEventListener('added', function(index, msg){
-      console.log('fire');
-      console.log(self);
-      console.log(tableName);
-      var tableId = msg.tableId;
-      var text = msg.text;
+      console.log(msg.results);
+      console.log(msg.results[0]);
+      var tableId = msg.results[0].id;
+      var text = msg.results[0].text;
       if (unvalidated === text) {
-        alasql("DELETE FROM " + tableName + " WHERE text = ?", [text]);
+        alasql("DELETE FROM " + tableName);
         unvalidated = "";
       }
-      alasql("INSERT INTO " + tableName + " VALUES ( ?, ?);", [tableId, text]);
+      for (var x = 0; x<10; x++) {
+        alasql("INSERT INTO tasks VALUES (?,?)", [msg.results[x].id, msg.results[x].text]);
+      }
+
       reactiveData.changed();
     });
 
@@ -142,17 +143,12 @@ SQLCollection = function(connection, name /* arguments */){
 };
 
 var registerStore = function(connection, name){
-  var sub = _.filter(buffer, function(sub){
-    Postgres.loadData('tasks', sub);
-    return 0;
-  });
   connection.registerStore(name, {
     beginUpdate: function(batchSize, reset){
     },
     update: function(msg){
       var idSplit = msg.id.split(':');
       var sub = _.filter(buffer, function(sub){
-        Postgres.loadData('tasks', connection);
         return sub.subscriptionId === idSplit[0];
       })[0].instance;
       if(idSplit.length === 1 && msg.msg === 'added' &&
