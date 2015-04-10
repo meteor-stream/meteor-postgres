@@ -414,6 +414,7 @@ Postgres.update = function(table, updateObj, selectObj) {
   }
 
   var inputString = 'UPDATE ' + table + ' SET ' + updateString + _where(selectObj) + ';';
+  console.log(inputString);
   pg.connect(conString, function(err, client, done) {
     if (err){
       console.log(err);
@@ -484,10 +485,34 @@ Postgres.autoSelect = function (sub) {
           id: sub._subscriptionId,
           index: tableId,
           fields: {
+            modified: false,
             removed: true,
             reset: false,
             tableId: tableId,
             name: sub._name
+          }
+        });
+      }
+      else if(returnMsg[1].operation === "UPDATE") {
+        var selectString = "select * from " + sub._name + " WHERE id = " + returnMsg[0][sub._name] + ";";
+        client.query(selectString, function(error, results) {
+          if (error) {
+          } else {
+            sub._session.send({
+              msg: 'changed',
+              collection: sub._name,
+              id: sub._subscriptionId,
+              index: tableId,
+              fields: {
+                modified: true,
+                removed: false,
+                reset: false,
+                tableId: results.rows[0].id,
+                text: results.rows[0].text,
+                checked: results.rows[0].checked,
+                createdAt: results.rows[0].created_at
+              }
+            });
           }
         });
       }
@@ -501,10 +526,12 @@ Postgres.autoSelect = function (sub) {
               collection: sub._name,
               id: sub._subscriptionId,
               fields: {
+                modified: false,
                 removed: false,
                 reset: false,
                 tableId: results.rows[0].id,
                 text: results.rows[0].text,
+                checked: results.rows[0].checked,
                 createdAt: results.rows[0].created_at
               }
             });
