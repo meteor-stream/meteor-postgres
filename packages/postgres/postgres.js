@@ -497,6 +497,23 @@ Postgres.delete = function (table, selectObj) {
 
 Postgres.autoSelect = function (sub) {
   pg.connect(conString, function(err, client) {
+    var selectString = "select id, text from " + "tasks" + " ORDER BY id DESC LIMIT 10;";
+    client.query(selectString, function(error, results) {
+      if (error) {
+        console.log("error in auto select " + table, error);
+      } else {
+        sub._session.send({
+          msg: 'added',
+          collection: sub._name,
+          id: sub._subscriptionId,
+          fields: {
+            reset: false,
+            results: results.rows
+          }
+        });
+        return results.rows;
+      }
+    });
     var query = client.query("LISTEN watchers");
     client.on('notification', function(msg) {
       var returnMsg = eval("(" + msg.payload + ")");
@@ -506,7 +523,7 @@ Postgres.autoSelect = function (sub) {
         k = key;
         v = returnMsg[key];
       }
-      var selectString = "select * from " + k + " where id = " + v + ";";
+      var selectString = "select id, text from " + k + " ORDER BY id DESC LIMIT 10;";
       client.query(selectString, function(error, results) {
         if (error) {
           console.log("error in auto select " + table, error);
@@ -517,9 +534,7 @@ Postgres.autoSelect = function (sub) {
             id: sub._subscriptionId,
             fields: {
               reset: false,
-              tableId: results.rows[0].id,
-              text: results.rows[0].text,
-              createdAt: results.rows[0].created_at
+              results: results.rows
             }
           });
           return results.rows;
