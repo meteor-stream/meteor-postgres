@@ -7,7 +7,7 @@ if (Meteor.isClient) {
   // To mirror the Mongo interface we should make it so taht 1 collection is 1 table
   var taskTable = {
     id: ['INT', 'AUTO_INCREMENT'],
-    text: ['varchar (255)', 'not null']
+    text: ['varchar (255)', 'not null'],
   };
   tasks.createTable('tasks', taskTable);
 
