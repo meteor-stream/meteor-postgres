@@ -22,7 +22,7 @@ SQLCollection = function(connection, name /* arguments */) {
   };
 
   this.insert = function(dataObj) {
-    minisql.insert(tableName, dataObj);
+    minisql.insert(tableName, -1, dataObj);
     reactiveData.changed();
     unvalidated = dataObj.text;
     Meteor.call('add', tableName, dataObj);
