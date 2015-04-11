@@ -8,7 +8,7 @@ if (Meteor.isClient) {
   var taskTable = {
     id: ['INT', 'AUTO_INCREMENT'],
     text: ['varchar (255)', 'not null'],
-    checked: ['BOOL', 'DEFAULT false']
+    checked: ['BOOL', 'DEFAULT true']
   };
   tasks.createTable('tasks', taskTable);
 
