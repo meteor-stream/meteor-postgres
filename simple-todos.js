@@ -32,7 +32,7 @@ if (Meteor.isClient) {
       // This function is called when the new task form is submitted
       var text = event.target.text.value;
       tasks.insert({
-        text:text,
+        value:text,
         checked:false
       });
 
