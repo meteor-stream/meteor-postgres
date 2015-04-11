@@ -2,13 +2,22 @@
   <title>Todo List</title>
 </head>
 
+
 <body>
+
   <div class="container">
     <header>
       <h1>Todo List</h1>
 
       <form class="new-task">
         <input type="text" name="text" placeholder="Type to add new tasks" />
+          <div class="menu">
+          <select class="catselect" name="category">
+            {{ #each categories }}
+            <option value="{{ name }}">{{ name }}</option>
+            {{ /each }}
+          </select>
+        </div>
       </form>
     </header>
 
