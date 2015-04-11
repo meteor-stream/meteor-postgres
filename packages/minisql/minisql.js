@@ -45,10 +45,8 @@ minisql.select = function(name, object) {
   return alasql(initString);
 };
 
-minisql.insert = function(name, id, params){
-  console.log(name);
-  console.log(params.value);
-  var insertText = "INSERT INTO " + name + " values ( " + id + ", " + "'" + params.value + "'" + ", false);";
+minisql.insert = function(name, params){
+  var insertText = "INSERT INTO " + name + " values ( " + params.id + ", " + "'" + params.text + "'" + ", false);";
   alasql(insertText);
 };
 
