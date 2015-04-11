@@ -5,6 +5,7 @@ var reactiveData = new Tracker.Dependency;
 SQLCollection = function(connection, name /* arguments */) {
   var self = this;
   var tableName = connection;
+  this.tableName = connection;
   var initiated = false;
   var unvalidated = true;
   var subscribeArgs;
@@ -22,9 +23,12 @@ SQLCollection = function(connection, name /* arguments */) {
   };
 
   this.insert = function(dataObj) {
-    minisql.insert(tableName, -1, dataObj);
+    dataObj['id'] = -1;
+    minisql.insert(tableName, dataObj);
     reactiveData.changed();
     unvalidated = dataObj.text;
+    // Removing ID so that server DB will automatically assign one
+    delete dataObj['id'];
     Meteor.call('add', tableName, dataObj);
   };
 
@@ -64,11 +68,8 @@ SQLCollection = function(connection, name /* arguments */) {
     // SQLCollection arguments does not use the first argument (the connection)
     subscribeArgs = Array.prototype.slice.call(arguments, 1);
   }
-  //Meteor.call('loadData', 'tasks', connection);
 
-  //this.loadData = function(tableName){
-  //  Meteor.call('loadData', tableName, connection);
-  //};
+
   Tracker.Dependency.call(self);
   var subsBefore = _.keys(connection._subscriptions);
   _.extend(self, connection.subscribe.apply(connection, subscribeArgs));
@@ -82,6 +83,7 @@ SQLCollection = function(connection, name /* arguments */) {
     subscriptionId: self.subscriptionId,
     instance: self
   });
+
   // If first store for this subscription name, register it!
   if (_.filter(buffer, function(sub) {
       return sub.name === name && sub.connection === connection;
@@ -113,7 +115,10 @@ SQLCollection = function(connection, name /* arguments */) {
     this.addEventListener('added', function(index, msg) {
       unvalidated = "";
       for (var x = msg.results.length-1; x >= 0 ; x--) {
-        // TODO: Modify this so that the logic is in minisql, so minisql.insert(x,y,z);
+        // TODO: Right now minisql.insert is not dynamic enough to be used to insert. This is
+        // being worked on and eventually the following line will replace the direct reference
+        // to alasql:
+        // minisql.insert(tableName, msg.results[x]);
         alasql("INSERT INTO tasks VALUES (?,?,?)", [msg.results[x].id, msg.results[x].text, msg.results[x].checked]);
       }
       reactiveData.changed();
@@ -133,7 +138,11 @@ SQLCollection = function(connection, name /* arguments */) {
       else if (msg.modified){
         // For the client that triggered the removal event, the data will have
         // already been removed and this is redundant.
-        // TODO: Modify this so that the logic is in minisql, so minisql.update(x,y,z);
+        // TODO: Right now mini.sql.update is not dynamic enough to be used to update. This being
+        // worked on and evnentually the following line will replace the direct reference to
+        // alasql:
+        // minisql.update(tableName, msgParams) // So msgParams doesn't exist. We will have to do
+        // some logic here or in alasql.
         alasql("UPDATE " + tableName + " SET checked = ? WHERE id= ?", [msg.checked, msg.tableId]);
       }
       else {
@@ -145,12 +154,22 @@ SQLCollection = function(connection, name /* arguments */) {
         // by the server should be an update rather than an insert as that entry already
         // exists in minisql. To account for this we store that entry as 'unvalidated' variable
         if (unvalidated !== "") {
-          // TODO: Modify this so that the logic is in minisql, so minisql.update(x,y,z);
+          // For the client that triggered the removal event, the data will have
+          // already been removed and this is redundant.
+          // TODO: Right now mini.sql.update is not dynamic enough to be used to update. This being
+          // worked on and evnentually the following line will replace the direct reference to
+          // alasql:
+          // minisql.update(tableName, msgParams) // So msgParams doesn't exist. We will have to do
+          // some logic here or in alasql.
           alasql("UPDATE " + tableName + " SET id = ? WHERE text= " + "'" + text + "'", [tableId]);
           unvalidated = "";
         }
         else {
-          // TODO: Modify this so that the logic is in minisql, so minisql.insert(x,y,z);
+          // TODO: Right now minisql.insert is not dynamic enough to be used to insert. This is
+          // being worked on and eventually the following line will replace the direct reference
+          // to alasql:
+          // minisql.insert(tableName, {id: -1, text:text, checked:checked, userID: userID});
+          // right now userID is not being passes in.
           alasql("INSERT INTO " + tableName + " VALUES (?,?,?)", [tableId, text, checked]);
         }
       }
@@ -244,7 +263,7 @@ SQLCollection.prototype.addEventListener = function(eventName, listener) {
 };
 
 SQLCollection.prototype.initialValue = function(eventName, listener) {
-  var result = Postgres.select('tasks');
+  var result = Postgres.select(this.tableName);
   return result;
 };
 
