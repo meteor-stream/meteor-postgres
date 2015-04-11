@@ -111,7 +111,6 @@ Postgres.createTable = function(table, tableObj, relTable) {
   }
   //inputString += ');';
   // add notify functionality and close input string
-  var insertQuote = '"';
   inputString += " created_at TIMESTAMP default now()); " +
   "CREATE OR REPLACE FUNCTION notify_trigger() RETURNS trigger AS $$" +
   "BEGIN" +
@@ -457,7 +456,7 @@ Postgres.remove = function (table, selectObj) {
 
 Postgres.autoSelect = function (sub) {
   pg.connect(conString, function(err, client) {
-    var selectString = "select id, text from " + "tasks" + " ORDER BY id DESC LIMIT 10;";
+    var selectString = "select id, text, checked from " + "tasks" + " ORDER BY id DESC LIMIT 10;";
     client.query(selectString, function(error, results) {
       if (error) {
       } else {

@@ -108,15 +108,15 @@ SQLCollection = function(connection, name /* arguments */) {
 
   if (Meteor.isClient) {
     this.addEventListener('added', function(index, msg) {
-      var tableId = msg.results[0].id;
-      var text = msg.results[0].text;
       //if (unvalidated === text) {
       alasql("DELETE FROM " + tableName);
       unvalidated = "";
-      //}
+      console.log(msg.results);
       for (var x = msg.results.length-1; x >= 0 ; x--) {
-        var checked = msg.results[x].checked === 'f';
-        alasql("INSERT INTO tasks VALUES (?,?,?)", [msg.results[x].id, msg.results[x].text, checked]);
+        //var checked = msg.results[x].checked == 't' ? true : false;
+        console.log(msg.results[x].checked);
+        //console.log(checked);
+        alasql("INSERT INTO tasks VALUES (?,?,?)", [msg.results[x].id, msg.results[x].text, msg.results[x].checked]);
       }
       reactiveData.changed();
     });
@@ -126,7 +126,6 @@ SQLCollection = function(connection, name /* arguments */) {
         minisql.remove(msg.name, tableId);
       }
       else if (msg.modified){
-        var tableId = msg.tableId;
         alasql("UPDATE " + tableName + " SET checked = ? WHERE id= ?", [msg.checked, msg.tableId]);
       }
       else {
