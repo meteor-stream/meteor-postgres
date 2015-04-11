@@ -12,8 +12,6 @@ if (Meteor.isClient) {
   };
   tasks.createTable('tasks', taskTable);
 
-  //tasks.loadData('tasks');
-
 
   Template.body.helpers({
     tasks: function () {
@@ -46,7 +44,6 @@ if (Meteor.isClient) {
       }
     },
     "click .delete": function () {
-      console.log(this);
       tasks.remove(this.id);
     }
   });
@@ -61,10 +58,6 @@ if (Meteor.isServer) {
   //Postgres.update('students',{'class': 'senior', age: 30},{age: {$gt: 18}});
   //Postgres.remove('students', {age: {$gt: 20}});
   var cursor = Postgres.getCursor();
-
-  //Postgres.select('tasks', []);
-  //
-  //Postgres.update('tasks', "text = 'hello world' WHERE id = 5");
 
   Meteor.publish('tasks', function () {
     return cursor;

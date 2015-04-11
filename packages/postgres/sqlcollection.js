@@ -7,9 +7,13 @@ SQLCollection = function(connection, name /* arguments */) {
   var tableName = connection;
   var initiated = false;
   var unvalidated = true;
+  var subscribeArgs;
+
+  // Defining the methods that application can interact with.
   this.createTable = function(tableName, tableDefinition) {
     // TODO: MAKE SURE THIS HANDLES TABLES THAT ALREADY EXIST (mini sql doesn't perssist data so shouldn't be an issue)
     minisql.createTable(tableName, tableDefinition);
+    // TODO: MAKE THIS INSERT INTO POSTGRES
   };
 
   this.select = function(args) {
@@ -27,11 +31,8 @@ SQLCollection = function(connection, name /* arguments */) {
   this.update = function(tableName, dataObj) {
     minisql.update(tableName, dataObj);
     reactiveData.changed();
-    console.log(dataObj);
     var newData = {"checked": dataObj.value};
     var newCheck = {"id": {$eq: dataObj.id}};
-    console.log(newData);
-    console.log(newCheck);
     Meteor.call('update', tableName, newData, newCheck);
   };
 
@@ -40,8 +41,6 @@ SQLCollection = function(connection, name /* arguments */) {
     reactiveData.changed();
     Meteor.call('remove', tableName, dataObj);
   };
-
-  var subscribeArgs;
 
   if (!(self instanceof SQLCollection)) {
     throw new Error('use "new" to construct a SQLCollection');
@@ -89,14 +88,14 @@ SQLCollection = function(connection, name /* arguments */) {
     }).length === 1) {
     registerStore(connection, name);
   }
+
+  // Server side methods to route to Postgres object
   if (Meteor.isServer) {
     Meteor.methods({
       add: function(table, paramObj) {
         Postgres.insert(table, paramObj);
       },
       update: function(table, paramObj, selectObj) {
-        console.log(paramObj);
-        console.log(selectObj);
         Postgres.update(table, paramObj, selectObj);
       },
       remove: function(table, paramObj) {
@@ -105,47 +104,58 @@ SQLCollection = function(connection, name /* arguments */) {
     });
   }
 
-
+  // Client side listeners for notifications from server
   if (Meteor.isClient) {
+    // Added will only be triggered on the initial flow of data
+    // Adding an entry to minisql will trigger a server side insert, but this
+    // will not trigger an added event on any client
+    // CAN WE RENAME TO POPULATE?
     this.addEventListener('added', function(index, msg) {
-      //if (unvalidated === text) {
-      alasql("DELETE FROM " + tableName);
       unvalidated = "";
-      console.log(msg.results);
       for (var x = msg.results.length-1; x >= 0 ; x--) {
-        console.log(msg.results[x].checked);
+        // TODO: Modify this so that the logic is in minisql, so minisql.insert(x,y,z);
         alasql("INSERT INTO tasks VALUES (?,?,?)", [msg.results[x].id, msg.results[x].text, msg.results[x].checked]);
       }
       reactiveData.changed();
     });
+    // Changed will be triggered whenever there is a deletion or update to Postgres
+    // It will also be triggered when there is a new entry while the client has the
+    // page loaded.
     this.addEventListener('changed', function(index, msg) {
+      // Checking to see if event is a removal from the DB
       if (msg.removed){
         var tableId = msg.tableId;
+        // For the client that triggered the removal event, the data will have
+        // already been removed and this is redundant.
         minisql.remove(msg.name, tableId);
       }
+      // Checking to see if event is a modification of the DB
       else if (msg.modified){
+        // For the client that triggered the removal event, the data will have
+        // already been removed and this is redundant.
+        // TODO: Modify this so that the logic is in minisql, so minisql.update(x,y,z);
         alasql("UPDATE " + tableName + " SET checked = ? WHERE id= ?", [msg.checked, msg.tableId]);
       }
       else {
+        // The message is a new insertion of a message
         var tableId = msg.tableId;
         var text = msg.text;
         var checked = msg.checked;
+        // If the message was submitted by this client then the insert message triggered
+        // by the server should be an update rather than an insert as that entry already
+        // exists in minisql. To account for this we store that entry as 'unvalidated' variable
         if (unvalidated !== "") {
+          // TODO: Modify this so that the logic is in minisql, so minisql.update(x,y,z);
           alasql("UPDATE " + tableName + " SET id = ? WHERE text= " + "'" + text + "'", [tableId]);
           unvalidated = "";
         }
         else {
+          // TODO: Modify this so that the logic is in minisql, so minisql.insert(x,y,z);
           alasql("INSERT INTO " + tableName + " VALUES (?,?,?)", [tableId, text, checked]);
         }
       }
       reactiveData.changed();
     });
-
-    //this.addEventListener('removed', function(index, msg) {
-    //  var tableId = msg.tableId;
-    //  minisql.remove(msg.name, tableId);
-    //  reactiveData.changed();
-    //});
   }
 };
 
@@ -175,20 +185,6 @@ var registerStore = function(connection, name) {
           case 'changed':
             sub.splice(index, 0, msg.fields);
             sub.dispatchEvent(msg.msg, index, msg.fields);
-            break;
-          //case 'changed':
-          //  oldRow = _.clone(sub[index]);
-          //  sub[index] = _.extend(sub[index], msg.fields);
-          //  sub.dispatchEvent(msg.msg, index, oldRow, sub[index]);
-          //  break;
-          //case 'removed':
-          //  oldRow = _.clone(sub[index]);
-          //  sub.splice(index, 1);
-          //  sub.dispatchEvent(msg.msg, index, oldRow);
-          //  break;
-          //case 'removed':
-          //  sub.splice(index, 0, msg.fields);
-          //  sub.dispatchEvent(msg.msg, index, msg.fields);
             break;
         }
       }
