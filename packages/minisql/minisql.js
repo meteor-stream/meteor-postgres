@@ -55,5 +55,6 @@ minisql.update = function(name, params){
 };
 
 minisql.remove = function(name, params){
+  console.log(name, params);
   alasql("DELETE FROM " + name + " WHERE id = " + params);
 };

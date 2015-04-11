@@ -1,8 +1,6 @@
  tasks = new SQLCollection('tasks');
 
-
 if (Meteor.isClient) {
-
   // TODO: Move the table definition into SQLCollection
   // To mirror the Mongo interface we should make it so taht 1 collection is 1 table
   var taskTable = {
@@ -16,11 +14,21 @@ if (Meteor.isClient) {
   Template.body.helpers({
     tasks: function () {
       return tasks.select({});
+    },
+    categories: function() {
+      return [
+        {name:'eddie'},
+        {name:'paulo'},
+        {name:'Bill.K.Miller'},
+        {name:'eric'},
+        {name:'kate'}
+      ];
     }
   });
 
   Template.body.events({
     "submit .new-task": function (event) {
+      console.log(event.target.category.value); // How to access name
       // This function is called when the new task form is submitted
       var text = event.target.text.value;
       tasks.insert({
@@ -47,6 +55,7 @@ if (Meteor.isClient) {
       tasks.remove(this.id);
     }
   });
+
 }
 
 if (Meteor.isServer) {
