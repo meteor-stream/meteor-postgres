@@ -1,4 +1,5 @@
  tasks = new SQLCollection('tasks');
+ users1 = new SQLCollection('users1');
 
 if (Meteor.isClient) {
   // TODO: Move the table definition into SQLCollection
@@ -10,6 +11,12 @@ if (Meteor.isClient) {
   };
   tasks.createTable('tasks', taskTable);
 
+  var usersTable = {
+    id: ['INT','not null'],
+    name: ['varchar (255)', 'not null']
+  };
+  users1.createTable('users1', usersTable);
+
 
   Template.body.helpers({
     tasks: function () {
@@ -19,7 +26,6 @@ if (Meteor.isClient) {
       return [
         {name:'eddie'},
         {name:'paulo'},
-        {name:'Bill.K.Miller'},
         {name:'eric'},
         {name:'kate'}
       ];
@@ -66,9 +72,15 @@ if (Meteor.isServer) {
   //Postgres.select('contacts',['address'],{},{ address: {$lm: 1}},{$fk: ['$loj', 'students']});
   //Postgres.update('students',{'class': 'senior', age: 30},{age: {$gt: 18}});
   //Postgres.remove('students', {age: {$gt: 20}});
-  var cursor = Postgres.getCursor();
+  var cursor = Postgres.getCursor('tasks', ['text', 'checked']);
+  var cursor1 = Postgres.getCursor('users1', ['name']);
+  //Postgres.createTable('users1', {name: ['$string']});
+  //Postgres.createTable('tasks', {text: ['$string'], created_at: ['$date', {$default: 'now()'}]});
 
   Meteor.publish('tasks', function () {
     return cursor;
   });
+  Meteor.publish('users1', function(){
+    return cursor1;
+  })
 }

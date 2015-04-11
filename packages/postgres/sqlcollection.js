@@ -15,6 +15,8 @@ SQLCollection = function(connection, name /* arguments */) {
     // TODO: MAKE SURE THIS HANDLES TABLES THAT ALREADY EXIST (mini sql doesn't perssist data so shouldn't be an issue)
     minisql.createTable(tableName, tableDefinition);
     // TODO: MAKE THIS INSERT INTO POSTGRES
+    var usersTable = {name: ['$string', '$notnull']};
+    //Meteor.call('createTable', 'users1', usersTable);
   };
 
   this.select = function(args) {
@@ -92,19 +94,7 @@ SQLCollection = function(connection, name /* arguments */) {
   }
 
   // Server side methods to route to Postgres object
-  if (Meteor.isServer) {
-    Meteor.methods({
-      add: function(table, paramObj) {
-        Postgres.insert(table, paramObj);
-      },
-      update: function(table, paramObj, selectObj) {
-        Postgres.update(table, paramObj, selectObj);
-      },
-      remove: function(table, paramObj) {
-        Postgres.remove(table, {"id":{$eq:paramObj}});
-      }
-    });
-  }
+
 
   // Client side listeners for notifications from server
   if (Meteor.isClient) {
@@ -114,12 +104,14 @@ SQLCollection = function(connection, name /* arguments */) {
     // CAN WE RENAME TO POPULATE?
     this.addEventListener('added', function(index, msg) {
       unvalidated = "";
+      console.log("in added:", msg);
+      console.log("in added:", index);
       for (var x = msg.results.length-1; x >= 0 ; x--) {
         // TODO: Right now minisql.insert is not dynamic enough to be used to insert. This is
         // being worked on and eventually the following line will replace the direct reference
         // to alasql:
         // minisql.insert(tableName, msg.results[x]);
-        alasql("INSERT INTO tasks VALUES (?,?,?)", [msg.results[x].id, msg.results[x].text, msg.results[x].checked]);
+        alasql("INSERT INTO tasks VALUES (?,?,?)", [msg.results[x]._id, msg.results[x].text, msg.results[x].checked]);
       }
       reactiveData.changed();
     });
@@ -176,7 +168,28 @@ SQLCollection = function(connection, name /* arguments */) {
       reactiveData.changed();
     });
   }
+
 };
+
+if (Meteor.isServer) {
+  Meteor.methods({
+    add: function(table, paramObj) {
+      Postgres.insert(table, paramObj);
+    },
+    update: function(table, paramObj, selectObj) {
+      Postgres.update(table, paramObj, selectObj);
+    },
+    remove: function(table, paramObj) {
+      Postgres.remove(table, {"id":{$eq:paramObj}});
+    },
+    createTable: function(table, paramObj){
+      console.log("in create table method");
+      Postgres.createTable(table, paramObj);
+    }
+  });
+}
+
+
 
 var registerStore = function(connection, name) {
   connection.registerStore(name, {
