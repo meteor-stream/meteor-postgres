@@ -130,8 +130,8 @@ SQLCollection = function(connection, name /* arguments */) {
         var tableId = msg.tableId;
         var text = msg.text;
         var checked = msg.checked;
-        if (unvalidated !== "") {
-          alasql("UPDATE " + tableName + " SET id = ? WHERE text= " + "'" + text + "'", [tableId]);
+        if (unvalidated === msg.text) {
+          alasql("UPDATE " + tableName + " SET id = ? WHERE id = -1", [tableId]);
           unvalidated = "";
         }
         else {
