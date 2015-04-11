@@ -80,8 +80,8 @@ Postgres._SelectAddons = {
 Postgres.createTable = function(table, tableObj, relTable) {
   // SQL: 'CREATE TABLE table (fieldName constraint);'
   // initialize input string parts
-  var inputString = 'CREATE TABLE ' + table + ' (';
-  var item, subKey, valOperator;
+  var startString = 'CREATE TABLE ' + table + ' (';
+  var item, subKey, valOperator, inputString = '';
   // iterate through array arguments to populate input string parts
   for (var key in tableObj) {
     inputString += key + ' ';
@@ -102,7 +102,7 @@ Postgres.createTable = function(table, tableObj, relTable) {
   }
   // check to see if id provided
   if (inputString.indexOf('_id') === -1) {
-    inputString += '_id serial primary key not null,';
+    startString += '_id serial primary key,';
   }
 
   // add foreign key
@@ -111,7 +111,7 @@ Postgres.createTable = function(table, tableObj, relTable) {
   }
   //inputString += ');';
   // add notify functionality and close input string
-  var insertQuote = '"';
+  inputString = startString + inputString;
   inputString += " created_at TIMESTAMP default now()); " +
   "CREATE OR REPLACE FUNCTION notify_trigger() RETURNS trigger AS $$" +
   "BEGIN" +
@@ -132,6 +132,7 @@ Postgres.createTable = function(table, tableObj, relTable) {
   "$$ LANGUAGE plpgsql; " +
   "CREATE TRIGGER watched_table_trigger AFTER INSERT ON "+ table +
   " FOR EACH ROW EXECUTE PROCEDURE notify_trigger();";
+  console.log(inputString);
   // send request to postgresql database
   pg.connect(conString, function(err, client) {
     if (err){
@@ -456,21 +457,21 @@ Postgres.remove = function (table, selectObj) {
 Postgres.autoSelect = function (sub) {
   pg.connect(conString, function(err, client) {
     var selectString = "select id, text from " + "tasks" + " ORDER BY id DESC LIMIT 10;";
-    client.query(selectString, function(error, results) {
-      if (error) {
-      } else {
-        sub._session.send({
-          msg: 'added',
-          collection: sub._name,
-          id: sub._subscriptionId,
-          fields: {
-            reset: false,
-            results: results.rows
-          }
-        });
-        return results.rows;
-      }
-    });
+    //client.query(selectString, function(error, results) {
+    //  if (error) {
+    //  } else {
+    //    sub._session.send({
+    //      msg: 'added',
+    //      collection: sub._name,
+    //      id: sub._subscriptionId,
+    //      fields: {
+    //        reset: false,
+    //        results: results.rows
+    //      }
+    //    });
+    //    return results.rows;
+    //  }
+    //});
     var query = client.query("LISTEN watchers");
     client.on('notification', function(msg) {
       var returnMsg = eval("(" + msg.payload + ")");
