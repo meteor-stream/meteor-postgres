@@ -102,7 +102,7 @@ Postgres.createTable = function(table, tableObj, relTable) {
   }
   // check to see if id provided
   if (inputString.indexOf('_id') === -1) {
-    startString += '_id serial primary key,';
+    inputString += '_id serial primary key,';
   }
 
   // add foreign key
@@ -116,21 +116,21 @@ Postgres.createTable = function(table, tableObj, relTable) {
   "CREATE OR REPLACE FUNCTION notify_trigger() RETURNS trigger AS $$" +
   "BEGIN" +
   " IF (TG_OP = 'DELETE') THEN " +
-  "PERFORM pg_notify('watchers', '[{' || TG_TABLE_NAME || ':' || OLD.id || '}, { operation: " +
-  "' || TG_OP || '}]');" +
+  "PERFORM pg_notify('watchers', '[{' || TG_TABLE_NAME || ':' || OLD._id || '}, { operation: " +
+  "\"' || TG_OP || '\"}]');" +
   "RETURN old;" +
   "ELSIF (TG_OP = 'INSERT') THEN " +
-  "PERFORM pg_notify('watchers', '[{' || TG_TABLE_NAME || ':' || NEW.id || '}, { operation: " +
-  "' || TG_OP || '}]');" +
+  "PERFORM pg_notify('watchers', '[{' || TG_TABLE_NAME || ':' || NEW._id || '}, { operation: " +
+  "\"' || TG_OP || '\"}]');" +
   "RETURN new; " +
   "ELSIF (TG_OP = 'UPDATE') THEN " +
-  "PERFORM pg_notify('watchers', '[{' || TG_TABLE_NAME || ':' || NEW.id || '}, { operation: " +
-  "' || TG_OP || '}]');" +
+  "PERFORM pg_notify('watchers', '[{' || TG_TABLE_NAME || ':' || NEW._id || '}, { operation: " +
+  "\"' || TG_OP || '\"}]');" +
   "RETURN new; " +
   "END IF; " +
   "END; " +
   "$$ LANGUAGE plpgsql; " +
-  "CREATE TRIGGER watched_table_trigger AFTER INSERT ON "+ table +
+  "CREATE TRIGGER watched_table_trigger AFTER INSERT OR DELETE OR UPDATE ON "+ table +
   " FOR EACH ROW EXECUTE PROCEDURE notify_trigger();";
   console.log(inputString);
   // send request to postgresql database
@@ -414,6 +414,7 @@ Postgres.update = function(table, updateObj, selectObj) {
   }
 
   var inputString = 'UPDATE ' + table + ' SET ' + updateString + _where(selectObj) + ';';
+  console.log(inputString);
   pg.connect(conString, function(err, client, done) {
     if (err){
       console.log(err);
@@ -454,24 +455,32 @@ Postgres.remove = function (table, selectObj) {
   });
 };
 
-Postgres.autoSelect = function (sub) {
+Postgres.autoSelect = function (sub, name, properties) {
+
   pg.connect(conString, function(err, client) {
-    var selectString = "select id, text from " + "tasks" + " ORDER BY id DESC LIMIT 10;";
-    //client.query(selectString, function(error, results) {
-    //  if (error) {
-    //  } else {
-    //    sub._session.send({
-    //      msg: 'added',
-    //      collection: sub._name,
-    //      id: sub._subscriptionId,
-    //      fields: {
-    //        reset: false,
-    //        results: results.rows
-    //      }
-    //    });
-    //    return results.rows;
-    //  }
-    //});
+    var selectString = "select _id, ";
+    for (var x = 0, count = properties.length; x < count; x++){
+      selectString += properties[x] + ", ";
+    }
+    selectString += "checked from " + name + " ORDER BY _id DESC LIMIT 10;";
+    client.query(selectString, function(error, results) {
+      console.log(name);
+      if (error) {
+        console.log(error)
+      } else {
+        //console.log(results);
+        sub._session.send({
+          msg: 'added',
+          collection: sub._name,
+          id: sub._subscriptionId,
+          fields: {
+            reset: false,
+            results: results.rows
+          }
+        });
+        return results.rows;
+      }
+    });
     var query = client.query("LISTEN watchers");
     client.on('notification', function(msg) {
       var returnMsg = eval("(" + msg.payload + ")");
@@ -494,6 +503,7 @@ Postgres.autoSelect = function (sub) {
       else {
         var selectString = "select * from " + sub._name + " WHERE id = " + returnMsg[0][sub._name] + ";";
         client.query(selectString, function(error, results) {
+          console.log('messages');
           if (error) {
           } else {
             sub._session.send({
@@ -503,7 +513,7 @@ Postgres.autoSelect = function (sub) {
               fields: {
                 removed: false,
                 reset: false,
-                tableId: results.rows[0].id,
+                tableId: results.rows[0]._id,
                 text: results.rows[0].text,
                 createdAt: results.rows[0].created_at
               }
@@ -516,11 +526,11 @@ Postgres.autoSelect = function (sub) {
   });
 };
 
-Postgres.getCursor = function(){
+Postgres.getCursor = function(name, columns){
   var cursor = {};
   //Creating publish
   cursor._publishCursor = function(sub){
-    this.autoSelect(sub);
+    this.autoSelect(sub, name, columns);
   };
   cursor.autoSelect = this.autoSelect;
   return cursor;
