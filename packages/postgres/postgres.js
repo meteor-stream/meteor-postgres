@@ -132,7 +132,6 @@ Postgres.createTable = function(table, tableObj, relTable) {
   "$$ LANGUAGE plpgsql; " +
   "CREATE TRIGGER watched_table_trigger AFTER INSERT ON "+ table +
   " FOR EACH ROW EXECUTE PROCEDURE notify_trigger();";
-  console.log(inputString);
   // send request to postgresql database
   pg.connect(conString, function(err, client) {
     if (err){
@@ -296,8 +295,8 @@ Postgres.insert = function(table, insertObj) {
   inputString += keys[keys.length-1] + valueString + '$' + keys.length + ');';
   insertArray.push(insertObj[keys[keys.length-1]]);
   // send request to postgresql database
-  console.log(inputString);
-  console.log(insertArray);
+  //console.log(inputString);
+  //console.log(insertArray);
   pg.connect(conString, function(err, client, done) {
     if (err){
       console.log(err);
@@ -367,7 +366,7 @@ Postgres.select = function(table, returnFields, selectObj, optionsObj, joinObj) 
   }
 
   var inputString = 'SELECT ' + returnFields + ' FROM ' + table + joinString + _where(selectObj) + optionsString + ';';
-  console.log(inputString);
+  //console.log(inputString);
   pg.connect(conString, function(err, client, done) {
     if (err){
       console.log(err);
@@ -549,3 +548,43 @@ function _emptyObject(obj) {
   }
   return true;
 }
+/**TESTING
+ *
+ * **/
+
+ActiveRecord = function() {
+  this.inputString = '';
+  this.table = '';
+};
+ActiveRecord.prototype.find = function(table, args) {
+  this.table = table;
+  this.inputString += 'SELECT * FROM ' + this.table + ' WHERE ('+ this.table + '._id ';
+  if (typeof args === 'number') {
+    this.inputString += '= ' + args + ') LIMIT 1;'
+  } else if (Array.isArray(args)) {
+    this.inputString += 'IN (' + args.join(',') + '));';
+  }
+  return this;
+};
+ActiveRecord.prototype.fetch = function() {
+  var input = this.inputString;
+  var table = this.table;
+  pg.connect(conString, function(err, client, done) {
+    if (err){
+      console.log(err);
+    }
+    console.log(input);
+    client.query(input, function(error, results) {
+      if (error) {
+        console.log("error in active record " + table, error);
+      } else {
+        console.log("results in active record " + table, results.rows);
+      }
+      done();
+    });
+  });
+};
+Postgres.test = function() {
+  var tdb = new ActiveRecord();
+  tdb.find('students',1).fetch();
+};
