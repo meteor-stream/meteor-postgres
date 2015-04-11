@@ -24,9 +24,15 @@ SQLCollection = function(connection, name /* arguments */) {
     Meteor.call('add', tableName, dataObj);
   };
 
-  this.update = function(dataObj) {
+  this.update = function(tableName, dataObj) {
     minisql.update(tableName, dataObj);
-    Meteor.call('update', tableName, dataObj, selectObject);
+    reactiveData.changed();
+    console.log(dataObj);
+    var newData = {"checked": dataObj.value};
+    var newCheck = {"id": {$eq: dataObj.id}};
+    console.log(newData);
+    console.log(newCheck);
+    Meteor.call('update', tableName, newData, newCheck);
   };
 
   this.remove = function(dataObj) {
@@ -89,6 +95,8 @@ SQLCollection = function(connection, name /* arguments */) {
         Postgres.insert(table, paramObj);
       },
       update: function(table, paramObj, selectObj) {
+        console.log(paramObj);
+        console.log(selectObj);
         Postgres.update(table, paramObj, selectObj);
       },
       remove: function(table, paramObj) {
@@ -100,14 +108,15 @@ SQLCollection = function(connection, name /* arguments */) {
 
   if (Meteor.isClient) {
     this.addEventListener('added', function(index, msg) {
-      var tableId = msg.results[0].id;
-      var text = msg.results[0].text;
       //if (unvalidated === text) {
       alasql("DELETE FROM " + tableName);
       unvalidated = "";
-      //}
+      console.log(msg.results);
       for (var x = msg.results.length-1; x >= 0 ; x--) {
-        alasql("INSERT INTO tasks VALUES (?,?)", [msg.results[x].id, msg.results[x].text]);
+        //var checked = msg.results[x].checked == 't' ? true : false;
+        console.log(msg.results[x].checked);
+        //console.log(checked);
+        alasql("INSERT INTO tasks VALUES (?,?,?)", [msg.results[x].id, msg.results[x].text, msg.results[x].checked]);
       }
       reactiveData.changed();
     });
@@ -116,15 +125,19 @@ SQLCollection = function(connection, name /* arguments */) {
         var tableId = msg.tableId;
         minisql.remove(msg.name, tableId);
       }
+      else if (msg.modified){
+        alasql("UPDATE " + tableName + " SET checked = ? WHERE id= ?", [msg.checked, msg.tableId]);
+      }
       else {
         var tableId = msg.tableId;
         var text = msg.text;
+        var checked = msg.checked;
         if (unvalidated !== "") {
           alasql("UPDATE " + tableName + " SET id = ? WHERE text= " + "'" + text + "'", [tableId]);
           unvalidated = "";
         }
         else {
-          alasql("INSERT INTO " + tableName + " VALUES (?,?)", [tableId, text]);
+          alasql("INSERT INTO " + tableName + " VALUES (?,?,?)", [tableId, text, checked]);
         }
       }
       reactiveData.changed();
