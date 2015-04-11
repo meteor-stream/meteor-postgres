@@ -29,7 +29,6 @@ SQLCollection = function(connection, name /* arguments */) {
     unvalidated = dataObj.text;
     // Removing ID so that server DB will automatically assign one
     delete dataObj['id'];
-    console.log(dataObj);
     Meteor.call('add', tableName, dataObj);
   };
 
