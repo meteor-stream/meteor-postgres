@@ -97,6 +97,77 @@ SQLCollection = function(connection, name /* arguments */) {
 
 
   // Client side listeners for notifications from server
+  if (Meteor.isClient) {
+    // Added will only be triggered on the initial flow of data
+    // Adding an entry to minisql will trigger a server side insert, but this
+    // will not trigger an added event on any client
+    // CAN WE RENAME TO POPULATE?
+    this.addEventListener('added', function(index, msg) {
+      unvalidated = "";
+      console.log("in added:", msg);
+      console.log("in added:", index);
+      for (var x = msg.results.length-1; x >= 0 ; x--) {
+        // TODO: Right now minisql.insert is not dynamic enough to be used to insert. This is
+        // being worked on and eventually the following line will replace the direct reference
+        // to alasql:
+        // minisql.insert(tableName, msg.results[x]);
+        alasql("INSERT INTO tasks VALUES (?,?,?)", [msg.results[x]._id, msg.results[x].text, msg.results[x].checked]);
+      }
+      reactiveData.changed();
+    });
+    // Changed will be triggered whenever there is a deletion or update to Postgres
+    // It will also be triggered when there is a new entry while the client has the
+    // page loaded.
+    this.addEventListener('changed', function(index, msg) {
+      // Checking to see if event is a removal from the DB
+      if (msg.removed){
+        var tableId = msg.tableId;
+        // For the client that triggered the removal event, the data will have
+        // already been removed and this is redundant.
+        minisql.remove(msg.name, tableId);
+      }
+      // Checking to see if event is a modification of the DB
+      else if (msg.modified){
+        // For the client that triggered the removal event, the data will have
+        // already been removed and this is redundant.
+        // TODO: Right now mini.sql.update is not dynamic enough to be used to update. This being
+        // worked on and evnentually the following line will replace the direct reference to
+        // alasql:
+        // minisql.update(tableName, msgParams) // So msgParams doesn't exist. We will have to do
+        // some logic here or in alasql.
+        alasql("UPDATE " + tableName + " SET checked = ? WHERE id= ?", [msg.checked, msg.tableId]);
+      }
+      else {
+        // The message is a new insertion of a message
+        var tableId = msg.tableId;
+        var text = msg.text;
+        var checked = msg.checked;
+        // If the message was submitted by this client then the insert message triggered
+        // by the server should be an update rather than an insert as that entry already
+        // exists in minisql. To account for this we store that entry as 'unvalidated' variable
+        if (unvalidated !== "") {
+          // For the client that triggered the removal event, the data will have
+          // already been removed and this is redundant.
+          // TODO: Right now mini.sql.update is not dynamic enough to be used to update. This being
+          // worked on and evnentually the following line will replace the direct reference to
+          // alasql:
+          // minisql.update(tableName, msgParams) // So msgParams doesn't exist. We will have to do
+          // some logic here or in alasql.
+          alasql("UPDATE " + tableName + " SET id = ? WHERE text= " + "'" + text + "'", [tableId]);
+          unvalidated = "";
+        }
+        else {
+          // TODO: Right now minisql.insert is not dynamic enough to be used to insert. This is
+          // being worked on and eventually the following line will replace the direct reference
+          // to alasql:
+          // minisql.insert(tableName, {id: -1, text:text, checked:checked, userID: userID});
+          // right now userID is not being passes in.
+          alasql("INSERT INTO " + tableName + " VALUES (?,?,?)", [tableId, text, checked]);
+        }
+      }
+      reactiveData.changed();
+    });
+  }
 
 };
 
@@ -112,82 +183,13 @@ if (Meteor.isServer) {
       Postgres.remove(table, {"id":{$eq:paramObj}});
     },
     createTable: function(table, paramObj){
+      console.log("in create table method");
       Postgres.createTable(table, paramObj);
     }
   });
 }
 
-if (Meteor.isClient) {
-  // Added will only be triggered on the initial flow of data
-  // Adding an entry to minisql will trigger a server side insert, but this
-  // will not trigger an added event on any client
-  // CAN WE RENAME TO POPULATE?
-  this.addEventListener('added', function(index, msg) {
-    unvalidated = "";
-    console.log(msg);
-    console.log(index);
-    for (var x = msg.results.length-1; x >= 0 ; x--) {
-      // TODO: Right now minisql.insert is not dynamic enough to be used to insert. This is
-      // being worked on and eventually the following line will replace the direct reference
-      // to alasql:
-      // minisql.insert(tableName, msg.results[x]);
-      alasql("INSERT INTO tasks VALUES (?,?,?)", [msg.results[x]._id, msg.results[x].text, msg.results[x].checked]);
-    }
-    reactiveData.changed();
-  });
-  // Changed will be triggered whenever there is a deletion or update to Postgres
-  // It will also be triggered when there is a new entry while the client has the
-  // page loaded.
-  this.addEventListener('changed', function(index, msg) {
-    // Checking to see if event is a removal from the DB
-    if (msg.removed){
-      var tableId = msg.tableId;
-      // For the client that triggered the removal event, the data will have
-      // already been removed and this is redundant.
-      minisql.remove(msg.name, tableId);
-    }
-    // Checking to see if event is a modification of the DB
-    else if (msg.modified){
-      // For the client that triggered the removal event, the data will have
-      // already been removed and this is redundant.
-      // TODO: Right now mini.sql.update is not dynamic enough to be used to update. This being
-      // worked on and evnentually the following line will replace the direct reference to
-      // alasql:
-      // minisql.update(tableName, msgParams) // So msgParams doesn't exist. We will have to do
-      // some logic here or in alasql.
-      alasql("UPDATE " + tableName + " SET checked = ? WHERE id= ?", [msg.checked, msg.tableId]);
-    }
-    else {
-      // The message is a new insertion of a message
-      var tableId = msg.tableId;
-      var text = msg.text;
-      var checked = msg.checked;
-      // If the message was submitted by this client then the insert message triggered
-      // by the server should be an update rather than an insert as that entry already
-      // exists in minisql. To account for this we store that entry as 'unvalidated' variable
-      if (unvalidated !== "") {
-        // For the client that triggered the removal event, the data will have
-        // already been removed and this is redundant.
-        // TODO: Right now mini.sql.update is not dynamic enough to be used to update. This being
-        // worked on and evnentually the following line will replace the direct reference to
-        // alasql:
-        // minisql.update(tableName, msgParams) // So msgParams doesn't exist. We will have to do
-        // some logic here or in alasql.
-        alasql("UPDATE " + tableName + " SET id = ? WHERE text= " + "'" + text + "'", [tableId]);
-        unvalidated = "";
-      }
-      else {
-        // TODO: Right now minisql.insert is not dynamic enough to be used to insert. This is
-        // being worked on and eventually the following line will replace the direct reference
-        // to alasql:
-        // minisql.insert(tableName, {id: -1, text:text, checked:checked, userID: userID});
-        // right now userID is not being passes in.
-        alasql("INSERT INTO " + tableName + " VALUES (?,?,?)", [tableId, text, checked]);
-      }
-    }
-    reactiveData.changed();
-  });
-}
+
 
 var registerStore = function(connection, name) {
   connection.registerStore(name, {

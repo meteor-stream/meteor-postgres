@@ -75,6 +75,7 @@ if (Meteor.isServer) {
   var cursor = Postgres.getCursor('tasks', ['text', 'checked']);
   var cursor1 = Postgres.getCursor('users1', ['name']);
   //Postgres.createTable('users1', {name: ['$string']});
+  //Postgres.createTable('tasks', {text: ['$string'], created_at: ['$date', {$default: 'now()'}]});
 
   Meteor.publish('tasks', function () {
     return cursor;

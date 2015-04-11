@@ -78,6 +78,7 @@ Postgres._SelectAddons = {
 //});
 //CREATE TABLE students (name varchar(255) not null, age integer, class varchar(255) default 2015, _id integer not null primary unique,
 Postgres.createTable = function(table, tableObj, relTable) {
+  console.log("in posgres create table");
   // SQL: 'CREATE TABLE table (fieldName constraint);'
   // initialize input string parts
   var startString = 'CREATE TABLE ' + table + ' (';
@@ -132,6 +133,7 @@ Postgres.createTable = function(table, tableObj, relTable) {
   "$$ LANGUAGE plpgsql; " +
   "CREATE TRIGGER watched_table_trigger AFTER INSERT OR DELETE OR UPDATE ON "+ table +
   " FOR EACH ROW EXECUTE PROCEDURE notify_trigger();";
+
   console.log(inputString);
   // send request to postgresql database
   pg.connect(conString, function(err, client) {
@@ -455,20 +457,22 @@ Postgres.remove = function (table, selectObj) {
   });
 };
 
-Postgres.autoSelect = function (sub, name, properties) {
 
+Postgres.autoSelect = function (sub, name, properties) {
+  //console.log(properties);
   pg.connect(conString, function(err, client) {
-    var selectString = "select _id, ";
+    var selectString = "select _id";
     for (var x = 0, count = properties.length; x < count; x++){
-      selectString += properties[x] + ", ";
+      selectString += ", " + properties[x];
     }
-    selectString += "checked from " + name + " ORDER BY _id DESC LIMIT 10;";
+    selectString += " from " + name + " ORDER BY _id DESC LIMIT 10;";
+    console.log(selectString);
     client.query(selectString, function(error, results) {
-      console.log(name);
+      //console.log(name);
       if (error) {
         console.log(error)
       } else {
-        //console.log(results);
+        console.log(results.rows);
         sub._session.send({
           msg: 'added',
           collection: sub._name,
@@ -501,10 +505,11 @@ Postgres.autoSelect = function (sub, name, properties) {
         });
       }
       else {
-        var selectString = "select * from " + sub._name + " WHERE id = " + returnMsg[0][sub._name] + ";";
+        var selectString = "select * from " + sub._name + " WHERE _id = " + returnMsg[0][sub._name] + ";";
         client.query(selectString, function(error, results) {
           console.log('messages');
           if (error) {
+            console.log(error)
           } else {
             sub._session.send({
               msg: 'changed',
