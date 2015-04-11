@@ -27,8 +27,8 @@ Package.onUse(function(api) {
   api.use('ddp');
   api.addFiles('postgres.js', 'server');
   api.export('Postgres', 'server');
-  api.addFiles('sqlcollection.js');
-  api.export('SQLCollection');
+  api.addFiles('sqlcollection.js', "activerecord.js");
+  api.export('SQLCollection, ActiveRecord');
 });
 
 
