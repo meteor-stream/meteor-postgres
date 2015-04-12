@@ -107,12 +107,19 @@ SQLCollection = function(connection, name /* arguments */) {
       console.log("in added:", msg);
       console.log("in added:", name);
       //alasql("DELETE FROM ") +
-      for (var x = msg.results.length-1; x >= 0 ; x--) {
-        // TODO: Right now minisql.insert is not dynamic enough to be used to insert. This is
-        // being worked on and eventually the following line will replace the direct reference
-        // to alasql:
-        // minisql.insert(tableName, msg.results[x]);
-        alasql("INSERT INTO " + name + " VALUES (?,?,?)", [msg.results[x]._id, msg.results[x].text, msg.results[x].checked]);
+      if (name === "users1") {
+        for (var x = msg.results.length - 1; x >= 0; x--) {
+          alasql("INSERT INTO " + name + " VALUES (?,?)", [msg.results[x]._id, msg.results[x].name]);
+        }
+      }
+      else {
+        for (var x = msg.results.length - 1; x >= 0; x--) {
+          // TODO: Right now minisql.insert is not dynamic enough to be used to insert. This is
+          // being worked on and eventually the following line will replace the direct reference
+          // to alasql:
+          // minisql.insert(tableName, msg.results[x]);
+          alasql("INSERT INTO " + name + " VALUES (?,?,?)", [msg.results[x]._id, msg.results[x].text, msg.results[x].checked]);
+        }
       }
       reactiveData.changed();
     });
@@ -121,14 +128,14 @@ SQLCollection = function(connection, name /* arguments */) {
     // page loaded.
     this.addEventListener('changed', function(index, msg, name) {
       // Checking to see if event is a removal from the DB
-      if (msg.removed){
+      if (msg.removed) {
         var tableId = msg.tableId;
         // For the client that triggered the removal event, the data will have
         // already been removed and this is redundant.
         minisql.remove(name, tableId);
       }
       // Checking to see if event is a modification of the DB
-      else if (msg.modified){
+      else if (msg.modified) {
         // For the client that triggered the removal event, the data will have
         // already been removed and this is redundant.
         // TODO: Right now mini.sql.update is not dynamic enough to be used to update. This being
@@ -140,9 +147,6 @@ SQLCollection = function(connection, name /* arguments */) {
       }
       else {
         // The message is a new insertion of a message
-        var tableId = msg.tableId;
-        var text = msg.text;
-        var checked = msg.checked;
         // If the message was submitted by this client then the insert message triggered
         // by the server should be an update rather than an insert as that entry already
         // exists in minisql. To account for this we store that entry as 'unvalidated' variable
@@ -154,7 +158,7 @@ SQLCollection = function(connection, name /* arguments */) {
           // alasql:
           // minisql.update(tableName, msgParams) // So msgParams doesn't exist. We will have to do
           // some logic here or in alasql.
-          alasql("UPDATE " + tableName + " SET _id = ? WHERE text= " + "'" + text + "'", [tableId]);
+          alasql("UPDATE " + tableName + " SET _id = ? WHERE text= " + "'" + msg.text + "'", [msg.tableId]);
           unvalidated = "";
         }
         else {
@@ -163,7 +167,15 @@ SQLCollection = function(connection, name /* arguments */) {
           // to alasql:
           // minisql.insert(tableName, {id: -1, text:text, checked:checked, userID: userID});
           // right now userID is not being passes in.
-          alasql("INSERT INTO " + tableName + " VALUES (?,?,?)", [tableId, text, checked]);
+          if (name === "users1"){
+            console.log("in users1");
+            console.log("table", tableName);
+            console.log(msg.tableId, msg.name);
+            alasql("INSERT INTO " + tableName + " VALUES (?,?)", [msg.tableId, msg.name]);
+          }
+          else {
+            alasql("INSERT INTO " + tableName + " VALUES (?,?,?)", [msg.tableId, msg.text, msg.checked]);
+          }
         }
       }
       reactiveData.changed();
@@ -181,15 +193,14 @@ if (Meteor.isServer) {
       Postgres.update(table, paramObj, selectObj);
     },
     remove: function(table, paramObj) {
-      Postgres.remove(table, {"_id":{$eq:paramObj}});
+      Postgres.remove(table, {"_id": {$eq: paramObj}});
     },
-    createTable: function(table, paramObj){
+    createTable: function(table, paramObj) {
       console.log("in create table method");
       Postgres.createTable(table, paramObj);
     }
   });
 }
-
 
 
 var registerStore = function(connection, name) {
