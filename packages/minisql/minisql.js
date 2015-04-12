@@ -13,7 +13,7 @@ minisql = {};
 minisql.createTable = function(name, object) {
   var initString = 'CREATE TABLE ' + name + '( ';
   for (var key in object) {
-    if (key === 'id'){
+    if (key === '_id'){
       initString += key + ' ' + object[key][0] + ' ' + object[key][1] ;
     }
     else {
@@ -46,15 +46,15 @@ minisql.select = function(name, object) {
 };
 
 minisql.insert = function(name, params){
-  var insertText = "INSERT INTO " + name + " values ( " + params.id + ", " + "'" + params.text + "'" + ", false);";
+  var insertText = "INSERT INTO " + name + " values ( " + params._id + ", " + "'" + params.text + "'" + ", false);";
   alasql(insertText);
 };
 
 minisql.update = function(name, params){
-  alasql("UPDATE " + name + " SET " + params.column + " = " + params.value + " WHERE ID = " + params.id);
+  alasql("UPDATE " + name + " SET " + params.column + " = " + params.value + " WHERE _id = " + params._id);
 };
 
 minisql.remove = function(name, params){
   console.log(name, params);
-  alasql("DELETE FROM " + name + " WHERE id = " + params);
+  alasql("DELETE FROM " + name + " WHERE _id = " + params);
 };

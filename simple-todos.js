@@ -5,14 +5,14 @@ if (Meteor.isClient) {
   // TODO: Move the table definition into SQLCollection
   // To mirror the Mongo interface we should make it so taht 1 collection is 1 table
   var taskTable = {
-    id: ['INT', 'AUTO_INCREMENT'],
+    _id: ['INT', 'AUTO_INCREMENT'],
     text: ['varchar (255)', 'not null'],
     checked: ['BOOL', 'DEFAULT true']
   };
   tasks.createTable('tasks', taskTable);
 
   var usersTable = {
-    id: ['INT','not null'],
+    _id: ['INT','not null'],
     name: ['varchar (255)', 'not null']
   };
   users1.createTable('users1', usersTable);
@@ -51,14 +51,14 @@ if (Meteor.isClient) {
     "click .toggle-checked": function () {
       // Set the checked property to the opposite of its current value
       if (this.checked) {
-        tasks.update('tasks', {id: this.id, column: "checked", value: false});
+        tasks.update('tasks', {_id: this._id, column: "checked", value: false});
       }
       else {
-        tasks.update('tasks', {id: this.id, column: "checked", value: true});
+        tasks.update('tasks', {_id: this._id, column: "checked", value: true});
       }
     },
     "click .delete": function () {
-      tasks.remove(this.id);
+      tasks.remove(this._id);
     }
   });
 
@@ -74,8 +74,8 @@ if (Meteor.isServer) {
   //Postgres.remove('students', {age: {$gt: 20}});
   var cursor = Postgres.getCursor('tasks', ['text', 'checked']);
   var cursor1 = Postgres.getCursor('users1', ['name']);
-  //Postgres.createTable('users1', {name: ['$string']});
-  //Postgres.createTable('tasks', {text: ['$string'], created_at: ['$date', {$default: 'now()'}]});
+  Postgres.createTable('users1', {name: ['$string']});
+  Postgres.createTable('tasks', {text: ['$string']});
 
   Meteor.publish('tasks', function () {
     return cursor;

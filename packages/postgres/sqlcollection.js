@@ -25,12 +25,12 @@ SQLCollection = function(connection, name /* arguments */) {
   };
 
   this.insert = function(dataObj) {
-    dataObj['id'] = -1;
+    dataObj['_id'] = -1;
     minisql.insert(tableName, dataObj);
     reactiveData.changed();
     unvalidated = dataObj.text;
     // Removing ID so that server DB will automatically assign one
-    delete dataObj['id'];
+    delete dataObj['_id'];
     Meteor.call('add', tableName, dataObj);
   };
 
@@ -38,7 +38,7 @@ SQLCollection = function(connection, name /* arguments */) {
     minisql.update(tableName, dataObj);
     reactiveData.changed();
     var newData = {"checked": dataObj.value};
-    var newCheck = {"id": {$eq: dataObj.id}};
+    var newCheck = {"_id": {$eq: dataObj._id}};
     Meteor.call('update', tableName, newData, newCheck);
   };
 
@@ -135,7 +135,7 @@ SQLCollection = function(connection, name /* arguments */) {
         // alasql:
         // minisql.update(tableName, msgParams) // So msgParams doesn't exist. We will have to do
         // some logic here or in alasql.
-        alasql("UPDATE " + tableName + " SET checked = ? WHERE id= ?", [msg.checked, msg.tableId]);
+        alasql("UPDATE " + tableName + " SET checked = ? WHERE _id= ?", [msg.checked, msg.tableId]);
       }
       else {
         // The message is a new insertion of a message
@@ -153,7 +153,7 @@ SQLCollection = function(connection, name /* arguments */) {
           // alasql:
           // minisql.update(tableName, msgParams) // So msgParams doesn't exist. We will have to do
           // some logic here or in alasql.
-          alasql("UPDATE " + tableName + " SET id = ? WHERE text= " + "'" + text + "'", [tableId]);
+          alasql("UPDATE " + tableName + " SET _id = ? WHERE text= " + "'" + text + "'", [tableId]);
           unvalidated = "";
         }
         else {
@@ -180,7 +180,7 @@ if (Meteor.isServer) {
       Postgres.update(table, paramObj, selectObj);
     },
     remove: function(table, paramObj) {
-      Postgres.remove(table, {"id":{$eq:paramObj}});
+      Postgres.remove(table, {"_id":{$eq:paramObj}});
     },
     createTable: function(table, paramObj){
       console.log("in create table method");
