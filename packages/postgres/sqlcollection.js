@@ -102,29 +102,30 @@ SQLCollection = function(connection, name /* arguments */) {
     // Adding an entry to minisql will trigger a server side insert, but this
     // will not trigger an added event on any client
     // CAN WE RENAME TO POPULATE?
-    this.addEventListener('added', function(index, msg) {
+    this.addEventListener('added', function(index, msg, name) {
       unvalidated = "";
       console.log("in added:", msg);
-      console.log("in added:", index);
+      console.log("in added:", name);
+      //alasql("DELETE FROM ") +
       for (var x = msg.results.length-1; x >= 0 ; x--) {
         // TODO: Right now minisql.insert is not dynamic enough to be used to insert. This is
         // being worked on and eventually the following line will replace the direct reference
         // to alasql:
         // minisql.insert(tableName, msg.results[x]);
-        alasql("INSERT INTO tasks VALUES (?,?,?)", [msg.results[x]._id, msg.results[x].text, msg.results[x].checked]);
+        alasql("INSERT INTO " + name + " VALUES (?,?,?)", [msg.results[x]._id, msg.results[x].text, msg.results[x].checked]);
       }
       reactiveData.changed();
     });
     // Changed will be triggered whenever there is a deletion or update to Postgres
     // It will also be triggered when there is a new entry while the client has the
     // page loaded.
-    this.addEventListener('changed', function(index, msg) {
+    this.addEventListener('changed', function(index, msg, name) {
       // Checking to see if event is a removal from the DB
       if (msg.removed){
         var tableId = msg.tableId;
         // For the client that triggered the removal event, the data will have
         // already been removed and this is redundant.
-        minisql.remove(msg.name, tableId);
+        minisql.remove(name, tableId);
       }
       // Checking to see if event is a modification of the DB
       else if (msg.modified){
@@ -212,11 +213,11 @@ var registerStore = function(connection, name) {
         switch (msg.msg) {
           case 'added':
             sub.splice(index, 0, msg.fields);
-            sub.dispatchEvent(msg.msg, index, msg.fields);
+            sub.dispatchEvent(msg.msg, index, msg.fields, msg.collection);
             break;
           case 'changed':
             sub.splice(index, 0, msg.fields);
-            sub.dispatchEvent(msg.msg, index, msg.fields);
+            sub.dispatchEvent(msg.msg, index, msg.fields, msg.collection);
             break;
         }
       }

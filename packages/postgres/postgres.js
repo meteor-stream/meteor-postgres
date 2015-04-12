@@ -298,7 +298,7 @@ Postgres.insert = function(table, insertObj) {
   inputString += keys[keys.length - 1] + valueString + '$' + keys.length + ');';
   insertArray.push(insertObj[keys[keys.length - 1]]);
   // send request to postgresql database
-  //console.log(inputString);
+  console.log(inputString);
   //console.log(insertArray);
   pg.connect(conString, function(err, client, done) {
     if (err) {
@@ -500,7 +500,6 @@ Postgres.autoSelect = function(sub, name, properties) {
             removed: true,
             reset: false,
             tableId: tableId,
-            name: sub._name
           }
         });
       }
@@ -527,7 +526,7 @@ Postgres.autoSelect = function(sub, name, properties) {
           }
         });
       }
-      else {
+      else if (returnMsg[1].operation === "INSERT") {
         var selectString = "select * from " + sub._name + " WHERE _id = " + returnMsg[0][sub._name] + ";";
         client.query(selectString, function(error, results) {
           console.log("insert", selectString);

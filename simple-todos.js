@@ -34,7 +34,7 @@ if (Meteor.isClient) {
 
   Template.body.events({
     "submit .new-task": function (event) {
-      console.log(event.target.category.value); // How to access name
+      //console.log(event.target.category.value); // How to access name
       // This function is called when the new task form is submitted
       var text = event.target.text.value;
       tasks.insert({
@@ -74,8 +74,8 @@ if (Meteor.isServer) {
   //Postgres.remove('students', {age: {$gt: 20}});
   var cursor = Postgres.getCursor('tasks', ['text', 'checked']);
   var cursor1 = Postgres.getCursor('users1', ['name']);
-  Postgres.createTable('users1', {name: ['$string']});
-  Postgres.createTable('tasks', {text: ['$string']});
+  //Postgres.createTable('users1', {name: ['$string']});
+  //Postgres.createTable('tasks', {text: ['$string']});
 
   Meteor.publish('tasks', function () {
     return cursor;
