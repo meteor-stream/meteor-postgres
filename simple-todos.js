@@ -22,13 +22,8 @@ if (Meteor.isClient) {
     tasks: function () {
       return tasks.select({});
     },
-    categories: function() {
-      return [
-        {name:'eddie'},
-        {name:'paulo'},
-        {name:'eric'},
-        {name:'kate'}
-      ];
+    categories: function () {
+      return users1.select({});
     }
   });
 
@@ -75,7 +70,7 @@ if (Meteor.isServer) {
   var cursor = Postgres.getCursor('tasks', ['text', 'checked']);
   var cursor1 = Postgres.getCursor('users1', ['name']);
   //Postgres.createTable('users1', {name: ['$string']});
-  //Postgres.createTable('tasks', {text: ['$string']});
+  //Postgres.createTable('tasks', {text: ['$string'], checked: ["$bool", {$default: false}]});
 
   Meteor.publish('tasks', function () {
     return cursor;

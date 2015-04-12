@@ -114,27 +114,27 @@ Postgres.createTable = function(table, tableObj, relTable) {
   // add notify functionality and close input string
   inputString = startString + inputString;
   inputString += " created_at TIMESTAMP default now()); " +
-  "CREATE OR REPLACE FUNCTION notify_trigger() RETURNS trigger AS $$" +
+  "CREATE OR REPLACE FUNCTION notify_trigger_" + table + "() RETURNS trigger AS $$" +
   "BEGIN" +
   " IF (TG_OP = 'DELETE') THEN " +
-  "PERFORM pg_notify('watchers', '[{' || TG_TABLE_NAME || ':' || OLD._id || '}, { operation: " +
+  "PERFORM pg_notify('notify_trigger_"+ table + "', '[{' || TG_TABLE_NAME || ':' || OLD._id || '}, { operation: " +
   "\"' || TG_OP || '\"}]');" +
   "RETURN old;" +
   "ELSIF (TG_OP = 'INSERT') THEN " +
-  "PERFORM pg_notify('watchers', '[{' || TG_TABLE_NAME || ':' || NEW._id || '}, { operation: " +
+  "PERFORM pg_notify('notify_trigger_"+ table + "', '[{' || TG_TABLE_NAME || ':' || NEW._id || '}, { operation: " +
   "\"' || TG_OP || '\"}]');" +
   "RETURN new; " +
   "ELSIF (TG_OP = 'UPDATE') THEN " +
-  "PERFORM pg_notify('watchers', '[{' || TG_TABLE_NAME || ':' || NEW._id || '}, { operation: " +
+  "PERFORM pg_notify('notify_trigger_"+ table + "', '[{' || TG_TABLE_NAME || ':' || NEW._id || '}, { operation: " +
   "\"' || TG_OP || '\"}]');" +
   "RETURN new; " +
   "END IF; " +
   "END; " +
   "$$ LANGUAGE plpgsql; " +
   "CREATE TRIGGER watched_table_trigger AFTER INSERT OR DELETE OR UPDATE ON " + table +
-  " FOR EACH ROW EXECUTE PROCEDURE notify_trigger();";
+  " FOR EACH ROW EXECUTE PROCEDURE notify_trigger_" + table + "();";
 
-  console.log(inputString);
+  //console.log(inputString);
   // send request to postgresql database
   pg.connect(conString, function(err, client) {
     if (err) {
@@ -165,7 +165,7 @@ Postgres.createTable = function(table, tableObj, relTable) {
       });
 
     });
-    var query = client.query("LISTEN watchers");
+    var query = client.query("LISTEN " + table);
   });
 };
 
@@ -198,7 +198,7 @@ Postgres.createRelationship = function(table1, table2) {
     // client.on('notification', function(msg) {
     //   console.log(msg);
     // });
-    var query = client.query("LISTEN watchers");
+    //var query = client.query("LISTEN watchers");
   });
 };
 
@@ -227,7 +227,7 @@ Postgres.addColumn = function(table, tableObj) {
     // client.on('notification', function(msg) {
     //   console.log(msg);
     // });
-    var query = client.query("LISTEN watchers");
+    //var query = client.query("LISTEN watchers");
   });
 };
 
@@ -248,7 +248,7 @@ Postgres.dropColumn = function(table, column) {
     // client.on('notification', function(msg) {
     //   console.log(msg);
     // });
-    var query = client.query("LISTEN watchers");
+    //var query = client.query("LISTEN watchers");
   });
 };
 
@@ -485,7 +485,7 @@ Postgres.autoSelect = function(sub, name, properties) {
         return results.rows;
       }
     });
-    var query = client.query("LISTEN watchers");
+    var query = client.query("LISTEN notify_trigger_" + name);
     client.on('notification', function(msg) {
       var returnMsg = eval("(" + msg.payload + ")");
       var k = sub._name;
@@ -499,7 +499,7 @@ Postgres.autoSelect = function(sub, name, properties) {
           fields: {
             removed: true,
             reset: false,
-            tableId: tableId,
+            tableId: tableId
           }
         });
       }
@@ -542,6 +542,7 @@ Postgres.autoSelect = function(sub, name, properties) {
                 reset: false,
                 tableId: results.rows[0]._id,
                 text: results.rows[0].text,
+                name: results.rows[0].name,
                 createdAt: results.rows[0].created_at
               }
             });
