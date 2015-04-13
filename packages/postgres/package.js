@@ -36,8 +36,11 @@ Package.onUse(function(api) {
 
 Package.onTest(function (api) {
   api.versionsFrom('1.1');
-  api.use(['spacebars', 'tinytest', 'test-helpers']);
+  api.use(['spacebars', 'tinytest', 'test-helpers', 'underscore', 'tracker', 'ddp']);
   api.addFiles('postgres.js', 'server');
   api.export('Postgres', 'server');
   api.addFiles('postgres_tests.js', 'server');
+  api.addFiles('sqlcollection.js', ['server', 'client']);
+  api.export('SQLCollection', ['server', 'client']);
+  api.addFiles('sqlcollection_tests.js', ['server', 'client']);
 });
