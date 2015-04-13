@@ -12,10 +12,10 @@ SQLCollection = function(connection, name /* arguments */) {
 
   // Defining the methods that application can interact with.
   this.createTable = function(tableName, tableDefinition) {
-    // TODO: MAKE SURE THIS HANDLES TABLES THAT ALREADY EXIST (mini sql doesn't perssist data so shouldn't be an issue)
+    // TODO: This will take the configuration from the cursor and will be modeled after a view
     minisql.createTable(tableName, tableDefinition);
-    // TODO: MAKE THIS INSERT INTO POSTGRES
-    var usersTable = {name: ['$string', '$notnull']};
+    // TODO: This will also create a postgres view for the data specified by the cursor
+    //var usersTable = {name: ['$string', '$notnull']};
     //Meteor.call('createTable', 'users1', usersTable);
   };
 
@@ -102,6 +102,7 @@ SQLCollection = function(connection, name /* arguments */) {
     // Adding an entry to minisql will trigger a server side insert, but this
     // will not trigger an added event on any client
     // CAN WE RENAME TO POPULATE?
+    // TODO: This needs to be modified in order to respond to the view
     this.addEventListener('added', function(index, msg, name) {
       unvalidated = "";
       console.log("in added:", msg);
@@ -195,6 +196,7 @@ if (Meteor.isServer) {
     remove: function(table, paramObj) {
       Postgres.remove(table, {"_id": {$eq: paramObj}});
     },
+    // TODO: In its current state this not useful. We dont want the client to be firing off create tables.
     createTable: function(table, paramObj) {
       console.log("in create table method");
       Postgres.createTable(table, paramObj);

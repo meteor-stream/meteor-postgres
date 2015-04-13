@@ -67,8 +67,15 @@ if (Meteor.isServer) {
   //Postgres.select('contacts',['address'],{},{ address: {$lm: 1}},{$fk: ['$loj', 'students']});
   //Postgres.update('students',{'class': 'senior', age: 30},{age: {$gt: 18}});
   //Postgres.remove('students', {age: {$gt: 20}});
-  var cursor = Postgres.getCursor('tasks', ['text', 'checked']);
-  var cursor1 = Postgres.getCursor('users1', ['name']);
+
+
+  //here the user specifies what data the client will have access too (data for postgres , minisql's data structure, and notifications will be taken from here)
+  var cursor = Postgres.getCursor('tasks', ['text', 'checked'], {}, {}, {});
+
+  //same as for cursor
+  var cursor1 = Postgres.getCursor('users1', ['name'], {}, {}, {});
+
+
   //Postgres.createTable('users1', {name: ['$string']});
   //Postgres.createTable('tasks', {text: ['$string'], checked: ["$bool", {$default: false}]});
 

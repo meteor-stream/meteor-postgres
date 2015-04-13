@@ -78,6 +78,7 @@ Postgres._SelectAddons = {
 //});
 //CREATE TABLE students (name varchar(255) not null, age integer, class varchar(255) default 2015, _id integer not null primary unique,
 Postgres.createTable = function(table, tableObj, relTable) {
+  //TODO: this need to be modified to move listener to views.
   console.log("in posgres create table");
   // SQL: 'CREATE TABLE table (fieldName constraint);'
   // initialize input string parts
@@ -329,6 +330,47 @@ Postgres.insert = function(table, insertObj) {
 // * @param {number} optionsObj value (comparator)
 // * @param {object} joinObj
 // */
+var selectStatement = function(table, returnFields, selectObj, optionsObj, joinObj) {
+  if (!returnFields || returnFields.length === 0) {
+    returnFields = ' * ';
+  }
+  else {
+    returnFields = '(' + returnFields.join(', ') + ')';
+  }
+
+  //{ name: {$lm: 1}}
+  var optionsString = '';
+  if (optionsObj && !_emptyObject(optionsObj)) {
+    var limit, group, offset, optionField;
+    optionField = Object.keys(optionsObj)[0];
+    group = optionsObj[optionField]['$gb'] ? (' GROUP BY ' + optionsObj[optionField]['$gb']) : '';
+    offset = optionsObj[optionField]['$off'] ? (' OFFSET ' + optionsObj[optionField]['$off']) : '';
+    limit = optionsObj[optionField]['$lm'] ? (' LIMIT ' + optionsObj[optionField]['$lm']) : '';
+    optionsString += group + offset + limit;
+  }
+
+  // joinObj TODO: helper table joins && better interface for $fk/$tb
+  // for foreign key it will be table1 join table2 on table1.table2_id = table2._id
+  // {$fk: [$loj, 'contacts']}
+  var joinString = '';
+  if (joinObj && !_emptyObject(joinObj)) {
+    var joinTable, joinType, tableField, joinField;
+    var type = Object.keys(joinObj)[0];
+    joinType = this._Joins[joinObj[type][0]];
+    joinTable = joinObj[type][1];
+    if (type === '$fk') {
+      tableField = table + '.' + joinTable + '_id';
+      joinField = joinTable + '._id';
+    }
+    else if (type === '$tb') {
+    }
+    joinString += joinType + joinTable + ' ON ' + tableField + ' = ' + joinField;
+  }
+
+  var inputString = 'SELECT ' + returnFields + ' FROM ' + table + joinString + _where(selectObj) + optionsString + ';';
+  return inputString;
+};
+
 Postgres.select = function(table, returnFields, selectObj, optionsObj, joinObj) {
   // SQL: 'SELECT fields FROM table WHERE field operator comparator AND (more WHERE) GROUP BY field / LIMIT number / OFFSET number;'
 
@@ -458,7 +500,8 @@ Postgres.remove = function(table, selectObj) {
 };
 
 
-Postgres.autoSelect = function(sub, name, properties) {
+Postgres.autoSelect = function(sub, name, properties, selectObj, optionsObj, joinObj) {
+  // TODO: this needs to be modified to create and start listening on views.
   //console.log(properties);
   pg.connect(conString, function(err, client) {
     var selectString = "select _id";
@@ -504,7 +547,7 @@ Postgres.autoSelect = function(sub, name, properties) {
         });
       }
       else if (returnMsg[1].operation === "UPDATE") {
-        var selectString = "select * from " + sub._name + " WHERE _id = " + returnMsg[0][sub._name] + ";";
+        var selectString = selectStatement(name, properties, selectObj, optionsObj, joinObj);
         client.query(selectString, function(error, results) {
           if (error) {
           } else {
@@ -527,7 +570,7 @@ Postgres.autoSelect = function(sub, name, properties) {
         });
       }
       else if (returnMsg[1].operation === "INSERT") {
-        var selectString = "select * from " + sub._name + " WHERE _id = " + returnMsg[0][sub._name] + ";";
+        var selectString = selectStatement(name, properties, selectObj, optionsObj, joinObj);
         client.query(selectString, function(error, results) {
           console.log("insert", selectString);
           if (error) {
@@ -554,11 +597,11 @@ Postgres.autoSelect = function(sub, name, properties) {
   });
 };
 
-Postgres.getCursor = function(name, columns) {
+Postgres.getCursor = function(name, columns, selectObj, optionsObj, joinObj) {
   var cursor = {};
   //Creating publish
   cursor._publishCursor = function(sub) {
-    this.autoSelect(sub, name, columns);
+    this.autoSelect(sub, name, columns, selectObj, optionsObj, joinObj);
   };
   cursor.autoSelect = this.autoSelect;
   return cursor;
