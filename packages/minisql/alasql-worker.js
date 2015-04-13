@@ -15,7 +15,7 @@
     var id = alasql.lastid++;
     alasql.buffer[id] = cb;
     alasql.webworker.postMessage({id: id, sql: sql, params: params});
-  };
+  }
 
 
   if (typeof importScripts === 'function') {
@@ -41,11 +41,8 @@
             path = sc[i].src.substr(0, sc[i].src.length - 13) + 'alasql.min.js';
             break;
           }
-          ;
         }
-        ;
       }
-      ;
 
       if (typeof path == "undefined") {
         throw new Error('Path to alasql.js is not specified');
@@ -72,7 +69,7 @@
 
         alasql.webworker.onerror = function(e) {
           throw e;
-        }
+        };
 
         if (arguments.length > 1) {
           var sql = 'REQUIRE ' + paths.map(function(p) {
@@ -85,11 +82,9 @@
         delete alasql.webworker;
         return;
       }
-      ;
     };
 
   }
-  ;
 
 
   /* WebWorker */
