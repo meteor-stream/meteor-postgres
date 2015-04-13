@@ -70,10 +70,10 @@ if (Meteor.isServer) {
 
 
   //here the user specifies what data the client will have access too (data for postgres , minisql's data structure, and notifications will be taken from here)
-  var cursor = Postgres.getCursor('tasks', ['text', 'checked'], {}, {}, {});
+  var cursor = Postgres.getCursor('tasks', ['_id', 'text', 'checked'], {}, {}, {});
 
   //same as for cursor
-  var cursor1 = Postgres.getCursor('users1', ['name'], {}, {}, {});
+  var cursor1 = Postgres.getCursor('users1', ['_id', 'name'], {}, {}, {});
 
 
   //Postgres.createTable('users1', {name: ['$string']});

@@ -335,7 +335,7 @@ var selectStatement = function(table, returnFields, selectObj, optionsObj, joinO
     returnFields = ' * ';
   }
   else {
-    returnFields = '(' + returnFields.join(', ') + ')';
+    returnFields = returnFields.join(', ');
   }
 
   //{ name: {$lm: 1}}
@@ -378,7 +378,7 @@ Postgres.select = function(table, returnFields, selectObj, optionsObj, joinObj) 
     returnFields = ' * ';
   }
   else {
-    returnFields = '(' + returnFields.join(', ') + ')';
+    returnFields = returnFields.join(', ');
   }
 
   //{ name: {$lm: 1}}
@@ -504,11 +504,12 @@ Postgres.autoSelect = function(sub, name, properties, selectObj, optionsObj, joi
   // TODO: this needs to be modified to create and start listening on views.
   //console.log(properties);
   pg.connect(conString, function(err, client) {
-    var selectString = "select _id";
-    for (var x = 0, count = properties.length; x < count; x++) {
-      selectString += ", " + properties[x];
-    }
-    selectString += " from " + name + " ORDER BY _id DESC LIMIT 10;";
+    //var selectString = "select _id";
+    //for (var x = 0, count = properties.length; x < count; x++) {
+    //  selectString += ", " + properties[x];
+    //}
+    //selectString += " from " + name + " ORDER BY _id DESC LIMIT 10;";
+    var selectString = selectStatement(name, properties, selectObj, optionsObj, joinObj);
     console.log(selectString);
     client.query(selectString, function(error, results) {
       //console.log(name);
@@ -547,7 +548,7 @@ Postgres.autoSelect = function(sub, name, properties, selectObj, optionsObj, joi
         });
       }
       else if (returnMsg[1].operation === "UPDATE") {
-        var selectString = selectStatement(name, properties, selectObj, optionsObj, joinObj);
+        var selectString = selectStatement(name, properties, {_id: {$eq: returnMsg[0][sub._name]}}, optionsObj, joinObj);
         client.query(selectString, function(error, results) {
           if (error) {
           } else {
@@ -570,12 +571,15 @@ Postgres.autoSelect = function(sub, name, properties, selectObj, optionsObj, joi
         });
       }
       else if (returnMsg[1].operation === "INSERT") {
-        var selectString = selectStatement(name, properties, selectObj, optionsObj, joinObj);
+        console.log("in insert");
+        console.log(returnMsg[0][sub._name]);
+        var selectString = selectStatement(name, properties, {_id: {$eq: returnMsg[0][sub._name]}}, optionsObj, joinObj);
         client.query(selectString, function(error, results) {
           console.log("insert", selectString);
           if (error) {
             console.log(error)
           } else {
+            console.log(results.rows);
             sub._session.send({
               msg: 'changed',
               collection: sub._name,
