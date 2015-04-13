@@ -288,8 +288,7 @@ SQLCollection.prototype.addEventListener = function(eventName, listener) {
 };
 
 SQLCollection.prototype.initialValue = function(eventName, listener) {
-  var result = Postgres.select(this.tableName);
-  return result;
+  return Postgres.select(this.tableName);
 };
 
 // @param {string} eventName - Remove events of this name, pass without suffix
