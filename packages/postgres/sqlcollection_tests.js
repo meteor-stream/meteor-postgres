@@ -21,6 +21,6 @@ Tinytest.add(
 );
 
 Tinytest.add('Livedata - server method - tests', function (test) {
-  var testCollection = new SQLCollection('test');
+  // var testCollection = new SQLCollection('test');
   //no event name error handle
 });
