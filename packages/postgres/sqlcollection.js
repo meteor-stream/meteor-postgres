@@ -54,7 +54,7 @@ SQLCollection = function(connection, name /* arguments */) {
     throw new Error('Use new to construct a SQLCollection');
   }
 
-  if (tableName !== null && typeof name !== "string") {
+  if (tableName !== null && typeof tableName !== "string") {
     throw new Error(
       'First argument to new SQLCollection must be a string or null');
   }
