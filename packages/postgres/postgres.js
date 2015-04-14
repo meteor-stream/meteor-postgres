@@ -77,74 +77,83 @@ Postgres._SelectAddons = {
 //  _id: ['$number', '$notnull', '$primary', '$unique']
 //});
 //CREATE TABLE students (name varchar(255) not null, age integer, class varchar(255) default 2015, _id integer not null primary unique,
-Postgres.createTable = function(table, tableObj, relTable) {
+Postgres.createTable = function(table, tableObj, relTable, cb) {
   console.log("in posgres create table");
   // SQL: 'CREATE TABLE table (fieldName constraint);'
   // initialize input string parts
   var startString = 'CREATE TABLE ' + table + ' (';
   var item, subKey, valOperator, inputString = '';
   // iterate through array arguments to populate input string parts
-  for (var key in tableObj) {
-    inputString += key + ' ';
-    inputString += this._DataTypes[tableObj[key][0]];
-    if (Array.isArray(tableObj[key]) && tableObj[key].length > 1) {
-      for (var i = 1, count = tableObj[key].length; i < count; i++) {
-        item = tableObj[key][i];
-        if (typeof item === 'object') {
-          subKey = Object.keys(item);
-          valOperator = this._TableConstraints[subKey];
-          inputString += ' ' + valOperator + item[subKey];
-        } else {
-          inputString += ' ' + this._TableConstraints[item];
+
+  if (!!tableObj) {
+    for (var key in tableObj) {
+      inputString += key + ' ';
+      inputString += this._DataTypes[tableObj[key][0]];
+      if (Array.isArray(tableObj[key]) && tableObj[key].length > 1) {
+        for (var i = 1, count = tableObj[key].length; i < count; i++) {
+          item = tableObj[key][i];
+          if (typeof item === 'object') {
+            subKey = Object.keys(item);
+            valOperator = this._TableConstraints[subKey];
+            inputString += ' ' + valOperator + item[subKey];
+          } else {
+            inputString += ' ' + this._TableConstraints[item];
+          }
         }
       }
+      inputString += ', ';
     }
-    inputString += ', ';
-  }
-  // check to see if id provided
-  if (inputString.indexOf('_id') === -1) {
-    inputString += '_id serial primary key,';
-  }
+    // check to see if id provided
+    if (inputString.indexOf('_id') === -1) {
+      inputString += '_id serial primary key,';
+    }
 
-  // add foreign key
-  if (relTable) {
-    inputString += ' ' + relTable + '_id' + ' integer references ' + relTable + ' (_id)';
+    // add foreign key
+    if (relTable) {
+      inputString += ' ' + relTable + '_id' + ' integer references ' + relTable + ' (_id)';
+    }
+    //inputString += ');';
+    // add notify functionality and close input string
+    inputString = startString + inputString;
+    inputString += " created_at TIMESTAMP default now()); " +
+    "CREATE OR REPLACE FUNCTION notify_trigger_" + table + "() RETURNS trigger AS $$" +
+    "BEGIN" +
+    " IF (TG_OP = 'DELETE') THEN " +
+    "PERFORM pg_notify('notify_trigger_"+ table + "', '[{' || TG_TABLE_NAME || ':' || OLD._id || '}, { operation: " +
+    "\"' || TG_OP || '\"}]');" +
+    "RETURN old;" +
+    "ELSIF (TG_OP = 'INSERT') THEN " +
+    "PERFORM pg_notify('notify_trigger_"+ table + "', '[{' || TG_TABLE_NAME || ':' || NEW._id || '}, { operation: " +
+    "\"' || TG_OP || '\"}]');" +
+    "RETURN new; " +
+    "ELSIF (TG_OP = 'UPDATE') THEN " +
+    "PERFORM pg_notify('notify_trigger_"+ table + "', '[{' || TG_TABLE_NAME || ':' || NEW._id || '}, { operation: " +
+    "\"' || TG_OP || '\"}]');" +
+    "RETURN new; " +
+    "END IF; " +
+    "END; " +
+    "$$ LANGUAGE plpgsql; " +
+    "CREATE TRIGGER watched_table_trigger AFTER INSERT OR DELETE OR UPDATE ON " + table +
+    " FOR EACH ROW EXECUTE PROCEDURE notify_trigger_" + table + "();";
+  } else {
+    inputString = 'Table Object cannot be undefiend or null';
+    console.log(inputString);
   }
-  //inputString += ');';
-  // add notify functionality and close input string
-  inputString = startString + inputString;
-  inputString += " created_at TIMESTAMP default now()); " +
-  "CREATE OR REPLACE FUNCTION notify_trigger_" + table + "() RETURNS trigger AS $$" +
-  "BEGIN" +
-  " IF (TG_OP = 'DELETE') THEN " +
-  "PERFORM pg_notify('notify_trigger_"+ table + "', '[{' || TG_TABLE_NAME || ':' || OLD._id || '}, { operation: " +
-  "\"' || TG_OP || '\"}]');" +
-  "RETURN old;" +
-  "ELSIF (TG_OP = 'INSERT') THEN " +
-  "PERFORM pg_notify('notify_trigger_"+ table + "', '[{' || TG_TABLE_NAME || ':' || NEW._id || '}, { operation: " +
-  "\"' || TG_OP || '\"}]');" +
-  "RETURN new; " +
-  "ELSIF (TG_OP = 'UPDATE') THEN " +
-  "PERFORM pg_notify('notify_trigger_"+ table + "', '[{' || TG_TABLE_NAME || ':' || NEW._id || '}, { operation: " +
-  "\"' || TG_OP || '\"}]');" +
-  "RETURN new; " +
-  "END IF; " +
-  "END; " +
-  "$$ LANGUAGE plpgsql; " +
-  "CREATE TRIGGER watched_table_trigger AFTER INSERT OR DELETE OR UPDATE ON " + table +
-  " FOR EACH ROW EXECUTE PROCEDURE notify_trigger_" + table + "();";
 
   //console.log(inputString);
   // send request to postgresql database
   pg.connect(conString, function(err, client) {
     if (err) {
-      console.log(err);
+      console.log('connection error');
     }
     client.query(inputString, function(error, results) {
-      if (error) {
-        console.log("error in create table " + table, error);
-      } else {
-        console.log("results in create table " + table); //, results
+      // if (error) {
+      //   console.log("error in create table " + table, error);
+      // } else {
+      //   console.log("results in create table " + table); //, results
+      // }
+      if (cb) {
+        cb(error, results);
       }
     });
     client.on('notification', function(msg) {
@@ -160,6 +169,9 @@ Postgres.createTable = function(table, tableObj, relTable) {
         if (error) {
           console.log("error in create table " + table, error);
         } else {
+          if (cb) {
+            cb(error, results);
+          }
           //console.log("results in create table ", results.rows);
         }
       });
@@ -202,27 +214,29 @@ Postgres.createRelationship = function(table1, table2) {
   });
 };
 
-Postgres.addColumn = function(table, tableObj) {
+Postgres.addColumn = function(table, tableObj, cb) {
   var inputString = 'ALTER TABLE ' + table + ' ADD COLUMN ';
   // iterate through array arguments to populate input string parts
-  for (var key in tableObj) {
-    inputString += key + ' ';
-    inputString += this._DataTypes[tableObj[key][0]] + ' ';
-    for (var i = 1, count = tableObj[key].length - 1; i < count; i++) {
-      inputString += tableObj[key][i] + ' ';
+
+  if (!!tableObj) {
+    for (var key in tableObj) {
+      inputString += key + ' ';
+      inputString += this._DataTypes[tableObj[key][0]] + ' ';
+      for (var i = 1, count = tableObj[key].length - 1; i < count; i++) {
+        inputString += tableObj[key][i] + ' ';
+      }
     }
+    inputString += ';';
+  } else {
+    inputString = 'Error';
   }
-  inputString += ';';
+
   pg.connect(conString, function(err, client) {
     if (err) {
       console.log(err);
     }
     client.query(inputString, function(error, results) {
-      if (error) {
-        console.log("error in create relationship " + table, error);
-      } else {
-        //console.log("results in create relationship " + table, results);
-      }
+      cb(error, results);
     });
     // client.on('notification', function(msg) {
     //   console.log(msg);
@@ -231,7 +245,7 @@ Postgres.addColumn = function(table, tableObj) {
   });
 };
 
-Postgres.dropColumn = function(table, column) {
+Postgres.dropColumn = function(table, column, cb) {
   var inputString = 'ALTER TABLE ' + table + ' DROP COLUMN ' + column;
   inputString += ';';
   pg.connect(conString, function(err, client) {
@@ -239,11 +253,12 @@ Postgres.dropColumn = function(table, column) {
       console.log(err);
     }
     client.query(inputString, function(error, results) {
-      if (error) {
-        console.log("error in create relationship " + table, error);
-      } else {
-        //console.log("results in create relationship " + table, results);
-      }
+      // if (error) {
+      //   console.log("error in create relationship " + table, error);
+      // } else {
+      //   //console.log("results in create relationship " + table, results);
+      // }
+      cb(error, results);
     });
     // client.on('notification', function(msg) {
     //   console.log(msg);
@@ -256,19 +271,24 @@ Postgres.dropColumn = function(table, column) {
  * TODO: Cascade or restrict?
  * @param {string} table
  */
-Postgres.dropTable = function(table) {
+Postgres.dropTable = function(table, cb) {
   var inputString = 'DROP FUNCTION IF EXISTS notify_trigger() CASCADE; DROP TABLE IF EXISTS ' + table + ' CASCADE;';
   // send request to postgresql database
   pg.connect(conString, function(err, client, done) {
     if (err) {
-      console.log(err);
+      console.log('connection error');
     }
     client.query(inputString, function(error, results) {
-      if (error) {
-        console.log("error in drop " + table, error);
-      } else {
-        //console.log("results in drop " + table, results);
-      }
+      // if (error) {
+      //   console.log("error in drop " + table, error);
+      // } else {
+      //   if (cb) {
+      //     console.log('second');
+      //     cb(error, results);
+      //   }
+      //   //console.log("results in drop " + table, results);
+      cb(error, results);
+      // }
       done();
     });
   });
