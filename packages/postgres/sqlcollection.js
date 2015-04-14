@@ -47,11 +47,16 @@ SQLCollection = function(connection, name /* arguments */) {
     Meteor.call('remove', tableName, dataObj);
   };
 
+  self._events = [];
+
   if (!(self instanceof SQLCollection)) {
-    throw new Error('use "new" to construct a SQLCollection');
+    throw new Error('Use new to construct a SQLCollection');
   }
 
-  self._events = [];
+  if (tableName !== null && typeof tableName !== "string") {
+    throw new Error(
+      'First argument to new SQLCollection must be a string or null');
+  }
 
   if (typeof connection === 'string') {
     // Using default connection

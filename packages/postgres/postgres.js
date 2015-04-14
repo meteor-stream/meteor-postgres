@@ -77,14 +77,14 @@ Postgres._SelectAddons = {
 //  _id: ['$number', '$notnull', '$primary', '$unique']
 //});
 //CREATE TABLE students (name varchar(255) not null, age integer, class varchar(255) default 2015, _id integer not null primary unique,
-Postgres.createTable = function(table, tableObj, relTable) {
-  //TODO: this need to be modified to move listener to views.
+Postgres.createTable = function(table, tableObj, relTable, cb) {
   console.log("in posgres create table");
   // SQL: 'CREATE TABLE table (fieldName constraint);'
   // initialize input string parts
   var startString = 'CREATE TABLE ' + table + ' (';
   var item, subKey, valOperator, inputString = '';
   // iterate through array arguments to populate input string parts
+
   for (var key in tableObj) {
     inputString += key + ' ';
     inputString += this._DataTypes[tableObj[key][0]];
@@ -100,7 +100,7 @@ Postgres.createTable = function(table, tableObj, relTable) {
         }
       }
     }
-    //inputString += ', ';
+    inputString += ', ';
   }
   // check to see if id provided
   if (inputString.indexOf('_id') === -1) {
@@ -172,9 +172,10 @@ Postgres.createRelationship = function(table1, table2) {
   });
 };
 
-Postgres.addColumn = function(table, tableObj) {
+Postgres.addColumn = function(table, tableObj, cb) {
   var inputString = 'ALTER TABLE ' + table + ' ADD COLUMN ';
   // iterate through array arguments to populate input string parts
+
   for (var key in tableObj) {
     inputString += key + ' ';
     inputString += this._DataTypes[tableObj[key][0]] + ' ';
@@ -183,16 +184,13 @@ Postgres.addColumn = function(table, tableObj) {
     }
   }
   inputString += ';';
+
   pg.connect(conString, function(err, client) {
     if (err) {
       console.log(err);
     }
     client.query(inputString, function(error, results) {
-      if (error) {
-        console.log("error in create relationship " + table, error);
-      } else {
-        //console.log("results in create relationship " + table, results);
-      }
+      cb(error, results);
     });
     // client.on('notification', function(msg) {
     //   console.log(msg);
@@ -201,7 +199,7 @@ Postgres.addColumn = function(table, tableObj) {
   });
 };
 
-Postgres.dropColumn = function(table, column) {
+Postgres.dropColumn = function(table, column, cb) {
   var inputString = 'ALTER TABLE ' + table + ' DROP COLUMN ' + column;
   inputString += ';';
   pg.connect(conString, function(err, client) {
@@ -209,11 +207,12 @@ Postgres.dropColumn = function(table, column) {
       console.log(err);
     }
     client.query(inputString, function(error, results) {
-      if (error) {
-        console.log("error in create relationship " + table, error);
-      } else {
-        //console.log("results in create relationship " + table, results);
-      }
+      // if (error) {
+      //   console.log("error in create relationship " + table, error);
+      // } else {
+      //   //console.log("results in create relationship " + table, results);
+      // }
+      cb(error, results);
     });
     // client.on('notification', function(msg) {
     //   console.log(msg);
@@ -226,19 +225,24 @@ Postgres.dropColumn = function(table, column) {
  * TODO: Cascade or restrict?
  * @param {string} table
  */
-Postgres.dropTable = function(table) {
+Postgres.dropTable = function(table, cb) {
   var inputString = 'DROP FUNCTION IF EXISTS notify_trigger() CASCADE; DROP TABLE IF EXISTS ' + table + ' CASCADE;';
   // send request to postgresql database
   pg.connect(conString, function(err, client, done) {
     if (err) {
-      console.log(err);
+      console.log('connection error');
     }
     client.query(inputString, function(error, results) {
-      if (error) {
-        console.log("error in drop " + table, error);
-      } else {
-        //console.log("results in drop " + table, results);
-      }
+      // if (error) {
+      //   console.log("error in drop " + table, error);
+      // } else {
+      //   if (cb) {
+      //     console.log('second');
+      //     cb(error, results);
+      //   }
+      //   //console.log("results in drop " + table, results);
+      cb(error, results);
+      // }
       done();
     });
   });
