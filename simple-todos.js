@@ -5,25 +5,31 @@ if (Meteor.isClient) {
   // TODO: Move the table definition into SQLCollection
   // To mirror the Mongo interface we should make it so taht 1 collection is 1 table
   var taskTable = {
-    _id: ['INT', 'AUTO_INCREMENT'],
-    text: ['varchar (255)', 'not null'],
-    checked: ['BOOL', 'DEFAULT true']
+    _id: ['$number'],
+    text: ['$string', '$notnull'],
+    checked: ['$bool']
   };
   tasks.createTable('tasks', taskTable);
 
   var usersTable = {
-    _id: ['INT','not null'],
-    name: ['varchar (255)', 'not null']
+    _id: ['$number'],
+    name: ['$string', '$notnull']
   };
   users1.createTable('users1', usersTable);
+//Postgres.createTable('students', {
+//  name: ['$string', '$notnull'],
+//  age: ['$number'],
+//  class: ['$string', {$default: '2015'}],
+//  _id: ['$number', '$notnull', '$primary', '$unique']
+//});
 
 
   Template.body.helpers({
     tasks: function () {
-      return tasks.select({});
+      return tasks.select();
     },
     categories: function () {
-      return users1.select({});
+      return users1.select();
     }
   });
 
@@ -45,15 +51,16 @@ if (Meteor.isClient) {
     },
     "click .toggle-checked": function () {
       // Set the checked property to the opposite of its current value
+      console.log(this.checked);
       if (this.checked) {
-        tasks.update('tasks', {_id: this._id, column: "checked", value: false});
+        tasks.update('tasks', {_id: this._id, "checked": false}, {"_id": {$eq: this._id}});
       }
       else {
-        tasks.update('tasks', {_id: this._id, column: "checked", value: true});
+        tasks.update('tasks', {_id: this._id, "checked": true}, {"_id": {$eq: this._id}});
       }
     },
     "click .delete": function () {
-      tasks.remove(this._id);
+      tasks.remove({_id: {$eq: this._id}});
     }
   });
 
@@ -67,8 +74,15 @@ if (Meteor.isServer) {
   //Postgres.select('contacts',['address'],{},{ address: {$lm: 1}},{$fk: ['$loj', 'students']});
   //Postgres.update('students',{'class': 'senior', age: 30},{age: {$gt: 18}});
   //Postgres.remove('students', {age: {$gt: 20}});
-  var cursor = Postgres.getCursor('tasks', ['text', 'checked']);
-  var cursor1 = Postgres.getCursor('users1', ['name']);
+
+
+  //here the user specifies what data the client will have access too (data for postgres , minisql's data structure, and notifications will be taken from here)
+  var cursor = Postgres.getCursor('tasks', ['_id', 'text', 'checked', 'created_at'], {}, {}, {});
+
+  //same as for cursor
+  var cursor1 = Postgres.getCursor('users1', ['_id', 'name', 'created_at'], {}, {}, {});
+
+
   //Postgres.createTable('users1', {name: ['$string']});
   //Postgres.createTable('tasks', {text: ['$string'], checked: ["$bool", {$default: false}]});
 
