@@ -145,11 +145,7 @@ Postgres.createTable = function(table, tableObj, relTable, cb) {
       console.log(err, "in create table");
     }
     client.query(inputString, function(error, results) {
-      if (error) {
-        console.log("error in create table " + table, error);
-      } else {
-        //console.log("results in create table " + table, results);
-      }
+      cb(error, results);
     });
     done();
   });
