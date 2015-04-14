@@ -37,9 +37,7 @@ SQLCollection = function(connection, name /* arguments */) {
   this.update = function(tableName, dataObj) {
     minisql.update(tableName, dataObj);
     reactiveData.changed();
-    var newData = {"checked": dataObj.value};
-    var newCheck = {"_id": {$eq: dataObj._id}};
-    Meteor.call('update', tableName, newData, newCheck);
+    Meteor.call('update', tableName, dataObj);
   };
 
   this.remove = function(dataObj) {
@@ -138,7 +136,8 @@ SQLCollection = function(connection, name /* arguments */) {
         // alasql:
         // minisql.update(tableName, msgParams) // So msgParams doesn't exist. We will have to do
         // some logic here or in alasql.
-        alasql("UPDATE " + tableName + " SET checked = ? WHERE _id= ?", [msg.checked, msg.tableId]);
+        console.log(msg.results._id);
+        minisql.update(tableName, msg.results, {"_id": {$eq: msg.results._id}});
       }
       else {
         // The message is a new insertion of a message
@@ -154,7 +153,8 @@ SQLCollection = function(connection, name /* arguments */) {
           // minisql.update(tableName, msgParams) // So msgParams doesn't exist. We will have to do
           // some logic here or in alasql.
           console.log(msg.results);
-          minisql.update(tableName, msg.results);
+          console.log(msg.results._id);
+          minisql.update(tableName, msg.results, {"_id": {$eq: -1}});
           unvalidated = "";
         }
         else {
