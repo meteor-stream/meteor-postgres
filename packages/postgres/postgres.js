@@ -137,37 +137,6 @@ Postgres.createTable = function(table, tableObj, relTable) {
 
   //console.log(inputString);
   // send request to postgresql database
-  pg.connect(conString, function(err, client) {
-    if (err) {
-      console.log(err);
-    }
-    client.query(inputString, function(error, results) {
-      if (error) {
-        console.log("error in create table " + table, error);
-      } else {
-        console.log("results in create table " + table); //, results
-      }
-    });
-    client.on('notification', function(msg) {
-      var returnMsg = eval("(" + msg.payload + ")");
-      var k = '';
-      var v = '';
-      for (var key in returnMsg) {
-        k = key;
-        v = returnMsg[key];
-      }
-      var selectString = "select * from " + k + " where id = " + v + ";";
-      client.query(selectString, function(error, results) {
-        if (error) {
-          console.log("error in create table " + table, error);
-        } else {
-          //console.log("results in create table ", results.rows);
-        }
-      });
-
-    });
-    var query = client.query("LISTEN " + table);
-  });
 };
 
 /**
@@ -543,7 +512,7 @@ Postgres.autoSelect = function(sub, name, properties, selectObj, optionsObj, joi
           fields: {
             removed: true,
             reset: false,
-            results:results.rows[0]
+            tableId:tableId
           }
         });
       }
