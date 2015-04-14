@@ -129,18 +129,19 @@ function _where(selectObj) {
   }
 }
 var updateStatement = function(table, updateObj, selectObj) {
+  console.log(updateObj);
   var updateString = ''; // fields VALUE values {'class': 'senior'}
   if (updateObj && !_emptyObject(updateObj)) {
     var keys = Object.keys(updateObj);
     // if there are many fields
     if (keys.length > 1) {
       for (var i = 0, count = keys.length - 1; i < count; i++) {
-        updateString += keys[i] + ' = ' + "'" + updateObj[keys[i]] + "', ";
+        updateString += keys[i] + ' = ' + updateObj[keys[i]] + ", ";
       }
-      updateString += keys[keys.length - 1] + "'" + updateObj[keys[keys.length - 1]] + "'";
+      updateString += keys[keys.length - 1] + updateObj[keys[keys.length - 1]];
     } else {
       // if there is only one field to update
-      updateString += keys[0] + ' = ' + "'" + updateObj[keys[0]] + "'";
+      updateString += keys[0] + ' = ' + updateObj[keys[0]];
     }
   }
   var inputString = 'UPDATE ' + table + ' SET ' + updateString + _where(selectObj) + ';';
@@ -199,26 +200,42 @@ minisql.insert = function(name, params){
 };
 
 minisql.update = function(table, updateObj, selectObj){
+  console.log("minisql line 203 update obj: ", updateObj);
+  console.log("minisql line 204 select obj: ", selectObj);
   var updateString = ''; // fields VALUE values {'class': 'senior'}
   if (updateObj && !_emptyObject(updateObj)) {
     var keys = Object.keys(updateObj);
     // if there are many fields
     if (keys.length > 1) {
       for (var i = 0, count = keys.length - 1; i < count; i++) {
-        updateString += keys[i] + ' = ' + "'" + updateObj[keys[i]] + "', ";
+        if (isNaN(updateObj[keys[i]]) || updateObj[keys[i]] instanceof Date) {
+          updateString += keys[i] + ' = ' + "'" + updateObj[keys[i]] + "', ";
+        } else {
+          updateString += keys[i] + ' = ' + updateObj[keys[i]] + ", ";
+        }
       }
-      updateString += keys[keys.length - 1] + " = '" + updateObj[keys[keys.length - 1]] + "'";
+      if (isNaN(updateObj[keys[keys.length - 1]]) || updateObj[keys[keys.length - 1]] instanceof Date) {
+        updateString += keys[keys.length - 1] + " = '" + updateObj[keys[keys.length - 1]] + "'";
+      } else {
+        updateString += keys[keys.length - 1] + " = " + updateObj[keys[keys.length - 1]];
+      }
     } else {
       // if there is only one field to update
-      updateString += keys[0] + ' = ' + "'" + updateObj[keys[0]] + "'";
+      if (isNaN(updateObj[keys[0]]) || updateObj[keys[0]] instanceof Date) {
+        updateString += keys[0] + ' = ' + "'" + updateObj[keys[0]] + "'";
+      } else {
+        updateString += keys[0] + ' = ' + updateObj[keys[0]];
+      }
     }
   }
   var inputString = 'UPDATE ' + table + ' SET ' + updateString + _where(selectObj) + ';';
-  console.log(inputString);
+  console.log('minisql line 232 inputString:', inputString);
   alasql(inputString);
 };
 
 minisql.remove = function(table, selectObj){
   var inputString = 'DELETE FROM ' + table + _where(selectObj) + ';';
+  // DELETE FROM table;
+  console.log('minisql line 238 delete input string:', inputString);
   alasql(inputString);
 };

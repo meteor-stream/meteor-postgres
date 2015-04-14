@@ -51,6 +51,7 @@ if (Meteor.isClient) {
     },
     "click .toggle-checked": function () {
       // Set the checked property to the opposite of its current value
+      console.log(this.checked);
       if (this.checked) {
         tasks.update('tasks', {_id: this._id, "checked": false}, {"_id": {$eq: this._id}});
       }
@@ -59,7 +60,7 @@ if (Meteor.isClient) {
       }
     },
     "click .delete": function () {
-      tasks.remove(this._id);
+      tasks.remove({_id: {$eq: this._id}});
     }
   });
 
