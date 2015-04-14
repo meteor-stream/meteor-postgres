@@ -2,51 +2,53 @@
 pg = Npm.require('pg');
 var conString = 'postgres://postgres:1234@localhost/postgres';
 
-ActiveRecord = function(conString) {
+ActiveRecord = function() {
   this.conString = conString;
-  this.inputString = '';
+  this.inpustString = '';
+  this.table = '';
   this.selectString = '';
   this.joinString = '';
   this.whereString = '';
   this.caboose = '';
-  this.table = '';
 };
 
-// Accepts table and following arguments are fields
-// SELECT fields FROM table
-// TODO distinct
+// TODO: COMPLETE
+// Parameters: table (req), fields (arguments, optional)
+// SQL: SELECT fields FROM table, SELECT * FROM table
+// Special: May pass table, distinct, field to obtain a single record per unique value
 ActiveRecord.prototype.select = function(table /*arguments*/) {
   this.table = table;
   var args = '';
-  if (arguments.length > 2) {
-    args += '(';
+  if (arguments.length >= 2) {
     for (var i = 1; i < arguments.length; i++) {
-      args += arguments[i] + ',';
+      if (arguments[i] === 'distinct') {
+        args += 'DISTINCT ';
+      } else {
+        args += arguments[i] + ', ';
+      }
     }
-    var last = args.length-1;
-    args = args.slice(0,last) + ')';
+    args = args.substring(0,args.length-2);
   } else {
-    args += arguments[1];
+    args += '*';
   }
-
-  //args = args.join(',');
   this.selectString = 'SELECT ' + args + ' FROM ' + table;
   return this;
 };
 
-
-
+// TODO: INCOMPLETE
 // can accept string
 ActiveRecord.prototype.joins = function() {
   if (arguments.length === 1 && typeof arguments[0] === 'string') {
     var joinTable = arguments[0];
     this.joinString += ' INNER JOIN ' + joinTable + ' ON '+ joinTable + '._id = ' + this.table + '.' + joinTable + '_id';
   }
-
   return this;
 };
 
-
+// TODO: IN PROGRESS
+// Parameters:
+// SQL: WHERE field operator comparator, WHERE field1 operator1 comparator1 AND/OR field2 operator2 comparator2
+// Special:
 // Conditions can be strings, arrays, or hashes
 // RAW is a string, arrays and hashes are safe
 // WHERE field operator condition
@@ -70,26 +72,107 @@ ActiveRecord.prototype.where = function(/*Arguments*/) {
   return this;
 };
 
+// TODO: INCOMPLETE
+// Parameters: table (req)
+// SQL: INSERT INTO table
+// Special:
+ActiveRecord.prototype.insert = function() {};
+
+// TODO: INCOMPLETE
+// Parameters: table (req)
+// SQL: UPDATE table SET
+// Special:
+ActiveRecord.prototype.update = function() {};
+
+// TODO: COMPLETE
+// Parameters: table (req)
+// SQL: DELETE FROM table
+// Special: May be chained with where, otherwise will delete all rows from table
+ActiveRecord.prototype.delete = function(table) {
+  this.selectString = 'DELETE FROM ' + table;
+  return this;
+};
+
+// TODO: COMPLETE
+// Parameters: limit integer
+// SQL: LIMIT number
 ActiveRecord.prototype.limit = function(limit) {
   this.caboose += ' LIMIT ' + limit;
   return this;
 };
 
+// TODO: COMPLETE
+// Parameters: offset integer
+// SQL: OFFSET number
 ActiveRecord.prototype.offset = function(offset) {
   this.caboose += ' OFFSET ' + offset;
   return this;
 };
 
-// TODO HOWTO must use fetch to communicate with the database it is the last item in the chain
+// TODO: COMPLETE
+// Parameters: table (req), limit (optional, defaults to 1)
+// SQL: SELECT * FROM table ORDER BY table._id ASC LIMIT 1, SELECT * FROM table ORDER BY table._id ASC LIMIT limit
+// Special: Retrieves first item, overrides all other chainable functions
+ActiveRecord.prototype.first = function(table, limit) {
+  this.table = table;
+  limit = limit || 1;
+  this.inputString += 'SELECT * FROM ' + table + ' ORDER BY ' + table + '._id ASC LIMIT ' + limit + ';';
+  return this;
+};
+
+// TODO: COMPLETE
+// Parameters: table (req), limit (optional, defaults to 1)
+// SQL: SELECT * FROM table ORDER BY table._id DESC LIMIT 1, SELECT * FROM table ORDER BY table._id DESC LIMIT limit
+// Special: Retrieves first item, overrides all other chainable functions
+ActiveRecord.prototype.last = function(table, limit) {
+  this.table = table;
+  limit = limit || 1;
+  this.inputString += 'SELECT * FROM ' + table + ' ORDER BY ' + table + '._id DESC LIMIT ' + limit + ';';
+  return this;
+};
+
+// TODO: COMPLETE
+// Parameters: table (req), limit (optional, defaults to 1)
+// SQL: SELECT * FROM table LIMIT 1, SELECT * FROM table LIMIT limit
+// Special: Retrieves a record without ordering, overrides all other chainable functions
+ActiveRecord.prototype.take = function(table, limit) {
+  this.table = table;
+  limit = limit || 1;
+  this.inputString += 'SELECT * FROM ' + table + ' LIMIT ' + limit + ';';
+  return this;
+};
+
+// TODO: INCOMPLETE
+// Parameters:
+// SQL: GROUP BY
+// Special:
+ActiveRecord.prototype.group = function() {
+  //this.caboose +=
+  return this;
+};
+
+// TODO: INCOMPLETE
+// Parameters:
+// SQL: HAVING
+// Special:
+ActiveRecord.prototype.having = function() {
+  //this.caboose +=
+  return this;
+};
+
+// TODO: COMPLETE
+// Parameters: None
+// SQL: Combines previously chained items to create a SQL statement
+// Special: Functions with an inputString override other chainable functions because they are complete
 ActiveRecord.prototype.fetch = function() {
-  var input = this.selectString + this.joinString + this.whereString + this.caboose + ';';
   var table = this.table;
-  console.log(input);
-  pg.connect(this.con, function(err, client, done) {
+  var input = this.inpustString.length > 0 ? this.inpustString : this.selectString + this.joinString + this.whereString + this.caboose + ';';
+  console.log('Fetch input:', input);
+  pg.connect(this.conString, function(err, client, done) {
     if (err){
       console.log(err);
     }
-    console.log(input);
+    //console.log(input);
     client.query(input, function(error, results) {
       if (error) {
         console.log("error in active record " + table, error);
@@ -100,71 +183,3 @@ ActiveRecord.prototype.fetch = function() {
     });
   });
 };
-
-
-
-
-
-
-
-//// TODO HO
-//// TODO HOWTO find, take, first, last are SELECT statements - > pick only one
-//// If passed a single integer, returns the item with that _id
-//// SELECT * FROM table WHERE (table._id = value) LIMIT 1;
-//// If passed an array of primary keys, it will return records for those keys
-//// SELECT * FROM table WHERE (table._id IN (array elements)); --> Ruby returns record not found unless all items are found
-//ActiveRecord.prototype.find = function(table, args) {
-//  this.table = table;
-//  this.inputString += 'SELECT * FROM ' + this.table + ' ';
-//  this.whereString += 'WHERE ('+ this.table + '._id ';
-//  if (typeof args === 'number') {
-//    this.whereString += '= ' + args + ')';
-//    this.caboose += 'LIMIT 1;';
-//  } else if (Array.isArray(args)) {
-//    this.inputString += 'IN (' + args.join(',') + '));';
-//  }
-//  this.inputString += ' ';
-//  return this;
-//};
-//
-//// Retrieves a record without ordering
-//// If passed no arguments, returns a record
-//// SELECT * FROM table LIMIT 1;
-//// passing other numbers changes the LIMIT
-//// Ruby returns null if no record found
-//ActiveRecord.prototype.take = function(table, args) {
-//  this.table = table;
-//  args = args || 1;
-//  this.inputString += 'SELECT * FROM ' + table + ' LIMIT ' + args + ' ';
-//  return this;
-//};
-//
-//// Retrieves first item
-//// If no arguments passed, returns first in order of primary key
-//// passing other numbers changes the LIMIT
-//ActiveRecord.prototype.first = function(table, args) {
-//  this.table = table;
-//  args = args || 1;
-//  this.inputString += 'SELECT * FROM ' + table + ' ORDER BY ' + table + '._id ASC LIMIT ' + args + ' ';
-//  return this;
-//};
-//
-//// Retrieves last item
-//// If no arguments passed, returns last in order of primary key
-//// passing other numbers changes the LIMIT
-//ActiveRecord.prototype.last = function(table, args) {
-//  this.table = table;
-//  args = args || 1;
-//  this.inputString += 'SELECT * FROM ' + table + ' ORDER BY ' + table + '._id DESC LIMIT ' + args + ' ';
-//  return this;
-//};
-//
-//// Finds first record matching same condition
-//// TODO: find_by is similar to .where -> do where first
-//ActiveRecord.prototype.find_by = function() {
-//
-//};
-//
-//// TODO: BATCHES??
-//
-
