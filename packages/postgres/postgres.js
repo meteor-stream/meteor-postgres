@@ -77,14 +77,14 @@ Postgres._SelectAddons = {
 //  _id: ['$number', '$notnull', '$primary', '$unique']
 //});
 //CREATE TABLE students (name varchar(255) not null, age integer, class varchar(255) default 2015, _id integer not null primary unique,
-Postgres.createTable = function(table, tableObj, relTable) {
-  //TODO: this need to be modified to move listener to views.
+Postgres.createTable = function(table, tableObj, relTable, cb) {
   console.log("in posgres create table");
   // SQL: 'CREATE TABLE table (fieldName constraint);'
   // initialize input string parts
   var startString = 'CREATE TABLE ' + table + ' (';
   var item, subKey, valOperator, inputString = '';
   // iterate through array arguments to populate input string parts
+
   for (var key in tableObj) {
     inputString += key + ' ';
     inputString += this._DataTypes[tableObj[key][0]];
@@ -100,7 +100,7 @@ Postgres.createTable = function(table, tableObj, relTable) {
         }
       }
     }
-    //inputString += ', ';
+    inputString += ', ';
   }
   // check to see if id provided
   if (inputString.indexOf('_id') === -1) {
@@ -137,37 +137,6 @@ Postgres.createTable = function(table, tableObj, relTable) {
 
   //console.log(inputString);
   // send request to postgresql database
-  pg.connect(conString, function(err, client) {
-    if (err) {
-      console.log(err);
-    }
-    client.query(inputString, function(error, results) {
-      if (error) {
-        console.log("error in create table " + table, error);
-      } else {
-        console.log("results in create table " + table); //, results
-      }
-    });
-    client.on('notification', function(msg) {
-      var returnMsg = eval("(" + msg.payload + ")");
-      var k = '';
-      var v = '';
-      for (var key in returnMsg) {
-        k = key;
-        v = returnMsg[key];
-      }
-      var selectString = "select * from " + k + " where id = " + v + ";";
-      client.query(selectString, function(error, results) {
-        if (error) {
-          console.log("error in create table " + table, error);
-        } else {
-          //console.log("results in create table ", results.rows);
-        }
-      });
-
-    });
-    var query = client.query("LISTEN " + table);
-  });
 };
 
 /**
@@ -203,9 +172,10 @@ Postgres.createRelationship = function(table1, table2) {
   });
 };
 
-Postgres.addColumn = function(table, tableObj) {
+Postgres.addColumn = function(table, tableObj, cb) {
   var inputString = 'ALTER TABLE ' + table + ' ADD COLUMN ';
   // iterate through array arguments to populate input string parts
+
   for (var key in tableObj) {
     inputString += key + ' ';
     inputString += this._DataTypes[tableObj[key][0]] + ' ';
@@ -214,16 +184,13 @@ Postgres.addColumn = function(table, tableObj) {
     }
   }
   inputString += ';';
+
   pg.connect(conString, function(err, client) {
     if (err) {
       console.log(err);
     }
     client.query(inputString, function(error, results) {
-      if (error) {
-        console.log("error in create relationship " + table, error);
-      } else {
-        //console.log("results in create relationship " + table, results);
-      }
+      cb(error, results);
     });
     // client.on('notification', function(msg) {
     //   console.log(msg);
@@ -232,7 +199,7 @@ Postgres.addColumn = function(table, tableObj) {
   });
 };
 
-Postgres.dropColumn = function(table, column) {
+Postgres.dropColumn = function(table, column, cb) {
   var inputString = 'ALTER TABLE ' + table + ' DROP COLUMN ' + column;
   inputString += ';';
   pg.connect(conString, function(err, client) {
@@ -240,11 +207,12 @@ Postgres.dropColumn = function(table, column) {
       console.log(err);
     }
     client.query(inputString, function(error, results) {
-      if (error) {
-        console.log("error in create relationship " + table, error);
-      } else {
-        //console.log("results in create relationship " + table, results);
-      }
+      // if (error) {
+      //   console.log("error in create relationship " + table, error);
+      // } else {
+      //   //console.log("results in create relationship " + table, results);
+      // }
+      cb(error, results);
     });
     // client.on('notification', function(msg) {
     //   console.log(msg);
@@ -257,19 +225,24 @@ Postgres.dropColumn = function(table, column) {
  * TODO: Cascade or restrict?
  * @param {string} table
  */
-Postgres.dropTable = function(table) {
+Postgres.dropTable = function(table, cb) {
   var inputString = 'DROP FUNCTION IF EXISTS notify_trigger() CASCADE; DROP TABLE IF EXISTS ' + table + ' CASCADE;';
   // send request to postgresql database
   pg.connect(conString, function(err, client, done) {
     if (err) {
-      console.log(err);
+      console.log('connection error');
     }
     client.query(inputString, function(error, results) {
-      if (error) {
-        console.log("error in drop " + table, error);
-      } else {
-        //console.log("results in drop " + table, results);
-      }
+      // if (error) {
+      //   console.log("error in drop " + table, error);
+      // } else {
+      //   if (cb) {
+      //     console.log('second');
+      //     cb(error, results);
+      //   }
+      //   //console.log("results in drop " + table, results);
+      cb(error, results);
+      // }
       done();
     });
   });
@@ -299,7 +272,6 @@ Postgres.insert = function(table, insertObj) {
   inputString += keys[keys.length - 1] + valueString + '$' + keys.length + ');';
   insertArray.push(insertObj[keys[keys.length - 1]]);
   // send request to postgresql database
-  console.log(inputString);
   //console.log(insertArray);
   pg.connect(conString, function(err, client, done) {
     if (err) {
@@ -420,7 +392,7 @@ Postgres.select = function(table, returnFields, selectObj, optionsObj, joinObj) 
       if (error) {
         console.log("error in select " + table, error);
       } else {
-        console.log("results in select " + table, results.rows);
+        //console.log("results in select " + table, results.rows);
       }
       done();
       return results.rows[0];
@@ -458,17 +430,17 @@ Postgres.update = function(table, updateObj, selectObj) {
   }
 
   var inputString = 'UPDATE ' + table + ' SET ' + updateString + _where(selectObj) + ';';
-  console.log(inputString);
+  //console.log(inputString);
   pg.connect(conString, function(err, client, done) {
     if (err) {
       console.log(err);
     }
-    console.log(inputString);
+    //console.log(inputString);
     client.query(inputString, function(error, results) {
       if (error) {
         console.log("error in update " + table, error);
       } else {
-        console.log("results in update " + table, results);
+        //console.log("results in update " + table, results);
       }
       done();
     });
@@ -492,7 +464,7 @@ Postgres.remove = function(table, selectObj) {
       if (error) {
         console.log("error in remove " + table, error);
       } else {
-        console.log("results in remove " + table, results.rows);
+        //console.log("results in remove " + table, results.rows);
       }
       done();
     });
@@ -510,13 +482,13 @@ Postgres.autoSelect = function(sub, name, properties, selectObj, optionsObj, joi
     //}
     //selectString += " from " + name + " ORDER BY _id DESC LIMIT 10;";
     var selectString = selectStatement(name, properties, selectObj, optionsObj, joinObj);
-    console.log(selectString);
+    //console.log(selectString);
     client.query(selectString, function(error, results) {
       //console.log(name);
       if (error) {
         console.log(error)
       } else {
-        console.log(results.rows);
+        //console.log(results.rows);
         sub._session.send({
           msg: 'added',
           collection: sub._name,
@@ -543,7 +515,7 @@ Postgres.autoSelect = function(sub, name, properties, selectObj, optionsObj, joi
           fields: {
             removed: true,
             reset: false,
-            results:results.rows[0]
+            tableId:tableId
           }
         });
       }
@@ -553,7 +525,7 @@ Postgres.autoSelect = function(sub, name, properties, selectObj, optionsObj, joi
           if (error) {
             console.log(error);
           } else {
-            console.log(results.rows[0]);
+            //console.log(results.rows[0]);
             sub._session.send({
               msg: 'changed',
               collection: sub._name,
@@ -570,15 +542,12 @@ Postgres.autoSelect = function(sub, name, properties, selectObj, optionsObj, joi
         });
       }
       else if (returnMsg[1].operation === "INSERT") {
-        console.log("in insert");
-        console.log(returnMsg[0][sub._name]);
         var selectString = selectStatement(name, properties, {_id: {$eq: returnMsg[0][sub._name]}}, optionsObj, joinObj);
         client.query(selectString, function(error, results) {
-          console.log("insert", selectString);
+          //console.log("insert", selectString);
           if (error) {
             console.log(error)
           } else {
-            console.log(results.rows[0]);
             sub._session.send({
               msg: 'changed',
               collection: sub._name,

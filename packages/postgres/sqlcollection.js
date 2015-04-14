@@ -47,11 +47,16 @@ SQLCollection = function(connection, name /* arguments */) {
     Meteor.call('remove', tableName, dataObj);
   };
 
+  self._events = [];
+
   if (!(self instanceof SQLCollection)) {
-    throw new Error('use "new" to construct a SQLCollection');
+    throw new Error('Use new to construct a SQLCollection');
   }
 
-  self._events = [];
+  if (tableName !== null && typeof tableName !== "string") {
+    throw new Error(
+      'First argument to new SQLCollection must be a string or null');
+  }
 
   if (typeof connection === 'string') {
     // Using default connection
@@ -104,15 +109,8 @@ SQLCollection = function(connection, name /* arguments */) {
     // TODO: This needs to be modified in order to respond to the view
     this.addEventListener('added', function(index, msg, name) {
       unvalidated = "";
-      console.log("in added:", msg);
-      console.log("in added:", name);
-      console.log(msg.results);
-      console.log(msg.results[0].created_at);
-      //alasql("DELETE FROM ") +
+      alasql("DELETE FROM " + tableName);
       for (var x = msg.results.length - 1; x >= 0; x--) {
-          console.log(msg.results[x].created_at);
-          console.log(msg.results[x]._id);
-          //console.log(msg.results[x].name);
           minisql.insert(tableName, msg.results[x]);
         }
       reactiveData.changed();
@@ -126,7 +124,7 @@ SQLCollection = function(connection, name /* arguments */) {
         var tableId = msg.tableId;
         // For the client that triggered the removal event, the data will have
         // already been removed and this is redundant.
-        minisql.remove(name, tableId);
+        minisql.remove(name, {_id: {$eq: tableId}});
       }
       // Checking to see if event is a modification of the DB
       else if (msg.modified) {
@@ -137,7 +135,6 @@ SQLCollection = function(connection, name /* arguments */) {
         // alasql:
         // minisql.update(tableName, msgParams) // So msgParams doesn't exist. We will have to do
         // some logic here or in alasql.
-        console.log("this is line 140: ", msg.results);
         minisql.update(tableName, msg.results, {"_id": {$eq: msg.results._id}});
       }
       else {
@@ -153,9 +150,8 @@ SQLCollection = function(connection, name /* arguments */) {
           // alasql:
           // minisql.update(tableName, msgParams) // So msgParams doesn't exist. We will have to do
           // some logic here or in alasql.
-          console.log(msg.results);
-          console.log(msg.results._id);
           minisql.update(tableName, msg.results, {_id: {$eq: -1}});
+          reactiveData.changed();
           unvalidated = "";
         }
         else {
@@ -164,7 +160,6 @@ SQLCollection = function(connection, name /* arguments */) {
           // to alasql:
           // minisql.insert(tableName, {id: -1, text:text, checked:checked, userID: userID});
           // right now userID is not being passes in.
-          console.log(msg.results);
           minisql.insert(tableName, msg.results);
         }
       }
@@ -183,7 +178,7 @@ if (Meteor.isServer) {
       Postgres.update(table, paramObj, selectObj);
     },
     remove: function(table, paramObj) {
-      Postgres.remove(table, {"_id": {$eq: paramObj}});
+      Postgres.remove(table, paramObj);
     },
     // TODO: In its current state this not useful. We dont want the client to be firing off create tables.
     createTable: function(table, paramObj) {
