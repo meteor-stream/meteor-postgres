@@ -154,7 +154,7 @@ Postgres.createRelationship = function(table1, table2) {
     table1 + '_id int not null references ' + table1 + '(id) on delete cascade,' +
     table2 + '_id int not null references ' + table2 + '(id) on delete cascade,' + ');';
   // send request to postgresql database
-  pg.connect(conString, function(err, client) {
+  pg.connect(conString, function(err, client, done) {
     if (err) {
       console.log(err);
     }
@@ -169,6 +169,7 @@ Postgres.createRelationship = function(table1, table2) {
     //   console.log(msg);
     // });
     //var query = client.query("LISTEN watchers");
+    done();
   });
 };
 
@@ -185,13 +186,14 @@ Postgres.addColumn = function(table, tableObj, cb) {
   }
   inputString += ';';
 
-  pg.connect(conString, function(err, client) {
+  pg.connect(conString, function(err, client, done) {
     if (err) {
       console.log(err);
     }
     client.query(inputString, function(error, results) {
       cb(error, results);
     });
+    done();
     // client.on('notification', function(msg) {
     //   console.log(msg);
     // });
@@ -202,7 +204,7 @@ Postgres.addColumn = function(table, tableObj, cb) {
 Postgres.dropColumn = function(table, column, cb) {
   var inputString = 'ALTER TABLE ' + table + ' DROP COLUMN ' + column;
   inputString += ';';
-  pg.connect(conString, function(err, client) {
+  pg.connect(conString, function(err, client, done) {
     if (err) {
       console.log(err);
     }
@@ -214,6 +216,7 @@ Postgres.dropColumn = function(table, column, cb) {
       // }
       cb(error, results);
     });
+    done();
     // client.on('notification', function(msg) {
     //   console.log(msg);
     // });
@@ -475,7 +478,7 @@ Postgres.remove = function(table, selectObj) {
 Postgres.autoSelect = function(sub, name, properties, selectObj, optionsObj, joinObj) {
   // TODO: this needs to be modified to create and start listening on views.
   //console.log(properties);
-  pg.connect(conString, function(err, client) {
+  pg.connect(conString, function(err, client,done) {
     //var selectString = "select _id";
     //for (var x = 0, count = properties.length; x < count; x++) {
     //  selectString += ", " + properties[x];
@@ -500,6 +503,7 @@ Postgres.autoSelect = function(sub, name, properties, selectObj, optionsObj, joi
         });
         return results.rows;
       }
+      done();
     });
     var query = client.query("LISTEN notify_trigger_" + name);
     client.on('notification', function(msg) {
@@ -518,6 +522,7 @@ Postgres.autoSelect = function(sub, name, properties, selectObj, optionsObj, joi
             tableId:tableId
           }
         });
+        done();
       }
       else if (returnMsg[1].operation === "UPDATE") {
         var selectString = selectStatement(name, properties, {_id: {$eq: returnMsg[0][sub._name]}}, optionsObj, joinObj);
@@ -540,6 +545,7 @@ Postgres.autoSelect = function(sub, name, properties, selectObj, optionsObj, joi
             });
           }
         });
+        done();
       }
       else if (returnMsg[1].operation === "INSERT") {
         var selectString = selectStatement(name, properties, {_id: {$eq: returnMsg[0][sub._name]}}, optionsObj, joinObj);
@@ -558,8 +564,8 @@ Postgres.autoSelect = function(sub, name, properties, selectObj, optionsObj, joi
                 results: results.rows[0]
               }
             });
-            return results.rows;
           }
+          done();
         });
       }
     });
