@@ -35,6 +35,19 @@ ActiveRecord.prototype.select = function(table /*arguments*/) {
   return this;
 };
 
+// TODO: COMPLETE
+// Parameters: table (req), id (optional)
+// SQL: SELECT fields FROM table, SELECT * FROM table
+// Special: If no idea is passed, may be chained with a where function
+ActiveRecord.prototype.findOne = function (table /*arguments*/) {
+  if (arguments.length === 2) {
+    this.inputString = 'SELECT * FROM ' + table + ' WHERE ' + table + '._id = ' + args + ' LIMIT 1;';
+  } else {
+    this.selectString = 'SELECT * FROM ' + table;
+    this.caboose = ' LIMIT 1';
+  }
+};
+
 // TODO: INCOMPLETE
 // can accept string
 ActiveRecord.prototype.joins = function() {
@@ -166,7 +179,7 @@ ActiveRecord.prototype.having = function() {
 // Special: Functions with an inputString override other chainable functions because they are complete
 ActiveRecord.prototype.fetch = function() {
   var table = this.table;
-  var input = this.inpustString.length > 0 ? this.inpustString : this.selectString + this.joinString + this.whereString + this.caboose + ';';
+  var input = this.inputString.length > 0 ? this.inputString : this.selectString + this.joinString + this.whereString + this.caboose + ';';
   console.log('Fetch input:', input);
   pg.connect(this.conString, function(err, client, done) {
     if (err){
