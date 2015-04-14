@@ -5,25 +5,31 @@ if (Meteor.isClient) {
   // TODO: Move the table definition into SQLCollection
   // To mirror the Mongo interface we should make it so taht 1 collection is 1 table
   var taskTable = {
-    _id: ['INT', 'AUTO_INCREMENT'],
-    text: ['varchar (255)', 'not null'],
-    checked: ['BOOL', 'DEFAULT true']
+    _id: ['$number'],
+    text: ['$string', '$notnull'],
+    checked: ['$bool']
   };
   tasks.createTable('tasks', taskTable);
 
   var usersTable = {
-    _id: ['INT','not null'],
-    name: ['varchar (255)', 'not null']
+    _id: ['$number'],
+    name: ['$string', '$notnull']
   };
   users1.createTable('users1', usersTable);
+//Postgres.createTable('students', {
+//  name: ['$string', '$notnull'],
+//  age: ['$number'],
+//  class: ['$string', {$default: '2015'}],
+//  _id: ['$number', '$notnull', '$primary', '$unique']
+//});
 
 
   Template.body.helpers({
     tasks: function () {
-      return tasks.select({});
+      return tasks.select();
     },
     categories: function () {
-      return users1.select({});
+      return users1.select();
     }
   });
 
@@ -70,10 +76,10 @@ if (Meteor.isServer) {
 
 
   //here the user specifies what data the client will have access too (data for postgres , minisql's data structure, and notifications will be taken from here)
-  var cursor = Postgres.getCursor('tasks', ['_id', 'text', 'checked'], {}, {}, {});
+  var cursor = Postgres.getCursor('tasks', ['_id', 'text', 'checked', 'created_at'], {}, {}, {});
 
   //same as for cursor
-  var cursor1 = Postgres.getCursor('users1', ['_id', 'name'], {}, {}, {});
+  var cursor1 = Postgres.getCursor('users1', ['_id', 'name', 'created_at'], {}, {}, {});
 
 
   //Postgres.createTable('users1', {name: ['$string']});

@@ -100,7 +100,7 @@ Postgres.createTable = function(table, tableObj, relTable) {
         }
       }
     }
-    inputString += ', ';
+    //inputString += ', ';
   }
   // check to see if id provided
   if (inputString.indexOf('_id') === -1) {
@@ -561,10 +561,7 @@ Postgres.autoSelect = function(sub, name, properties, selectObj, optionsObj, joi
                 modified: true,
                 removed: false,
                 reset: false,
-                tableId: results.rows[0]._id,
-                text: results.rows[0].text,
-                checked: results.rows[0].checked,
-                createdAt: results.rows[0].created_at
+                tableId: results.rows[0]
               }
             });
           }
@@ -579,7 +576,7 @@ Postgres.autoSelect = function(sub, name, properties, selectObj, optionsObj, joi
           if (error) {
             console.log(error)
           } else {
-            console.log(results.rows);
+            console.log(results.rows[0]);
             sub._session.send({
               msg: 'changed',
               collection: sub._name,
@@ -587,10 +584,7 @@ Postgres.autoSelect = function(sub, name, properties, selectObj, optionsObj, joi
               fields: {
                 removed: false,
                 reset: false,
-                tableId: results.rows[0]._id,
-                text: results.rows[0].text,
-                name: results.rows[0].name,
-                createdAt: results.rows[0].created_at
+                results: results.rows[0]
               }
             });
             return results.rows;

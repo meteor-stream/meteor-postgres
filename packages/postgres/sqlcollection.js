@@ -7,7 +7,7 @@ SQLCollection = function(connection, name /* arguments */) {
   var tableName = connection;
   this.tableName = connection;
   var initiated = false;
-  var unvalidated = true;
+  var unvalidated = "";
   var subscribeArgs;
 
   // Defining the methods that application can interact with.
@@ -19,9 +19,9 @@ SQLCollection = function(connection, name /* arguments */) {
     //Meteor.call('createTable', 'users1', usersTable);
   };
 
-  this.select = function(args) {
+  this.select = function(returnFields, selectObj, optionsObj) {
     reactiveData.depend();
-    return minisql.select(tableName, args);
+    return minisql.select(tableName, returnFields);
   };
 
   this.insert = function(dataObj) {
@@ -29,8 +29,8 @@ SQLCollection = function(connection, name /* arguments */) {
     minisql.insert(tableName, dataObj);
     reactiveData.changed();
     unvalidated = dataObj.text;
-    // Removing ID so that server DB will automatically assign one
     delete dataObj['_id'];
+    // Removing ID so that server DB will automatically assign one
     Meteor.call('add', tableName, dataObj);
   };
 
@@ -107,21 +107,15 @@ SQLCollection = function(connection, name /* arguments */) {
       unvalidated = "";
       console.log("in added:", msg);
       console.log("in added:", name);
+      console.log(msg.results);
+      console.log(msg.results[0].created_at);
       //alasql("DELETE FROM ") +
-      if (name === "users1") {
-        for (var x = msg.results.length - 1; x >= 0; x--) {
-          alasql("INSERT INTO " + name + " VALUES (?,?)", [msg.results[x]._id, msg.results[x].name]);
+      for (var x = msg.results.length - 1; x >= 0; x--) {
+          console.log(msg.results[x].created_at);
+          console.log(msg.results[x]._id);
+          //console.log(msg.results[x].name);
+          minisql.insert(tableName, msg.results[x]);
         }
-      }
-      else {
-        for (var x = msg.results.length - 1; x >= 0; x--) {
-          // TODO: Right now minisql.insert is not dynamic enough to be used to insert. This is
-          // being worked on and eventually the following line will replace the direct reference
-          // to alasql:
-          // minisql.insert(tableName, msg.results[x]);
-          alasql("INSERT INTO " + name + " VALUES (?,?,?)", [msg.results[x]._id, msg.results[x].text, msg.results[x].checked]);
-        }
-      }
       reactiveData.changed();
     });
     // Changed will be triggered whenever there is a deletion or update to Postgres
@@ -159,7 +153,8 @@ SQLCollection = function(connection, name /* arguments */) {
           // alasql:
           // minisql.update(tableName, msgParams) // So msgParams doesn't exist. We will have to do
           // some logic here or in alasql.
-          alasql("UPDATE " + tableName + " SET _id = ? WHERE text= " + "'" + msg.text + "'", [msg.tableId]);
+          console.log(msg.results);
+          minisql.update(tableName, msg.results);
           unvalidated = "";
         }
         else {
@@ -168,15 +163,8 @@ SQLCollection = function(connection, name /* arguments */) {
           // to alasql:
           // minisql.insert(tableName, {id: -1, text:text, checked:checked, userID: userID});
           // right now userID is not being passes in.
-          if (name === "users1"){
-            console.log("in users1");
-            console.log("table", tableName);
-            console.log(msg.tableId, msg.name);
-            alasql("INSERT INTO " + tableName + " VALUES (?,?)", [msg.tableId, msg.name]);
-          }
-          else {
-            alasql("INSERT INTO " + tableName + " VALUES (?,?,?)", [msg.tableId, msg.text, msg.checked]);
-          }
+          console.log(msg.results);
+          minisql.insert(tableName, msg.results);
         }
       }
       reactiveData.changed();
