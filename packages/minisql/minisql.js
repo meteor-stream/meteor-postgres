@@ -112,11 +112,16 @@ var createTableStatement = function(table, tableObj, relTable){
   return inputString;
 };
 function _where(selectObj) {
+  var _QueryOperators = {
+    $eq: ' = ',
+    $gt: ' > ',
+    $lt: ' < '
+  };
   if (selectObj && !_emptyObject(selectObj)) {
     var selectField, operator, comparator, key;
     selectField = Object.keys(selectObj)[0];
     key = Object.keys(selectObj[selectField])[0];
-    operator = Postgres._QueryOperators[key];
+    operator = _QueryOperators[key];
     comparator = selectObj[selectField][key];
     return ' WHERE ' + selectField + operator + comparator;
   } else {
@@ -126,21 +131,18 @@ function _where(selectObj) {
 var updateStatement = function(table, updateObj, selectObj) {
   var updateString = ''; // fields VALUE values {'class': 'senior'}
   if (updateObj && !_emptyObject(updateObj)) {
-    var updateField = '(', updateValue = '(', keys = Object.keys(updateObj);
+    var keys = Object.keys(updateObj);
+    // if there are many fields
     if (keys.length > 1) {
       for (var i = 0, count = keys.length - 1; i < count; i++) {
-        updateField += keys[i] + ', ';
-        updateValue += "'" + updateObj[keys[i]] + "', ";
+        updateString += keys[i] + ' = ' + "'" + updateObj[keys[i]] + "', ";
       }
-      updateField += keys[keys.length - 1];
-      updateValue += "'" + updateObj[keys[keys.length - 1]] + "'";
+      updateString += keys[keys.length - 1] + "'" + updateObj[keys[keys.length - 1]] + "'";
     } else {
-      updateField += keys[0];
-      updateValue += "'" + updateObj[keys[0]] + "'";
+      // if there is only one field to update
+      updateString += keys[0] + ' = ' + "'" + updateObj[keys[0]] + "'";
     }
-    updateString += updateField + ') = ' + updateValue + ')';
   }
-
   var inputString = 'UPDATE ' + table + ' SET ' + updateString + _where(selectObj) + ';';
 };
 
@@ -191,16 +193,32 @@ minisql.select = function(name, returnFields, selectObj, optionsObj) {
 };
 
 minisql.insert = function(name, params){
-  //var insertText = "INSERT INTO " + name + " values ( " + params._id + ", " + "'" + params.text + "'" + ", false);";
+  //var insertText = "INSERT INTO " + name + " values ( " + params._id + ", " + "'" + params.text + "'" + ", false);"
   var insertText = insertStatement(name, params);
   alasql(insertText[0], insertText[1]);
 };
 
-minisql.update = function(name, params){
-  alasql("UPDATE " + name + " SET " + params.column + " = " + params.value + " WHERE _id = " + params._id);
+minisql.update = function(table, updateObj, selectObj){
+  var updateString = ''; // fields VALUE values {'class': 'senior'}
+  if (updateObj && !_emptyObject(updateObj)) {
+    var keys = Object.keys(updateObj);
+    // if there are many fields
+    if (keys.length > 1) {
+      for (var i = 0, count = keys.length - 1; i < count; i++) {
+        updateString += keys[i] + ' = ' + "'" + updateObj[keys[i]] + "', ";
+      }
+      updateString += keys[keys.length - 1] + " = '" + updateObj[keys[keys.length - 1]] + "'";
+    } else {
+      // if there is only one field to update
+      updateString += keys[0] + ' = ' + "'" + updateObj[keys[0]] + "'";
+    }
+  }
+  var inputString = 'UPDATE ' + table + ' SET ' + updateString + _where(selectObj) + ';';
+  console.log(inputString);
+  alasql(inputString);
 };
 
-minisql.remove = function(name, params){
-  console.log(name, params);
-  alasql("DELETE FROM " + name + " WHERE _id = " + params);
+minisql.remove = function(table, selectObj){
+  var inputString = 'DELETE FROM ' + table + _where(selectObj) + ';';
+  alasql(inputString);
 };
