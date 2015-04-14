@@ -5,7 +5,9 @@ var conString = 'postgres://postgres:1234@localhost/postgres';
 // TODO: reset command for development (in command line need a reset that does dropdb <name> and createdb <name>
 
 Postgres = {};
-var clientHolder;
+
+// Holds clients dedicated to autoSelect
+var clientHolder = {};
 
 /* objects: DataTypes, TableConstraints, QueryOperators, SelectOptions, and Joins */
 
@@ -157,7 +159,7 @@ Postgres.createRelationship = function(table1, table2) {
   // send request to postgresql database
   pg.connect(conString, function(err, client, done) {
     if (err) {
-      console.log(err);
+      console.log(err, "in create Relationship");
     }
     client.query(inputString, function(error, results) {
       if (error) {
@@ -189,7 +191,7 @@ Postgres.addColumn = function(table, tableObj, cb) {
 
   pg.connect(conString, function(err, client, done) {
     if (err) {
-      console.log(err);
+      console.log(err, "in add column");
     }
     client.query(inputString, function(error, results) {
       cb(error, results);
@@ -207,7 +209,7 @@ Postgres.dropColumn = function(table, column, cb) {
   inputString += ';';
   pg.connect(conString, function(err, client, done) {
     if (err) {
-      console.log(err);
+      console.log(err, "in drop column");
     }
     client.query(inputString, function(error, results) {
       // if (error) {
@@ -279,7 +281,7 @@ Postgres.insert = function(table, insertObj) {
   //console.log(insertArray);
   pg.connect(conString, function(err, client, done) {
     if (err) {
-      console.log(err);
+      console.log(err, "in insert");
     }
     client.query(inputString, insertArray, function(error, results) {
       if (error) {
@@ -390,7 +392,7 @@ Postgres.select = function(table, returnFields, selectObj, optionsObj, joinObj) 
   //console.log(inputString);
   pg.connect(conString, function(err, client, done) {
     if (err) {
-      console.log(err);
+      console.log(err, "in select");
     }
     client.query(inputString, function(error, results) {
       if (error) {
@@ -437,7 +439,7 @@ Postgres.update = function(table, updateObj, selectObj) {
   //console.log(inputString);
   pg.connect(conString, function(err, client, done) {
     if (err) {
-      console.log(err);
+      console.log(err, "in update");
     }
     //console.log(inputString);
     client.query(inputString, function(error, results) {
@@ -462,7 +464,7 @@ Postgres.remove = function(table, selectObj) {
 
   pg.connect(conString, function(err, client, done) {
     if (err) {
-      console.log(err);
+      console.log(err, "in update");
     }
     client.query(inputString, function(error, results) {
       if (error) {
@@ -484,21 +486,22 @@ Postgres.autoSelect = function(sub, name, properties, selectObj, optionsObj, joi
   //  selectString += ", " + properties[x];
   //}
   //selectString += " from " + name + " ORDER BY _id DESC LIMIT 10;";
-  var loadAutoSelectClient = function(cb){
-    console.log(123);
+  var loadAutoSelectClient = function(name, cb){
+    console.log("Loading new client for autoSelect");
     var context = this;
     pg.connect(conString, function(err, client, done) {
-      clientHolder = client;
+      clientHolder[name] = client;
       cb(client);
     });
   };
+
   var selectString = selectStatement(name, properties, selectObj, optionsObj, joinObj);
   //console.log(selectString);
   var autoSelectHelper = function(client){
     client.query(selectString, function(error, results) {
       //console.log(name);
       if (error) {
-        console.log(error)
+        console.log(error, "in autoSelect top")
       } else {
         //console.log(results.rows);
         sub._session.send({
@@ -535,7 +538,8 @@ Postgres.autoSelect = function(sub, name, properties, selectObj, optionsObj, joi
         var selectString = selectStatement(name, properties, {_id: {$eq: returnMsg[0][sub._name]}}, optionsObj, joinObj);
         client.query(selectString, function(error, results) {
           if (error) {
-            console.log(error);
+            console.log(selectString);
+            console.log(error, "in autoSelect update");
           } else {
             //console.log(results.rows[0]);
             sub._session.send({
@@ -558,7 +562,8 @@ Postgres.autoSelect = function(sub, name, properties, selectObj, optionsObj, joi
         client.query(selectString, function(error, results) {
           //console.log("insert", selectString);
           if (error) {
-            console.log(error)
+            console.log(selectString);
+            console.log(error, "in autoSelect insert")
           } else {
             sub._session.send({
               msg: 'changed',
@@ -576,10 +581,10 @@ Postgres.autoSelect = function(sub, name, properties, selectObj, optionsObj, joi
     });
   };
 
-  if(clientHolder){
-    autoSelectHelper(clientHolder);
+  if(clientHolder[name]){
+    autoSelectHelper(clientHolder[name]);
   } else{
-    loadAutoSelectClient(autoSelectHelper);
+    loadAutoSelectClient(name, autoSelectHelper);
   }
 
 };
