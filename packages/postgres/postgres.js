@@ -522,6 +522,7 @@ Postgres.autoSelect = function(sub, name, properties, selectObj, optionsObj, joi
             tableId:tableId
           }
         });
+        done();
       }
       else if (returnMsg[1].operation === "UPDATE") {
         var selectString = selectStatement(name, properties, {_id: {$eq: returnMsg[0][sub._name]}}, optionsObj, joinObj);
@@ -544,6 +545,7 @@ Postgres.autoSelect = function(sub, name, properties, selectObj, optionsObj, joi
             });
           }
         });
+        done();
       }
       else if (returnMsg[1].operation === "INSERT") {
         var selectString = selectStatement(name, properties, {_id: {$eq: returnMsg[0][sub._name]}}, optionsObj, joinObj);
