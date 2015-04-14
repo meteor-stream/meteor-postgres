@@ -7,21 +7,21 @@ SQLCollection = function(connection, name /* arguments */) {
   var tableName = connection;
   this.tableName = connection;
   var initiated = false;
-  var unvalidated = true;
+  var unvalidated = "";
   var subscribeArgs;
 
   // Defining the methods that application can interact with.
   this.createTable = function(tableName, tableDefinition) {
-    // TODO: MAKE SURE THIS HANDLES TABLES THAT ALREADY EXIST (mini sql doesn't perssist data so shouldn't be an issue)
+    // TODO: This will take the configuration from the cursor and will be modeled after a view
     minisql.createTable(tableName, tableDefinition);
-    // TODO: MAKE THIS INSERT INTO POSTGRES
-    var usersTable = {name: ['$string', '$notnull']};
+    // TODO: This will also create a postgres view for the data specified by the cursor
+    //var usersTable = {name: ['$string', '$notnull']};
     //Meteor.call('createTable', 'users1', usersTable);
   };
 
-  this.select = function(args) {
+  this.select = function(returnFields, selectObj, optionsObj) {
     reactiveData.depend();
-    return minisql.select(tableName, args);
+    return minisql.select(tableName, returnFields);
   };
 
   this.insert = function(dataObj) {
@@ -29,8 +29,8 @@ SQLCollection = function(connection, name /* arguments */) {
     minisql.insert(tableName, dataObj);
     reactiveData.changed();
     unvalidated = dataObj.text;
-    // Removing ID so that server DB will automatically assign one
     delete dataObj['_id'];
+    // Removing ID so that server DB will automatically assign one
     Meteor.call('add', tableName, dataObj);
   };
 
@@ -102,25 +102,20 @@ SQLCollection = function(connection, name /* arguments */) {
     // Adding an entry to minisql will trigger a server side insert, but this
     // will not trigger an added event on any client
     // CAN WE RENAME TO POPULATE?
+    // TODO: This needs to be modified in order to respond to the view
     this.addEventListener('added', function(index, msg, name) {
       unvalidated = "";
       console.log("in added:", msg);
       console.log("in added:", name);
+      console.log(msg.results);
+      console.log(msg.results[0].created_at);
       //alasql("DELETE FROM ") +
-      if (name === "users1") {
-        for (var x = msg.results.length - 1; x >= 0; x--) {
-          alasql("INSERT INTO " + name + " VALUES (?,?)", [msg.results[x]._id, msg.results[x].name]);
+      for (var x = msg.results.length - 1; x >= 0; x--) {
+          console.log(msg.results[x].created_at);
+          console.log(msg.results[x]._id);
+          //console.log(msg.results[x].name);
+          minisql.insert(tableName, msg.results[x]);
         }
-      }
-      else {
-        for (var x = msg.results.length - 1; x >= 0; x--) {
-          // TODO: Right now minisql.insert is not dynamic enough to be used to insert. This is
-          // being worked on and eventually the following line will replace the direct reference
-          // to alasql:
-          // minisql.insert(tableName, msg.results[x]);
-          alasql("INSERT INTO " + name + " VALUES (?,?,?)", [msg.results[x]._id, msg.results[x].text, msg.results[x].checked]);
-        }
-      }
       reactiveData.changed();
     });
     // Changed will be triggered whenever there is a deletion or update to Postgres
@@ -158,7 +153,8 @@ SQLCollection = function(connection, name /* arguments */) {
           // alasql:
           // minisql.update(tableName, msgParams) // So msgParams doesn't exist. We will have to do
           // some logic here or in alasql.
-          alasql("UPDATE " + tableName + " SET _id = ? WHERE text= " + "'" + msg.text + "'", [msg.tableId]);
+          console.log(msg.results);
+          minisql.update(tableName, msg.results);
           unvalidated = "";
         }
         else {
@@ -167,15 +163,8 @@ SQLCollection = function(connection, name /* arguments */) {
           // to alasql:
           // minisql.insert(tableName, {id: -1, text:text, checked:checked, userID: userID});
           // right now userID is not being passes in.
-          if (name === "users1"){
-            console.log("in users1");
-            console.log("table", tableName);
-            console.log(msg.tableId, msg.name);
-            alasql("INSERT INTO " + tableName + " VALUES (?,?)", [msg.tableId, msg.name]);
-          }
-          else {
-            alasql("INSERT INTO " + tableName + " VALUES (?,?,?)", [msg.tableId, msg.text, msg.checked]);
-          }
+          console.log(msg.results);
+          minisql.insert(tableName, msg.results);
         }
       }
       reactiveData.changed();
@@ -195,6 +184,7 @@ if (Meteor.isServer) {
     remove: function(table, paramObj) {
       Postgres.remove(table, {"_id": {$eq: paramObj}});
     },
+    // TODO: In its current state this not useful. We dont want the client to be firing off create tables.
     createTable: function(table, paramObj) {
       console.log("in create table method");
       Postgres.createTable(table, paramObj);

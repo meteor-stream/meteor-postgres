@@ -2,7 +2,8 @@
 pg = Npm.require('pg');
 var conString = 'postgres://postgres:1234@localhost/postgres';
 
-ActiveRecord = function() {
+ActiveRecord = function(conString) {
+  this.conString = conString;
   this.inputString = '';
   this.selectString = '';
   this.joinString = '';
@@ -84,7 +85,7 @@ ActiveRecord.prototype.fetch = function() {
   var input = this.selectString + this.joinString + this.whereString + this.caboose + ';';
   var table = this.table;
   console.log(input);
-  pg.connect(conString, function(err, client, done) {
+  pg.connect(this.con, function(err, client, done) {
     if (err){
       console.log(err);
     }
