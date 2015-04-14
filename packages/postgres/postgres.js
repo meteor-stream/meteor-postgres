@@ -272,7 +272,6 @@ Postgres.insert = function(table, insertObj) {
   inputString += keys[keys.length - 1] + valueString + '$' + keys.length + ');';
   insertArray.push(insertObj[keys[keys.length - 1]]);
   // send request to postgresql database
-  console.log(inputString);
   //console.log(insertArray);
   pg.connect(conString, function(err, client, done) {
     if (err) {
@@ -393,7 +392,7 @@ Postgres.select = function(table, returnFields, selectObj, optionsObj, joinObj) 
       if (error) {
         console.log("error in select " + table, error);
       } else {
-        console.log("results in select " + table, results.rows);
+        //console.log("results in select " + table, results.rows);
       }
       done();
       return results.rows[0];
@@ -431,17 +430,17 @@ Postgres.update = function(table, updateObj, selectObj) {
   }
 
   var inputString = 'UPDATE ' + table + ' SET ' + updateString + _where(selectObj) + ';';
-  console.log(inputString);
+  //console.log(inputString);
   pg.connect(conString, function(err, client, done) {
     if (err) {
       console.log(err);
     }
-    console.log(inputString);
+    //console.log(inputString);
     client.query(inputString, function(error, results) {
       if (error) {
         console.log("error in update " + table, error);
       } else {
-        console.log("results in update " + table, results);
+        //console.log("results in update " + table, results);
       }
       done();
     });
@@ -465,7 +464,7 @@ Postgres.remove = function(table, selectObj) {
       if (error) {
         console.log("error in remove " + table, error);
       } else {
-        console.log("results in remove " + table, results.rows);
+        //console.log("results in remove " + table, results.rows);
       }
       done();
     });
@@ -483,13 +482,13 @@ Postgres.autoSelect = function(sub, name, properties, selectObj, optionsObj, joi
     //}
     //selectString += " from " + name + " ORDER BY _id DESC LIMIT 10;";
     var selectString = selectStatement(name, properties, selectObj, optionsObj, joinObj);
-    console.log(selectString);
+    //console.log(selectString);
     client.query(selectString, function(error, results) {
       //console.log(name);
       if (error) {
         console.log(error)
       } else {
-        console.log(results.rows);
+        //console.log(results.rows);
         sub._session.send({
           msg: 'added',
           collection: sub._name,
@@ -526,7 +525,7 @@ Postgres.autoSelect = function(sub, name, properties, selectObj, optionsObj, joi
           if (error) {
             console.log(error);
           } else {
-            console.log(results.rows[0]);
+            //console.log(results.rows[0]);
             sub._session.send({
               msg: 'changed',
               collection: sub._name,
@@ -543,15 +542,12 @@ Postgres.autoSelect = function(sub, name, properties, selectObj, optionsObj, joi
         });
       }
       else if (returnMsg[1].operation === "INSERT") {
-        console.log("in insert");
-        console.log(returnMsg[0][sub._name]);
         var selectString = selectStatement(name, properties, {_id: {$eq: returnMsg[0][sub._name]}}, optionsObj, joinObj);
         client.query(selectString, function(error, results) {
-          console.log("insert", selectString);
+          //console.log("insert", selectString);
           if (error) {
             console.log(error)
           } else {
-            console.log(results.rows[0]);
             sub._session.send({
               msg: 'changed',
               collection: sub._name,
