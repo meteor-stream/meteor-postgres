@@ -5,6 +5,7 @@ var conString = 'postgres://postgres:1234@localhost/postgres';
 // TODO: reset command for development (in command line need a reset that does dropdb <name> and createdb <name>
 
 Postgres = {};
+var clientHolder;
 
 /* objects: DataTypes, TableConstraints, QueryOperators, SelectOptions, and Joins */
 
@@ -478,14 +479,22 @@ Postgres.remove = function(table, selectObj) {
 Postgres.autoSelect = function(sub, name, properties, selectObj, optionsObj, joinObj) {
   // TODO: this needs to be modified to create and start listening on views.
   //console.log(properties);
-  pg.connect(conString, function(err, client,done) {
-    //var selectString = "select _id";
-    //for (var x = 0, count = properties.length; x < count; x++) {
-    //  selectString += ", " + properties[x];
-    //}
-    //selectString += " from " + name + " ORDER BY _id DESC LIMIT 10;";
-    var selectString = selectStatement(name, properties, selectObj, optionsObj, joinObj);
-    //console.log(selectString);
+  //var selectString = "select _id";
+  //for (var x = 0, count = properties.length; x < count; x++) {
+  //  selectString += ", " + properties[x];
+  //}
+  //selectString += " from " + name + " ORDER BY _id DESC LIMIT 10;";
+  var loadAutoSelectClient = function(cb){
+    console.log(123);
+    var context = this;
+    pg.connect(conString, function(err, client, done) {
+      clientHolder = client;
+      cb(client);
+    });
+  };
+  var selectString = selectStatement(name, properties, selectObj, optionsObj, joinObj);
+  //console.log(selectString);
+  var autoSelectHelper = function(client){
     client.query(selectString, function(error, results) {
       //console.log(name);
       if (error) {
@@ -503,7 +512,6 @@ Postgres.autoSelect = function(sub, name, properties, selectObj, optionsObj, joi
         });
         return results.rows;
       }
-      done();
     });
     var query = client.query("LISTEN notify_trigger_" + name);
     client.on('notification', function(msg) {
@@ -522,7 +530,6 @@ Postgres.autoSelect = function(sub, name, properties, selectObj, optionsObj, joi
             tableId:tableId
           }
         });
-        done();
       }
       else if (returnMsg[1].operation === "UPDATE") {
         var selectString = selectStatement(name, properties, {_id: {$eq: returnMsg[0][sub._name]}}, optionsObj, joinObj);
@@ -545,7 +552,6 @@ Postgres.autoSelect = function(sub, name, properties, selectObj, optionsObj, joi
             });
           }
         });
-        done();
       }
       else if (returnMsg[1].operation === "INSERT") {
         var selectString = selectStatement(name, properties, {_id: {$eq: returnMsg[0][sub._name]}}, optionsObj, joinObj);
@@ -565,11 +571,17 @@ Postgres.autoSelect = function(sub, name, properties, selectObj, optionsObj, joi
               }
             });
           }
-          done();
         });
       }
     });
-  });
+  };
+
+  if(clientHolder){
+    autoSelectHelper(clientHolder);
+  } else{
+    loadAutoSelectClient(autoSelectHelper);
+  }
+
 };
 
 Postgres.getCursor = function(name, columns, selectObj, optionsObj, joinObj) {
