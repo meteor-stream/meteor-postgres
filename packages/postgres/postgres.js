@@ -468,7 +468,7 @@ Postgres.update = function(table, updateObj, selectObj) {
       if (error) {
         console.log("error in update " + table, error);
       } else {
-        console.log("results in update " + table, results.rows);
+        console.log("results in update " + table, results);
       }
       done();
     });
@@ -543,7 +543,7 @@ Postgres.autoSelect = function(sub, name, properties, selectObj, optionsObj, joi
           fields: {
             removed: true,
             reset: false,
-            tableId: tableId
+            results:results.rows[0]
           }
         });
       }
@@ -551,7 +551,9 @@ Postgres.autoSelect = function(sub, name, properties, selectObj, optionsObj, joi
         var selectString = selectStatement(name, properties, {_id: {$eq: returnMsg[0][sub._name]}}, optionsObj, joinObj);
         client.query(selectString, function(error, results) {
           if (error) {
+            console.log(error);
           } else {
+            console.log(results.rows[0]);
             sub._session.send({
               msg: 'changed',
               collection: sub._name,
@@ -561,7 +563,7 @@ Postgres.autoSelect = function(sub, name, properties, selectObj, optionsObj, joi
                 modified: true,
                 removed: false,
                 reset: false,
-                tableId: results.rows[0]
+                results: results.rows[0]
               }
             });
           }

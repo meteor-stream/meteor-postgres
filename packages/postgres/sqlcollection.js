@@ -34,10 +34,11 @@ SQLCollection = function(connection, name /* arguments */) {
     Meteor.call('add', tableName, dataObj);
   };
 
-  this.update = function(tableName, dataObj) {
-    minisql.update(tableName, dataObj);
+  this.update = function(tableName, dataObj, selectObj) {
+    console.log(dataObj);
+    minisql.update(tableName, dataObj, selectObj);
     reactiveData.changed();
-    Meteor.call('update', tableName, dataObj);
+    Meteor.call('update', tableName, dataObj, selectObj);
   };
 
   this.remove = function(dataObj) {
@@ -136,7 +137,7 @@ SQLCollection = function(connection, name /* arguments */) {
         // alasql:
         // minisql.update(tableName, msgParams) // So msgParams doesn't exist. We will have to do
         // some logic here or in alasql.
-        console.log(msg.results._id);
+        console.log("this is line 140: ", msg.results);
         minisql.update(tableName, msg.results, {"_id": {$eq: msg.results._id}});
       }
       else {
@@ -154,7 +155,7 @@ SQLCollection = function(connection, name /* arguments */) {
           // some logic here or in alasql.
           console.log(msg.results);
           console.log(msg.results._id);
-          minisql.update(tableName, msg.results, {"_id": {$eq: -1}});
+          minisql.update(tableName, msg.results, {_id: {$eq: -1}});
           unvalidated = "";
         }
         else {
