@@ -140,6 +140,20 @@ Postgres.createTable = function(table, tableObj, relTable, cb) {
 
   //console.log(inputString);
   // send request to postgresql database
+  pg.connect(conString, function(err, client, done) {
+    if (err) {
+      console.log(err, "in create table");
+    }
+    client.query(inputString, function(error, results) {
+      if (error) {
+        console.log("error in create table " + table, error);
+      } else {
+        //console.log("results in create table " + table, results);
+      }
+    });
+    done();
+  });
+
 };
 
 /**
