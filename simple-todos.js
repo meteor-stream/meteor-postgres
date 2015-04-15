@@ -55,9 +55,13 @@ if (Meteor.isClient) {
 }
 
 if (Meteor.isServer) {
-
-  // Postgres.createTable('users1', {name: ['$string']});
-  // Postgres.createTable('tasks', {text: ['$string'], checked: ["$bool", {$default: false}]});
+  var users = new ActiveRecord('users');
+  //users.createTable({name: ['$string']}).save();
+  var tasks = new ActiveRecord('tasks');
+  //tasks.createTable({text: ['$string'], checked: ["$bool", {$default: false}]}).save();
+  tasks.insert({text: 'this is a task', checked: false}).save();
+  tasks.insert({text: 'this is another task', checked: true}).save();
+  //tasks.select()
 
   Meteor.publish('tasks', function () {
     return SQL.Collection.getCursor('tasks', ['_id', 'text', 'checked', 'created_at'], {}, {}, {});

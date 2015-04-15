@@ -1,10 +1,11 @@
 // PostgreSQL connection
 pg = Npm.require('pg');
 var conString = 'postgres://postgres:1234@localhost/postgres';
+var table = 'tasks';
 
-ActiveRecord = function() {
-  this.conString = conString;
-  this.table = '';
+ActiveRecord = function (table, conString) {
+  this.conString = conString || 'postgres://postgres:1234@localhost/postgres';
+  this.table = table || 'tasks';
   // inputString used by queries, overrides other strings
   this.inputString = '';
   // strings used by chaining statements
@@ -41,10 +42,11 @@ ActiveRecord.prototype._TableConstraints = {
 // Parameters: table (req), tableObj (req), relTable (optional)
 // SQL: CREATE TABLE
 // Special:
-ActiveRecord.prototype.createTable = function(table, tableObj, relTable) {
+ActiveRecord.prototype.createTable = function (tableObj, relTable) {
   console.log("in posgres create table");
   // SQL: 'CREATE TABLE table (fieldName constraint);'
   // initialize input string parts
+  var table = this.table;
   var startString = 'CREATE TABLE ' + table + ' (';
   var item, subKey, valOperator, inputString = '';
   // iterate through array arguments to populate input string parts
@@ -82,15 +84,15 @@ ActiveRecord.prototype.createTable = function(table, tableObj, relTable) {
   "CREATE OR REPLACE FUNCTION notify_trigger_" + table + "() RETURNS trigger AS $$" +
   "BEGIN" +
   " IF (TG_OP = 'DELETE') THEN " +
-  "PERFORM pg_notify('notify_trigger_"+ table + "', '[{' || TG_TABLE_NAME || ':' || OLD._id || '}, { operation: " +
+  "PERFORM pg_notify('notify_trigger_" + table + "', '[{' || TG_TABLE_NAME || ':' || OLD._id || '}, { operation: " +
   "\"' || TG_OP || '\"}]');" +
   "RETURN old;" +
   "ELSIF (TG_OP = 'INSERT') THEN " +
-  "PERFORM pg_notify('notify_trigger_"+ table + "', '[{' || TG_TABLE_NAME || ':' || NEW._id || '}, { operation: " +
+  "PERFORM pg_notify('notify_trigger_" + table + "', '[{' || TG_TABLE_NAME || ':' || NEW._id || '}, { operation: " +
   "\"' || TG_OP || '\"}]');" +
   "RETURN new; " +
   "ELSIF (TG_OP = 'UPDATE') THEN " +
-  "PERFORM pg_notify('notify_trigger_"+ table + "', '[{' || TG_TABLE_NAME || ':' || NEW._id || '}, { operation: " +
+  "PERFORM pg_notify('notify_trigger_" + table + "', '[{' || TG_TABLE_NAME || ':' || NEW._id || '}, { operation: " +
   "\"' || TG_OP || '\"}]');" +
   "RETURN new; " +
   "END IF; " +
@@ -108,7 +110,7 @@ ActiveRecord.prototype.createTable = function(table, tableObj, relTable) {
 // Parameters: table (req)
 // SQL: DROP TABLE table
 // Special: Deletes cascade
-ActiveRecord.prototype.dropTable = function(table) {
+ActiveRecord.prototype.dropTable = function (table) {
   this.inputString = 'DROP FUNCTION IF EXISTS notify_trigger() CASCADE; DROP TABLE IF EXISTS ' + table + ' CASCADE;';
   this.prevFunc = 'DROP TABLE';
   return this;
@@ -118,8 +120,7 @@ ActiveRecord.prototype.dropTable = function(table) {
 // Parameters: table (req), fields (arguments, optional)
 // SQL: SELECT fields FROM table, SELECT * FROM table
 // Special: May pass table, distinct, field to obtain a single record per unique value
-ActiveRecord.prototype.select = function(table /*arguments*/) {
-  this.table = table;
+ActiveRecord.prototype.select = function (/*arguments*/) {
   var args = '';
   if (arguments.length >= 2) {
     for (var i = 1; i < arguments.length; i++) {
@@ -129,11 +130,12 @@ ActiveRecord.prototype.select = function(table /*arguments*/) {
         args += arguments[i] + ', ';
       }
     }
-    args = args.substring(0,args.length-2);
+    args = args.substring(0, args.length - 2);
   } else {
     args += '*';
   }
-  this.selectString = 'SELECT ' + args + ' FROM ' + table;
+  this.selectString = 'SELECT ' + args + ' FROM ' + this.table;
+  this.prevFunc = 'SELECT';
   return this;
 };
 
@@ -153,10 +155,10 @@ ActiveRecord.prototype.findOne = function (table /*arguments*/) {
 
 // TODO: INCOMPLETE
 // can accept string
-ActiveRecord.prototype.joins = function() {
+ActiveRecord.prototype.joins = function () {
   if (arguments.length === 1 && typeof arguments[0] === 'string') {
     var joinTable = arguments[0];
-    this.joinString += ' INNER JOIN ' + joinTable + ' ON '+ joinTable + '._id = ' + this.table + '.' + joinTable + '_id';
+    this.joinString += ' INNER JOIN ' + joinTable + ' ON ' + joinTable + '._id = ' + this.table + '.' + joinTable + '_id';
   }
   return this;
 };
@@ -169,7 +171,7 @@ ActiveRecord.prototype.joins = function() {
 // db.select('students').where('age = ? and class = ? or name = ?','18','senior','kate').fetch();
 // db.select('students').where(['age = ? and class = ? or name = ?','18','senior','kate']).fetch();
 // db.select('students').where('age = 18 and class = senior or name = kate').fetch();
-ActiveRecord.prototype.where = function(/*Arguments*/) {
+ActiveRecord.prototype.where = function (/*Arguments*/) {
   this.whereString += ' WHERE ';
   var where = '', redux, substring1, substring2;
   if (arguments.length === 1 && typeof arguments[0] === 'string') {
@@ -181,8 +183,8 @@ ActiveRecord.prototype.where = function(/*Arguments*/) {
     // replace ? with rest of array
     for (var i = 1, count = arguments[0].length; i < count; i++) {
       redux = where.indexOf('?');
-      substring1 = where.substring(0,redux);
-      substring2 = where.substring(redux+1,where.length);
+      substring1 = where.substring(0, redux);
+      substring2 = where.substring(redux + 1, where.length);
       where = substring1 + arguments[0][i] + substring2;
     }
     this.whereString += where;
@@ -192,8 +194,8 @@ ActiveRecord.prototype.where = function(/*Arguments*/) {
     // replace ? with rest of array
     for (var i = 1, count = arguments.length; i < count; i++) {
       redux = where.indexOf('?');
-      substring1 = where.substring(0,redux);
-      substring2 = where.substring(redux+1,where.length);
+      substring1 = where.substring(0, redux);
+      substring2 = where.substring(redux + 1, where.length);
       where = substring1 + arguments[i] + substring2;
     }
     this.whereString += where;
@@ -203,19 +205,19 @@ ActiveRecord.prototype.where = function(/*Arguments*/) {
 };
 
 // TODO: PARTIALLY COMPLETE, NEEDS TESTING
-// Parameters: table (req)
+// Parameters: table (req), inserts object (req)
 // SQL: INSERT INTO table (fields) VALUES (values)
 // Special:
-ActiveRecord.prototype.insert = function(table, inserts) {
+ActiveRecord.prototype.insert = function (inserts) {
   var valueString = ') VALUES (', keys = Object.keys(inserts);
-  var insertString = 'INSERT INTO ' + table + ' (';
+  var insertString = 'INSERT INTO ' + this.table + ' (';
   // iterate through array arguments to populate input string parts
   for (var i = 0, count = keys.length; i < count;) {
     insertString += keys[i] + ', ';
     this.insertArray.push(inserts[keys[i]]);
     valueString += '$' + (++i) + ', ';
   }
-  this.inputString = insertString.substring(0,insertString.length-2) + valueString.substring(0,valueString.length-2) + ');';
+  this.inputString = insertString.substring(0, insertString.length - 2) + valueString.substring(0, valueString.length - 2) + ');';
   this.prevFunc = 'INSERT';
   return this;
 };
@@ -224,7 +226,7 @@ ActiveRecord.prototype.insert = function(table, inserts) {
 // Parameters: table (req), updates object (req)
 // SQL: UPDATE table SET (fields) = (values)
 // Special:
-ActiveRecord.prototype.update = function(table, updates) {
+ActiveRecord.prototype.update = function (table, updates) {
   var updateField = '(', updateValue = '(', keys = Object.keys(updates);
   if (keys.length > 1) {
     for (var i = 0, count = keys.length - 1; i < count; i++) {
@@ -246,7 +248,7 @@ ActiveRecord.prototype.update = function(table, updates) {
 // Parameters: table (req)
 // SQL: DELETE FROM table
 // Special: May be chained with where, otherwise will remove all rows from table
-ActiveRecord.prototype.remove = function(table) {
+ActiveRecord.prototype.remove = function (table) {
   this.selectString = 'DELETE FROM ' + table;
   return this;
 };
@@ -254,7 +256,7 @@ ActiveRecord.prototype.remove = function(table) {
 // TODO: COMPLETE
 // Parameters: limit integer
 // SQL: LIMIT number
-ActiveRecord.prototype.limit = function(limit) {
+ActiveRecord.prototype.limit = function (limit) {
   this.caboose += ' LIMIT ' + limit;
   return this;
 };
@@ -262,7 +264,7 @@ ActiveRecord.prototype.limit = function(limit) {
 // TODO: COMPLETE
 // Parameters: offset integer
 // SQL: OFFSET number
-ActiveRecord.prototype.offset = function(offset) {
+ActiveRecord.prototype.offset = function (offset) {
   this.caboose += ' OFFSET ' + offset;
   return this;
 };
@@ -271,7 +273,7 @@ ActiveRecord.prototype.offset = function(offset) {
 // Parameters: table (req), limit (optional, defaults to 1)
 // SQL: SELECT * FROM table ORDER BY table._id ASC LIMIT 1, SELECT * FROM table ORDER BY table._id ASC LIMIT limit
 // Special: Retrieves first item, overrides all other chainable functions
-ActiveRecord.prototype.first = function(table, limit) {
+ActiveRecord.prototype.first = function (table, limit) {
   this.table = table;
   limit = limit || 1;
   this.inputString += 'SELECT * FROM ' + table + ' ORDER BY ' + table + '._id ASC LIMIT ' + limit + ';';
@@ -282,7 +284,7 @@ ActiveRecord.prototype.first = function(table, limit) {
 // Parameters: table (req), limit (optional, defaults to 1)
 // SQL: SELECT * FROM table ORDER BY table._id DESC LIMIT 1, SELECT * FROM table ORDER BY table._id DESC LIMIT limit
 // Special: Retrieves first item, overrides all other chainable functions
-ActiveRecord.prototype.last = function(table, limit) {
+ActiveRecord.prototype.last = function (table, limit) {
   this.table = table;
   limit = limit || 1;
   this.inputString += 'SELECT * FROM ' + table + ' ORDER BY ' + table + '._id DESC LIMIT ' + limit + ';';
@@ -293,7 +295,7 @@ ActiveRecord.prototype.last = function(table, limit) {
 // Parameters: table (req), limit (optional, defaults to 1)
 // SQL: SELECT * FROM table LIMIT 1, SELECT * FROM table LIMIT limit
 // Special: Retrieves a record without ordering, overrides all other chainable functions
-ActiveRecord.prototype.take = function(table, limit) {
+ActiveRecord.prototype.take = function (table, limit) {
   this.table = table;
   limit = limit || 1;
   this.inputString += 'SELECT * FROM ' + table + ' LIMIT ' + limit + ';';
@@ -304,7 +306,7 @@ ActiveRecord.prototype.take = function(table, limit) {
 // Parameters:
 // SQL: GROUP BY
 // Special:
-ActiveRecord.prototype.group = function() {
+ActiveRecord.prototype.group = function () {
   //this.caboose +=
   return this;
 };
@@ -313,7 +315,7 @@ ActiveRecord.prototype.group = function() {
 // Parameters:
 // SQL: HAVING
 // Special:
-ActiveRecord.prototype.having = function() {
+ActiveRecord.prototype.having = function () {
   //this.caboose +=
   return this;
 };
@@ -322,16 +324,16 @@ ActiveRecord.prototype.having = function() {
 // Parameters: None
 // SQL: Combines previously chained items to create a SQL statement
 // Special: Functions with an inputString override other chainable functions because they are complete
-ActiveRecord.prototype.fetch = function() {
+ActiveRecord.prototype.fetch = function () {
   var table = this.table;
   var prevFunc = this.prevFunc;
   var input = this.inputString.length > 0 ? this.inputString : this.selectString + this.joinString + this.whereString + this.caboose + ';';
-  pg.connect(this.conString, function(err, client, done) {
-    if (err){
+  pg.connect(this.conString, function (err, client, done) {
+    if (err) {
       console.log(err);
     }
     //console.log(input);
-    client.query(input, function(error, results) {
+    client.query(input, function (error, results) {
       if (error) {
         console.log("error in " + prevFunc + ' ' + table, error);
       } else {
@@ -342,40 +344,51 @@ ActiveRecord.prototype.fetch = function() {
   });
 };
 
-ActiveRecord.prototype.save = function(cb) {
+ActiveRecord.prototype.save = function () {
   var input = this.inputString.length > 0 ? this.inputString : this.updateString + this.joinString + this.whereString + ';';
   var prevFunc = this.prevFunc;
   var table = this.table;
-  pg.connect(conString, function(err, client, done) {
+  var callback = function (err, results) {
+      console.log(err, results);
+    };
+  console.log('SAVE:', input);
+  pg.connect(this.conString, this.insertArray, function (err, client, done) {
     if (err) {
       console.log(err, "in " + prevFunc + ' ' + table);
     }
-    client.query(input, function(error, results) {
-      cb(error, results);
+    client.query(input, function (error, results) {
+      callback(error, results);
     });
     done();
   });
 };
+
+//ActiveRecord.prototype.createRelationship = function (relTable, relationship) {
+//  if (relationship === "$onetomany") {
+//    this.inputString += "ALTER TABLE " + this.table + " ADD " + relTable +
+//    "_id INTEGER references " + relTable + "(_id);";
+//  }
+//  else {
+//    this.inputString += "CREATE TABLE " + this.table + relTable + " ( _id serial primary key, " +
+//    this.table + "_id integer references " + this.table + "(_id)" +
+//    relTable + "_id integer references " + relTable + "(_id);";
+//  }
+//  return this;
+//};
 /*
-Postgres = {};
 
-Postgres.createRelationship = function(table1, table2) {
-  // SQL: 'CREATE TABLE table1_table2(
-  //    table1_id INT NOT NULL REFERENCES table1(id) on delete cascade,
-  //    table2_id INT NOT NULL REFERENCES table2(id) on delete cascade,
-  //    primary key(table1_id, table2_id) );'
-  var table = table1 + '_' + table2;
-  var inputString = 'CREATE TABLE ' + table + '(' +
-    table1 + '_id int not null references ' + table1 + '(id) on delete cascade,' +
-    table2 + '_id int not null references ' + table2 + '(id) on delete cascade,' + ');';
-  // send request to postgresql database
+ Postgres.createRelationship = function(table1, table2) {
+ // SQL: 'CREATE TABLE table1_table2(
+ //    table1_id INT NOT NULL REFERENCES table1(id) on delete cascade,
+ //    table2_id INT NOT NULL REFERENCES table2(id) on delete cascade,
+ //    primary key(table1_id, table2_id) );'
+ var table = table1 + '_' + table2;
+ var inputString = 'CREATE TABLE ' + table + '(' +
+ table1 + '_id int not null references ' + table1 + '(id) on delete cascade,' +
+ table2 + '_id int not null references ' + table2 + '(id) on delete cascade,' + ');';
+ // send request to postgresql database
 
-
-
-
-
-
-*/
+ */
 
 /* HELPER FUNCTIONS */
 

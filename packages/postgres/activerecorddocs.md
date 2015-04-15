@@ -30,15 +30,15 @@ ActiveRecord.prototype.joins = function() {
 // db.select('students').where('age = 18 and class = senior or name = kate').fetch();
 ActiveRecord.prototype.where = function(/*Arguments*/) {};
 
-### INCOMPLETE: INSERT QUERY
-// Parameters: table (req)
-// SQL: INSERT INTO table
+### PARTIALLY COMPLETE: INSERT QUERY
+// Parameters: table (req), inserts object (req) 
+// SQL: INSERT INTO table (fields) VALUES (values)
 // Special:
 ActiveRecord.prototype.insert = function() {};
 
-### INCOMPLETE: UPDATE STATEMENT STARTER
-// Parameters: table (req)
-// SQL: UPDATE table SET
+### PARTIALLY COMPLETE: UPDATE STATEMENT STARTER
+// Parameters: table (req), updates object (req)
+// SQL: UPDATE table SET (fields) = (values)
 // Special:
 ActiveRecord.prototype.update = function() {};
 
