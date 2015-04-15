@@ -318,16 +318,14 @@ ActiveRecord.prototype.having = function () {
 // Special: Functions with an inputString override other chainable functions because they are complete
 ActiveRecord.prototype.fetch = function () {
   var table = this.table;
-  var dataArray = this.dataArray;
   var prevFunc = this.prevFunc;
   var input = this.inputString.length > 0 ? this.inputString : this.selectString + this.joinString + this.whereString + this.caboose + ';';
-  console.log('FETCH:', input, dataArray);
   pg.connect(this.conString, function (err, client, done) {
     if (err) {
       console.log(err);
     }
     //console.log(input);
-    client.query(input, dataArray, function (error, results) {
+    client.query(input, function (error, results) {
       if (error) {
         console.log("error in " + prevFunc + ' ' + table, error);
       } else {
@@ -340,44 +338,49 @@ ActiveRecord.prototype.fetch = function () {
 
 ActiveRecord.prototype.save = function () {
   var input = this.inputString.length > 0 ? this.inputString : this.updateString + this.joinString + this.whereString + ';';
-  var dataArray = this.dataArray;
+  var insertArray = this.insertArray;
   var prevFunc = this.prevFunc;
   var table = this.table;
   var callback = function (err, results) {
       console.log(err, results);
     };
-  console.log('SAVE:', input, dataArray);
+  console.log('SAVE:', input);
   pg.connect(this.conString, function (err, client, done) {
     if (err) {
       console.log(err, "in " + prevFunc + ' ' + table);
     }
-    client.query(input, dataArray, function (error, results) {
+    client.query(input, insertArray, function (error, results) {
       callback(error, results);
     });
     done();
   });
 };
 
-ActiveRecord.prototype.createRelationship = function(relTable, relationship){
-  if (relationship === "$onetomany"){
+ActiveRecord.prototype.createRelationship = function(relTable, relationship, columnNames){
+  if (relationship === "onetomany"){
     this.inputString += "ALTER TABLE " +  this.table + " ADD " + relTable +
     "_id INTEGER references " + relTable + "(_id);";
   }
   else {
     this.inputString += "CREATE TABLE " +
-    this.table + relTable + " (" + this.table + "_id integer references " + this.table + "(_id), " +
-    relTable + "_id integer references " + relTable + "(_id), " +
-    "PRIMARY KEY(" + this.table + "_id, " + relTable + "_id)); ";
-    this.inputString +=  "CREATE OR REPLACE FUNCTION " + this.table + relTable + "() RETURNS trigger AS $$ " +
-    "BEGIN DELETE FROM " + this.table + relTable + " WHERE TG_TABLE_NAME || _id = OLD._id; " +
+    this.table + "_id integer references " + this.table + "(_id)" +
+    relTable + "_id integer references " + relTable + "(_id)," +
+    this.table + relTable + " PRIMARY KEY(" + this.table + "_id, " + relTable + "_id)";
+    this.inputString +=  "CREATE OR REPLACE FUNCTION " + this.table + relTable + "(" + columnNames[0][0] + " " +
+    columnNames[0][1] + ", " + columnNames[1][0] + " " + columnNames[1][1] + ") RETURNS trigger AS $$ " +
+    "IF (TG_OP = 'DELETE') THEN " +
+    "DELETE FROM " + this.table + relTable + " WHERE " + this.table + relTable + "_id = OLD._id " +
     "RETURN old; " +
+    "ELSIF (TG_OP = 'INSERT') THEN " +
+    "INSERT INTO " + this.table + relTable + " ( " + this.table + "_id, " + relTable + "_id, VALUES " +
+    "(NEW._id, (SELECT _id from " + relTable + "WHERE " + relTable  + "_id = value;) " +
+    "RETURN new " +
+    "END IF; " +
     "END; " +
     "$$ LANGUAGE plpgsql; ";
-    this.inputString += "CREATE TRIGGER " + this.table+relTable  + " AFTER DELETE ON " + this.table +
-    " FOR EACH ROW EXECUTE PROCEDURE " + this.table + relTable + "(); ";
-    this.inputString += "CREATE TRIGGER " + this.table+relTable  + " AFTER DELETE ON " + relTable +
-    " FOR EACH ROW EXECUTE PROCEDURE " + this.table + relTable + "(); ";
+    this.inputString += "CREATE TRIGGER " + this.table+relTable  + " AFTER INSERT OR DELETE ON " + this.table + " | " +
+    relTable + " FOR EACH ROW EXECUTE PROCEDURE update" + this.table+relTable + "();";
   }
-  console.log(this.inputString);
+
   return this;
 };
