@@ -1,6 +1,6 @@
 // PostgreSQL connection
 pg = Npm.require('pg');
-var conString = 'postgres://postgres:1234@localhost/postgres';
+var conString = 'postgres://meteor:Meteor1234@191.238.146.165/postgres';
 
 // TODO: reset command for development (in command line need a reset that does dropdb <name> and createdb <name>
 

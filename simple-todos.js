@@ -1,5 +1,5 @@
- tasks = new SQLCollection('tasks');
- users1 = new SQLCollection('users1');
+ tasks = new SQL.Collection('tasks');
+ users1 = new SQL.Collection('users1');
 
 if (Meteor.isClient) {
   // TODO: Move the table definition into SQLCollection
@@ -9,13 +9,13 @@ if (Meteor.isClient) {
     text: ['$string', '$notnull'],
     checked: ['$bool']
   };
-  tasks.createTable('tasks', taskTable);
+  tasks.createTable(taskTable);
 
   var usersTable = {
     _id: ['$number'],
     name: ['$string', '$notnull']
   };
-  users1.createTable('users1', usersTable);
+  users1.createTable(usersTable);
 //Postgres.createTable('students', {
 //  name: ['$string', '$notnull'],
 //  age: ['$number'],
@@ -53,10 +53,10 @@ if (Meteor.isClient) {
       // Set the checked property to the opposite of its current value
       console.log(this.checked);
       if (this.checked) {
-        tasks.update('tasks', {_id: this._id, "checked": false}, {"_id": {$eq: this._id}});
+        tasks.update({_id: this._id, "checked": false}, {"_id": {$eq: this._id}});
       }
       else {
-        tasks.update('tasks', {_id: this._id, "checked": true}, {"_id": {$eq: this._id}});
+        tasks.update({_id: this._id, "checked": true}, {"_id": {$eq: this._id}});
       }
     },
     "click .delete": function () {
@@ -83,8 +83,8 @@ if (Meteor.isServer) {
   var cursor1 = Postgres.getCursor('users1', ['_id', 'name', 'created_at'], {}, {}, {});
 
 
-  //Postgres.createTable('users1', {name: ['$string']});
-  //Postgres.createTable('tasks', {text: ['$string'], checked: ["$bool", {$default: false}]});
+  // Postgres.createTable('users1', {name: ['$string']});
+  // Postgres.createTable('tasks', {text: ['$string'], checked: ["$bool", {$default: false}]});
 
   Meteor.publish('tasks', function () {
     return cursor;

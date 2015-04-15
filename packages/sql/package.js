@@ -1,5 +1,5 @@
 Package.describe({
-  name: 'meteor-steam:postgres',
+  name: 'meteor-steam:postgresql',
   version: '0.0.1',
   // Brief, one-line summary of the package.
   summary: '',
@@ -11,22 +11,22 @@ Package.describe({
 });
 
 Npm.depends({
-  'pg'            :  '4.3.0',
-  'babel-runtime' :  '5.0.9',
   'lodash'        :  '3.6.0',
-  'random-strings':  '0.0.1',
-  'murmurhash-js' :  '1.0.0',
-  'pg-live-query' :  '0.0.3'
 });
 
+
 Package.onUse(function(api) {
-  // The order these files are imported is very important
-  api.versionsFrom('1.1');
   api.use('underscore');
   api.use('tracker');
   api.use('ddp');
-  api.addFiles('postgres.js', 'server');
-  api.export('Postgres', 'server');
-  api.addFiles('activerecord.js', 'server');
-  api.export('ActiveRecord', 'server');
+  api.versionsFrom('1.1');
+  api.addFiles('collection.js');
+  api.export('SQL');
+});
+
+
+Package.onTest(function (api) {
+  api.addFiles('collection.js', ['server', 'client']);
+  api.export('SQL', ['server', 'client']);
+  api.addFiles('collection_tests.js', ['server', 'client']);
 });
