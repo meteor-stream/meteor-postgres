@@ -393,21 +393,77 @@ ActiveRecord.prototype.createRelationship = function(relTable, relationship, col
   return this;
 };
 
+Postgres.dropColumn = function(table, column, cb) {
+  var inputString = 'ALTER TABLE ' + table + ' DROP COLUMN ' + column;
+  inputString += ';';
+};
 
-/*
+Postgres.dropTable = function(table, cb) {
+  var inputString = 'DROP FUNCTION IF EXISTS notify_trigger() CASCADE; DROP TABLE IF EXISTS ' + table + ' CASCADE;';
+  // send request to postgresql database
+};
 
- Postgres.createRelationship = function(table1, table2) {
- // SQL: 'CREATE TABLE table1_table2(
- //    table1_id INT NOT NULL REFERENCES table1(id) on delete cascade,
- //    table2_id INT NOT NULL REFERENCES table2(id) on delete cascade,
- //    primary key(table1_id, table2_id) );'
- var table = table1 + '_' + table2;
- var inputString = 'CREATE TABLE ' + table + '(' +
- table1 + '_id int not null references ' + table1 + '(id) on delete cascade,' +
- table2 + '_id int not null references ' + table2 + '(id) on delete cascade,' + ');';
- // send request to postgresql database
 
- */
+/**
+ * TODO: foreign key associations
+ * @param {string} table
+ * @param {object} insertObj
+ * @param {string} insertObj key (field name)
+ * @param {string} insertObj value (value)
+
+Postgres.insert = function(table, insertObj) {
+  // SQL: 'INSERT INTO table (insertFields) VALUES (insertValues);'
+  // initialize input string parts
+  var inputString = 'INSERT INTO ' + table + ' (';
+  var valueString = ') VALUES (';
+  var keys = Object.keys(insertObj);
+  var insertArray = [];
+  // iterate through array arguments to populate input string parts
+  for (var i = 0, count = keys.length - 1; i < count;) {
+    inputString += keys[i] + ', ';
+    insertArray.push(insertObj[keys[i]]);
+    valueString += '$' + (++i) + ', ';
+  }
+  // combine parts and close input string
+  inputString += keys[keys.length - 1] + valueString + '$' + keys.length + ');';
+  insertArray.push(insertObj[keys[keys.length - 1]]);
+  // send request to postgresql database
+  //console.log(insertArray);
+};
+
+
+/**
+ *
+ * @param {string} table
+ * @param {object} updateObj: key, value = fieldToUpdate, valueToUpdate
+ * @param {object} selectObj: key, value = fieldToSelect, comparisonObject -> use QueryOperators for key
+
+//Postgres.update('students',{'class': 'senior', age: 30},{age: {$gt: 18}});
+//UPDATE students SET (class, age) = ('senior', 30) WHERE age > 18
+Postgres.update = function(table, updateObj, selectObj) {
+  // SQL: 'UPDATE table SET fields VALUE values WHERE fields operator comparator;'
+
+  var updateString = ''; // fields VALUE values {'class': 'senior'}
+  if (updateObj && !_emptyObject(updateObj)) {
+    var updateField = '(', updateValue = '(', keys = Object.keys(updateObj);
+    if (keys.length > 1) {
+      for (var i = 0, count = keys.length - 1; i < count; i++) {
+        updateField += keys[i] + ', ';
+        updateValue += "'" + updateObj[keys[i]] + "', ";
+      }
+      updateField += keys[keys.length - 1];
+      updateValue += "'" + updateObj[keys[keys.length - 1]] + "'";
+    } else {
+      updateField += keys[0];
+      updateValue += "'" + updateObj[keys[0]] + "'";
+    }
+    updateString += updateField + ') = ' + updateValue + ')';
+  }
+
+  var inputString = 'UPDATE ' + table + ' SET ' + updateString + _where(selectObj) + ';';
+};
+
+*/
 
 /* HELPER FUNCTIONS */
 
