@@ -353,11 +353,11 @@ ActiveRecord.prototype.save = function () {
       console.log(err, results);
     };
   console.log('SAVE:', input);
-  pg.connect(this.conString, this.insertArray, function (err, client, done) {
+  pg.connect(this.conString, function (err, client, done) {
     if (err) {
       console.log(err, "in " + prevFunc + ' ' + table);
     }
-    client.query(input, function (error, results) {
+    client.query(input, this.insertArray, function (error, results) {
       callback(error, results);
     });
     done();
