@@ -1,3 +1,5 @@
+This project is still in development and will likely contain serious bugs. We are targetting 4/26/2015 as our stable release date.
+
 # meteor-postgres
 Postgres integration for Meteor
 

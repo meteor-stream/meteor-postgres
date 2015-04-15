@@ -103,7 +103,7 @@ SQL.Collection = function(connection, name) {
   if (Meteor.isClient) {
     // Added will only be triggered on the initial flow of data
     // Adding an entry to minisql will trigger a server side insert, but this
-    // will not trigger an added event on any client
+    // will not trigger an added event on any client. That will trigger a 'changed' event
     this.addEventListener('added', function(index, msg, name) {
       unvalidated = "";
       alasql("DELETE FROM " + this.tableName);
