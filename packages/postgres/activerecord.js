@@ -118,8 +118,8 @@ ActiveRecord.prototype.dropTable = function () {
 // Special: May pass table, distinct, field to obtain a single record per unique value
 ActiveRecord.prototype.select = function (/*arguments*/) {
   var args = '';
-  if (arguments.length >= 2) {
-    for (var i = 1; i < arguments.length; i++) {
+  if (arguments.length >= 1) {
+    for (var i = 0; i < arguments.length; i++) {
       if (arguments[i] === 'distinct') {
         args += 'DISTINCT ';
       } else {
@@ -152,13 +152,13 @@ ActiveRecord.prototype.findOne = function (/*arguments*/) {
 
 // TODO: INCOMPLETE
 // can accept string
-ActiveRecord.prototype.joins = function () {
-  if (arguments.length === 1 && typeof arguments[0] === 'string') {
-    var joinTable = arguments[0];
-    this.joinString += ' INNER JOIN ' + joinTable + ' ON ' + joinTable + '._id = ' + this.table + '.' + joinTable + '_id';
-  }
-  return this;
-};
+//ActiveRecord.prototype.joins = function () {
+//  if (arguments.length === 1 && typeof arguments[0] === 'string') {
+//    var joinTable = arguments[0];
+//    this.joinString += ' INNER JOIN ' + joinTable + ' ON ' + joinTable + '._id = ' + this.table + '.' + joinTable + '_id';
+//  }
+//  return this;
+//};
 
 // TODO: PARTIALLY COMPLETE -> need to add IN statement if value is an array & additional selects & prevent use of words that are not SQL words
 // Parameters: string with ?'s followed by an argument for each of the ?'s
@@ -358,13 +358,23 @@ ActiveRecord.prototype.save = function () {
   });
 };
 
+ActiveRecord.prototype.join = function (joinType, tableValues, compValues) {
+  for (var x = 0, count = tableValues.length; x < count; x++){
+    this.selectString += " " + joinType[x] + " " + compValues[x][0] + " ON " + this.table + "." + tableValues[x] + " = " + compValues[x][0] + "." + compValues[x][1];
+  }
+
+  this.prevFunc = "JOIN";
+  console.log(this.selectString);
+  return this;
+};
+
 ActiveRecord.prototype.createRelationship = function(relTable, relationship){
   if (relationship === "$onetomany"){
     this.inputString += "ALTER TABLE " +  this.table + " ADD " + relTable +
     "_id INTEGER references " + relTable + "(_id);";
   }
   else {
-    this.inputString += "CREATE TABLE " +
+    this.inputString += "CREATE TABLE IF NOT EXISTS" +
     this.table + relTable + " (" + this.table + "_id integer references " + this.table + "(_id), " +
     relTable + "_id integer references " + relTable + "(_id), " +
     "PRIMARY KEY(" + this.table + "_id, " + relTable + "_id)); ";
