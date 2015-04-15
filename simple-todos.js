@@ -1,5 +1,5 @@
- tasks = new SQLCollection('tasks');
- users1 = new SQLCollection('users1');
+ tasks = new SQL.Collection('tasks');
+ users1 = new SQL.Collection('users1');
 
 if (Meteor.isClient) {
   // TODO: Move the table definition into SQLCollection
@@ -9,19 +9,13 @@ if (Meteor.isClient) {
     text: ['$string', '$notnull'],
     checked: ['$bool']
   };
-  tasks.createTable('tasks', taskTable);
+  tasks.createTable(taskTable);
 
   var usersTable = {
     _id: ['$number'],
     name: ['$string', '$notnull']
   };
-  users1.createTable('users1', usersTable);
-//Postgres.createTable('students', {
-//  name: ['$string', '$notnull'],
-//  age: ['$number'],
-//  class: ['$string', {$default: '2015'}],
-//  _id: ['$number', '$notnull', '$primary', '$unique']
-//});
+  users1.createTable(usersTable);
 
 
   Template.body.helpers({
@@ -51,13 +45,7 @@ if (Meteor.isClient) {
     },
     "click .toggle-checked": function () {
       // Set the checked property to the opposite of its current value
-      console.log(this.checked);
-      if (this.checked) {
-        tasks.update('tasks', {_id: this._id, "checked": false}, {"_id": {$eq: this._id}});
-      }
-      else {
-        tasks.update('tasks', {_id: this._id, "checked": true}, {"_id": {$eq: this._id}});
-      }
+      tasks.update({_id: this._id, "checked": !this.checked}, {"_id": {$eq: this._id}});
     },
     "click .delete": function () {
       tasks.remove({_id: {$eq: this._id}});
@@ -67,29 +55,14 @@ if (Meteor.isClient) {
 }
 
 if (Meteor.isServer) {
-  //Postgres.select('students');
-  //Postgres.select('students',['name', 'age']);
-  //Postgres.select('students',['name', 'age'],{age: {$gt: 18}});
-  //Postgres.select('students',['name', 'age'],{age: {$gt: 18}},{ name: {$lm: 1}});
-  //Postgres.select('contacts',['address'],{},{ address: {$lm: 1}},{$fk: ['$loj', 'students']});
-  //Postgres.update('students',{'class': 'senior', age: 30},{age: {$gt: 18}});
-  //Postgres.remove('students', {age: {$gt: 20}});
-  var db = new ActiveRecord();
 
-  ////here the user specifies what data the client will have access too (data for postgres , minisql's data structure, and notifications will be taken from here)
-  //var cursor = Postgres.getCursor('tasks', ['_id', 'text', 'checked', 'created_at'], {}, {}, {});
-  //
-  ////same as for cursor
-  //var cursor1 = Postgres.getCursor('users1', ['_id', 'name', 'created_at'], {}, {}, {});
-
-
-  //Postgres.createTable('users1', {name: ['$string']});
-  //Postgres.createTable('tasks', {text: ['$string'], checked: ["$bool", {$default: false}]});
+  // Postgres.createTable('users1', {name: ['$string']});
+  // Postgres.createTable('tasks', {text: ['$string'], checked: ["$bool", {$default: false}]});
 
   Meteor.publish('tasks', function () {
-    return cursor;
+    return SQL.Collection.getCursor('tasks', ['_id', 'text', 'checked', 'created_at'], {}, {}, {});
   });
   Meteor.publish('users1', function(){
-    return cursor1;
+    return SQL.Collection.getCursor('users1', ['_id', 'name', 'created_at'], {}, {}, {});
   })
 }
