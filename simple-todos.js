@@ -59,9 +59,13 @@ if (Meteor.isServer) {
   //users.createTable({name: ['$string']}).save();
   var tasks = new ActiveRecord('tasks');
   //tasks.createTable({text: ['$string'], checked: ["$bool", {$default: false}]}).save();
-  tasks.insert({text: 'this is a task', checked: false}).save();
-  tasks.insert({text: 'this is another task', checked: true}).save();
-  //tasks.select()
+  //tasks.insert({text: 'this is a task', checked: false}).save();
+  //tasks.insert({text: 'this is another task', checked: true}).save();
+  //tasks.select().fetch();
+  tasks.select().where('checked = ?','true').fetch();
+  //tasks.insert({text: 'yet another', checked: true}).save();
+  //tasks.first(2).fetch();
+  //tasks.update({checked: false}).where('checked = ?','true').save();
 
   Meteor.publish('tasks', function () {
     return SQL.Collection.getCursor('tasks', ['_id', 'text', 'checked', 'created_at'], {}, {}, {});

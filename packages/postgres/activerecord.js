@@ -11,7 +11,7 @@ ActiveRecord = function (table, conString) {
   // strings used by chaining statements
   this.selectString = '';
   this.updateString = '';
-  this.insertArray = [];
+  this.dataArray = [];
   this.joinString = '';
   this.whereString = '';
   this.caboose = '';
@@ -160,46 +160,39 @@ ActiveRecord.prototype.joins = function () {
   return this;
 };
 
-// TODO: PARTIALLY COMPLETE -> need to add IN statement if value is an array & additional selects
-// Parameters: 1) string only (not safe), 2) array (where first element is a string), 3) unlimited with first argument as string
+// TODO: PARTIALLY COMPLETE -> need to add IN statement if value is an array & additional selects & prevent use of words that are not SQL words
+// Parameters: string with ?'s followed by an argument for each of the ?'s
 // SQL: WHERE field operator comparator, WHERE field1 operator1 comparator1 AND/OR field2 operator2 comparator2
 // Special:
 // For example:
 // db.select('students').where('age = ? and class = ? or name = ?','18','senior','kate').fetch();
-// db.select('students').where(['age = ? and class = ? or name = ?','18','senior','kate']).fetch();
-// db.select('students').where('age = 18 and class = senior or name = kate').fetch();
 ActiveRecord.prototype.where = function (/*Arguments*/) {
+  this.dataArray = [];
   this.whereString += ' WHERE ';
   var where = '', redux, substring1, substring2;
-  if (arguments.length === 1 && typeof arguments[0] === 'string') {
-    // 1 arg, string -> raw
-    this.whereString += arguments[0];
-  } else if (arguments.length === 1 && Array.isArray(arguments[0])) {
-    // 1 arg, array -> first is string, then replacements
-    where += arguments[0][0];
-    // replace ? with rest of array
-    for (var i = 1, count = arguments[0].length; i < count; i++) {
-      redux = where.indexOf('?');
-      substring1 = where.substring(0, redux);
-      substring2 = where.substring(redux + 1, where.length);
-      where = substring1 + arguments[0][i] + substring2;
-    }
-    this.whereString += where;
-  } else {
-    // more than 2 -> treated like an array
-    where += arguments[0];
-    // replace ? with rest of array
-    for (var i = 1, count = arguments.length; i < count; i++) {
-      redux = where.indexOf('?');
-      substring1 = where.substring(0, redux);
-      substring2 = where.substring(redux + 1, where.length);
-      where = substring1 + arguments[i] + substring2;
-    }
-    this.whereString += where;
+  where += arguments[0];
+  // replace ? with rest of array
+  for (var i = 1, count = arguments.length; i < count; i++) {
+    redux = where.indexOf('?');
+    substring1 = where.substring(0, redux);
+    substring2 = where.substring(redux + 1, where.length);
+    where = substring1 + '$' + i + substring2;
+    this.dataArray.push(arguments[i]);
   }
-
+  this.whereString += where;
   return this;
 };
+
+// update tasks set text = 'test'
+// where userid = (select _id from users1 where name = 'paulo');
+// tasks.update({text: 'test'}).where(').save();
+// tasks.update({text: 'test'}).where('userid = ? (select ? from ? where name = ?','18','senior','kate').fetch();
+// db.select('students').where(['age = ? and class = ? or name = ?','18','senior','kate']).fetch();
+// db.select('students').where('age = 18 and class = senior or name = kate').fetch();
+ActiveRecord.prototype.parameterizedWhere = function() {
+
+};
+
 
 // TODO: COMPLETE
 // Parameters: inserts object (req)
@@ -208,11 +201,11 @@ ActiveRecord.prototype.where = function (/*Arguments*/) {
 ActiveRecord.prototype.insert = function (inserts) {
   var valueString = ') VALUES (', keys = Object.keys(inserts);
   var insertString = 'INSERT INTO ' + this.table + ' (';
-  this.insertArray = [];
+  this.dataArray = [];
   // iterate through array arguments to populate input string parts
   for (var i = 0, count = keys.length; i < count;) {
     insertString += keys[i] + ', ';
-    this.insertArray.push(inserts[keys[i]]);
+    this.dataArray.push(inserts[keys[i]]);
     valueString += '$' + (++i) + ', ';
   }
   this.inputString = insertString.substring(0, insertString.length - 2) + valueString.substring(0, valueString.length - 2) + ');';
@@ -325,14 +318,16 @@ ActiveRecord.prototype.having = function () {
 // Special: Functions with an inputString override other chainable functions because they are complete
 ActiveRecord.prototype.fetch = function () {
   var table = this.table;
+  var dataArray = this.dataArray;
   var prevFunc = this.prevFunc;
   var input = this.inputString.length > 0 ? this.inputString : this.selectString + this.joinString + this.whereString + this.caboose + ';';
+  console.log('FETCH:', input, dataArray);
   pg.connect(this.conString, function (err, client, done) {
     if (err) {
       console.log(err);
     }
     //console.log(input);
-    client.query(input, function (error, results) {
+    client.query(input, dataArray, function (error, results) {
       if (error) {
         console.log("error in " + prevFunc + ' ' + table, error);
       } else {
@@ -345,18 +340,18 @@ ActiveRecord.prototype.fetch = function () {
 
 ActiveRecord.prototype.save = function () {
   var input = this.inputString.length > 0 ? this.inputString : this.updateString + this.joinString + this.whereString + ';';
-  var insertArray = this.insertArray;
+  var dataArray = this.dataArray;
   var prevFunc = this.prevFunc;
   var table = this.table;
   var callback = function (err, results) {
       console.log(err, results);
     };
-  console.log('SAVE:', input);
+  console.log('SAVE:', input, dataArray);
   pg.connect(this.conString, function (err, client, done) {
     if (err) {
       console.log(err, "in " + prevFunc + ' ' + table);
     }
-    client.query(input, insertArray, function (error, results) {
+    client.query(input, dataArray, function (error, results) {
       callback(error, results);
     });
     done();

@@ -2,15 +2,16 @@ Statements may be chained. Do not use more than one starter per query.
 Cabooses must be attached to statements. 
 Queries will override all other items in the chain.
 Data functions must be attached to interact with the database. 
+There is no alter table function here, since you cannot alter a table once there is data. You can drop and re add it.
 
 ### SELECT STATEMENT STARTER
-// Parameters: table (req), fields (arguments, optional)
+// Parameters: fields (arguments, optional)
 // SQL: SELECT fields FROM table, SELECT * FROM table
 // Special: May pass table, distinct, field to obtain a single record per unique value
 ActiveRecord.prototype.select = function(table /*arguments*/) {};
 
 ### FIND ONE STATEMENT STARTER
-// Parameters: table (req), id (optional)
+// Parameters: id (optional)
 // SQL: SELECT fields FROM table, SELECT * FROM table
 // Special: If no idea is passed, may be chained with a where function
 ActiveRecord.prototype.findOne = function (table /*arguments*/) {};
@@ -31,13 +32,13 @@ ActiveRecord.prototype.joins = function() {
 ActiveRecord.prototype.where = function(/*Arguments*/) {};
 
 ### PARTIALLY COMPLETE: INSERT QUERY
-// Parameters: table (req), inserts object (req) 
+// Parameters: inserts object (req) 
 // SQL: INSERT INTO table (fields) VALUES (values)
 // Special:
 ActiveRecord.prototype.insert = function() {};
 
 ### PARTIALLY COMPLETE: UPDATE STATEMENT STARTER
-// Parameters: table (req), updates object (req)
+// Parameters: updates object (req)
 // SQL: UPDATE table SET (fields) = (values)
 // Special:
 ActiveRecord.prototype.update = function() {};
@@ -59,19 +60,19 @@ ActiveRecord.prototype.limit = function(limit) {};
 ActiveRecord.prototype.offset = function(offset) {};
 
 ### FIRST QUERY
-// Parameters: table (req), limit (optional, defaults to 1)
+// Parameters: limit (optional, defaults to 1)
 // SQL: SELECT * FROM table ORDER BY table._id ASC LIMIT 1, SELECT * FROM table ORDER BY table._id ASC LIMIT limit
 // Special: Retrieves first item, overrides all other chainable functions
 ActiveRecord.prototype.first = function(table, limit) {};
 
 ### LAST QUERY
-// Parameters: table (req), limit (optional, defaults to 1)
+// Parameters: limit (optional, defaults to 1)
 // SQL: SELECT * FROM table ORDER BY table._id DESC LIMIT 1, SELECT * FROM table ORDER BY table._id DESC LIMIT limit
 // Special: Retrieves first item, overrides all other chainable functions
 ActiveRecord.prototype.last = function(table, limit) {};
 
 ### TAKE QUERY
-// Parameters: table (req), limit (optional, defaults to 1)
+// Parameters: limit (optional, defaults to 1)
 // SQL: SELECT * FROM table LIMIT 1, SELECT * FROM table LIMIT limit
 // Special: Retrieves a record without ordering, overrides all other chainable functions
 ActiveRecord.prototype.take = function(table, limit) {};
