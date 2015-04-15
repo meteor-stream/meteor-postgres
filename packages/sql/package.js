@@ -14,7 +14,6 @@ Npm.depends({
   'lodash'        :  '3.6.0',
 });
 
-
 Package.onUse(function(api) {
   api.use('underscore');
   api.use('tracker');
@@ -24,9 +23,10 @@ Package.onUse(function(api) {
   api.export('SQL');
 });
 
-
 Package.onTest(function (api) {
+  api.versionsFrom('1.1');
+  api.use(['spacebars', 'tinytest', 'test-helpers', 'underscore', 'tracker', 'ddp']);
   api.addFiles('collection.js', ['server', 'client']);
   api.export('SQL', ['server', 'client']);
-  api.addFiles('collection_tests.js', ['server', 'client']);
+  api.addFiles('collection_tests.js');
 });
