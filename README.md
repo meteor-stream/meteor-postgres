@@ -59,3 +59,6 @@ Updating
 Removing
 
     tasks.remove(this._id);
+
+# LICENSE
+Released under the MIT license. See the LICENSE file for more info.
