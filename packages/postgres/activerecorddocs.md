@@ -1,7 +1,7 @@
 Statements may be chained. Do not use more than one starter per query.
 Cabooses must be attached to statements. 
 Queries will override all other items in the chain.
-Fetch must be attached at end to retrieve data.
+Data functions must be attached to interact with the database. 
 
 ### SELECT STATEMENT STARTER
 // Parameters: table (req), fields (arguments, optional)
@@ -96,7 +96,7 @@ ActiveRecord.prototype.fetch = function() {};
 
 ### CREATE TABLE QUERY
 // TODO: CREATE TABLE EXAMPLES. The first element in the array must be the data type from the _DataType object above
-//Postgres.createTable('students', {
+//ActiveRecord.createTable('students', {
 //  name: ['$string', '$notnull'],
 //  age: ['$number'],
 //  class: ['$string', {$default: '2015'}]
@@ -112,3 +112,10 @@ ActiveRecord.prototype.fetch = function() {};
 //CREATE TABLE students (name varchar(255) not null, age integer, class varchar(255) default 2015, _id integer not null primary unique,
 
 ### SAVE DATA 
+
+// TODO: PARTIALLY COMPLETE, NEEDS TESTING
+// Parameters: table (req)
+// SQL: DROP TABLE table
+// Special: Deletes cascade
+ActiveRecord.prototype.dropTable = function(table) {
+

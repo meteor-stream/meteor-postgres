@@ -4,12 +4,17 @@ var conString = 'postgres://postgres:1234@localhost/postgres';
 
 ActiveRecord = function() {
   this.conString = conString;
-  this.inputString = '';
   this.table = '';
+  // inputString used by queries, overrides other strings
+  this.inputString = '';
+  // strings used by chaining statements
   this.selectString = '';
+  this.updateString = '';
+  this.insertArray = [];
   this.joinString = '';
   this.whereString = '';
   this.caboose = '';
+  // passes previous function name into data functions for error logging
   this.prevFunc = '';
 };
 
@@ -32,7 +37,7 @@ ActiveRecord.prototype._TableConstraints = {
   $primary: 'primary key'
 };
 
-// TODO: PARTIALLY COMPLETE
+// TODO: PARTIALLY COMPLETE, NEEDS TESTING
 // Parameters: table (req), tableObj (req), relTable (optional)
 // SQL: CREATE TABLE
 // Special:
@@ -99,19 +104,14 @@ ActiveRecord.prototype.createTable = function(table, tableObj, relTable) {
   return this;
 };
 
-ActiveRecord.prototype.save = function(cb) {
-  var inputString = this.inputString;
-  var prevFunc = this.prevFunc;
-  var table = this.table;
-  pg.connect(conString, function(err, client, done) {
-    if (err) {
-      console.log(err, "in " + prevFunc + ' ' + table);
-    }
-    client.query(inputString, function(error, results) {
-      cb(error, results);
-    });
-    done();
-  });
+// TODO: PARTIALLY COMPLETE, NEEDS TESTING
+// Parameters: table (req)
+// SQL: DROP TABLE table
+// Special: Deletes cascade
+ActiveRecord.prototype.dropTable = function(table) {
+  this.inputString = 'DROP FUNCTION IF EXISTS notify_trigger() CASCADE; DROP TABLE IF EXISTS ' + table + ' CASCADE;';
+  this.prevFunc = 'DROP TABLE';
+  return this;
 };
 
 // TODO: COMPLETE
@@ -202,22 +202,42 @@ ActiveRecord.prototype.where = function(/*Arguments*/) {
   return this;
 };
 
-// TODO: INCOMPLETE
+// TODO: PARTIALLY COMPLETE, NEEDS TESTING
 // Parameters: table (req)
-// SQL: INSERT INTO table
+// SQL: INSERT INTO table (fields) VALUES (values)
 // Special:
-ActiveRecord.prototype.insert = function() {
-
+ActiveRecord.prototype.insert = function(table, inserts) {
+  var valueString = ') VALUES (', keys = Object.keys(inserts);
+  var insertString = 'INSERT INTO ' + table + ' (';
+  // iterate through array arguments to populate input string parts
+  for (var i = 0, count = keys.length; i < count;) {
+    insertString += keys[i] + ', ';
+    this.insertArray.push(inserts[keys[i]]);
+    valueString += '$' + (++i) + ', ';
+  }
+  this.inputString = insertString.substring(0,insertString.length-2) + valueString.substring(0,valueString.length-2) + ');';
   this.prevFunc = 'INSERT';
   return this;
 };
 
-// TODO: INCOMPLETE
-// Parameters: table (req)
-// SQL: UPDATE table SET
+// TODO: PARTIALLY COMPLETE, NEEDS TESTING
+// Parameters: table (req), updates object (req)
+// SQL: UPDATE table SET (fields) = (values)
 // Special:
-ActiveRecord.prototype.update = function() {
-
+ActiveRecord.prototype.update = function(table, updates) {
+  var updateField = '(', updateValue = '(', keys = Object.keys(updates);
+  if (keys.length > 1) {
+    for (var i = 0, count = keys.length - 1; i < count; i++) {
+      updateField += keys[i] + ', ';
+      updateValue += "'" + updates[keys[i]] + "', ";
+    }
+    updateField += keys[keys.length - 1];
+    updateValue += "'" + updates[keys[keys.length - 1]] + "'";
+  } else {
+    updateField += keys[0];
+    updateValue += "'" + updates[keys[0]] + "'";
+  }
+  this.updateString = 'UPDATE ' + table + ' SET ' + updateField + ') = ' + updateValue + ')';
   this.prevFunc = 'UPDATE';
   return this;
 };
@@ -304,9 +324,8 @@ ActiveRecord.prototype.having = function() {
 // Special: Functions with an inputString override other chainable functions because they are complete
 ActiveRecord.prototype.fetch = function() {
   var table = this.table;
-  console.log(this.inputString, 123423948098239488888888888888888888888888888888);
+  var prevFunc = this.prevFunc;
   var input = this.inputString.length > 0 ? this.inputString : this.selectString + this.joinString + this.whereString + this.caboose + ';';
-  console.log('Fetch input:', input);
   pg.connect(this.conString, function(err, client, done) {
     if (err){
       console.log(err);
@@ -314,12 +333,27 @@ ActiveRecord.prototype.fetch = function() {
     //console.log(input);
     client.query(input, function(error, results) {
       if (error) {
-        console.log("error in active record " + table, error);
+        console.log("error in " + prevFunc + ' ' + table, error);
       } else {
-        console.log("results in active record " + table, results.rows);
+        console.log("results in " + prevFunc + ' ' + table, results.rows);
       }
       done();
     });
+  });
+};
+
+ActiveRecord.prototype.save = function(cb) {
+  var input = this.inputString.length > 0 ? this.inputString : this.updateString + this.joinString + this.whereString + ';';
+  var prevFunc = this.prevFunc;
+  var table = this.table;
+  pg.connect(conString, function(err, client, done) {
+    if (err) {
+      console.log(err, "in " + prevFunc + ' ' + table);
+    }
+    client.query(input, function(error, results) {
+      cb(error, results);
+    });
+    done();
   });
 };
 /*
@@ -336,92 +370,10 @@ Postgres.createRelationship = function(table1, table2) {
     table2 + '_id int not null references ' + table2 + '(id) on delete cascade,' + ');';
   // send request to postgresql database
 
-};
-
-Postgres.addColumn = function(table, tableObj, cb) {
-  var inputString = 'ALTER TABLE ' + table + ' ADD COLUMN ';
-  // iterate through array arguments to populate input string parts
-
-  for (var key in tableObj) {
-    inputString += key + ' ';
-    inputString += this._DataTypes[tableObj[key][0]] + ' ';
-    for (var i = 1, count = tableObj[key].length - 1; i < count; i++) {
-      inputString += tableObj[key][i] + ' ';
-    }
-  }
-  inputString += ';';
-
-};
-
-Postgres.dropColumn = function(table, column, cb) {
-  var inputString = 'ALTER TABLE ' + table + ' DROP COLUMN ' + column;
-  inputString += ';';
-};
-
-Postgres.dropTable = function(table, cb) {
-  var inputString = 'DROP FUNCTION IF EXISTS notify_trigger() CASCADE; DROP TABLE IF EXISTS ' + table + ' CASCADE;';
-  // send request to postgresql database
-};
 
 
-/**
- * TODO: foreign key associations
- * @param {string} table
- * @param {object} insertObj
- * @param {string} insertObj key (field name)
- * @param {string} insertObj value (value)
-
-Postgres.insert = function(table, insertObj) {
-  // SQL: 'INSERT INTO table (insertFields) VALUES (insertValues);'
-  // initialize input string parts
-  var inputString = 'INSERT INTO ' + table + ' (';
-  var valueString = ') VALUES (';
-  var keys = Object.keys(insertObj);
-  var insertArray = [];
-  // iterate through array arguments to populate input string parts
-  for (var i = 0, count = keys.length - 1; i < count;) {
-    inputString += keys[i] + ', ';
-    insertArray.push(insertObj[keys[i]]);
-    valueString += '$' + (++i) + ', ';
-  }
-  // combine parts and close input string
-  inputString += keys[keys.length - 1] + valueString + '$' + keys.length + ');';
-  insertArray.push(insertObj[keys[keys.length - 1]]);
-  // send request to postgresql database
-  //console.log(insertArray);
-};
 
 
-/**
- *
- * @param {string} table
- * @param {object} updateObj: key, value = fieldToUpdate, valueToUpdate
- * @param {object} selectObj: key, value = fieldToSelect, comparisonObject -> use QueryOperators for key
-
-//Postgres.update('students',{'class': 'senior', age: 30},{age: {$gt: 18}});
-//UPDATE students SET (class, age) = ('senior', 30) WHERE age > 18
-Postgres.update = function(table, updateObj, selectObj) {
-  // SQL: 'UPDATE table SET fields VALUE values WHERE fields operator comparator;'
-
-  var updateString = ''; // fields VALUE values {'class': 'senior'}
-  if (updateObj && !_emptyObject(updateObj)) {
-    var updateField = '(', updateValue = '(', keys = Object.keys(updateObj);
-    if (keys.length > 1) {
-      for (var i = 0, count = keys.length - 1; i < count; i++) {
-        updateField += keys[i] + ', ';
-        updateValue += "'" + updateObj[keys[i]] + "', ";
-      }
-      updateField += keys[keys.length - 1];
-      updateValue += "'" + updateObj[keys[keys.length - 1]] + "'";
-    } else {
-      updateField += keys[0];
-      updateValue += "'" + updateObj[keys[0]] + "'";
-    }
-    updateString += updateField + ') = ' + updateValue + ')';
-  }
-
-  var inputString = 'UPDATE ' + table + ' SET ' + updateString + _where(selectObj) + ';';
-};
 
 */
 
