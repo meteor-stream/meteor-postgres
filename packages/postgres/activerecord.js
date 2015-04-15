@@ -345,6 +345,7 @@ ActiveRecord.prototype.fetch = function () {
 
 ActiveRecord.prototype.save = function () {
   var input = this.inputString.length > 0 ? this.inputString : this.updateString + this.joinString + this.whereString + ';';
+  var insertArray = this.insertArray;
   var prevFunc = this.prevFunc;
   var table = this.table;
   var callback = function (err, results) {
@@ -355,7 +356,7 @@ ActiveRecord.prototype.save = function () {
     if (err) {
       console.log(err, "in " + prevFunc + ' ' + table);
     }
-    client.query(input, this.insertArray, function (error, results) {
+    client.query(input, insertArray, function (error, results) {
       callback(error, results);
     });
     done();
