@@ -343,6 +343,8 @@ ActiveRecord.prototype.fetch = function () {
     });
   });
 };
+/*
+Postgres = {};
 
 ActiveRecord.prototype.save = function () {
   var input = this.inputString.length > 0 ? this.inputString : this.updateString + this.joinString + this.whereString + ';';
@@ -363,18 +365,20 @@ ActiveRecord.prototype.save = function () {
   });
 };
 
-//ActiveRecord.prototype.createRelationship = function (relTable, relationship) {
-//  if (relationship === "$onetomany") {
-//    this.inputString += "ALTER TABLE " + this.table + " ADD " + relTable +
-//    "_id INTEGER references " + relTable + "(_id);";
-//  }
-//  else {
-//    this.inputString += "CREATE TABLE " + this.table + relTable + " ( _id serial primary key, " +
-//    this.table + "_id integer references " + this.table + "(_id)" +
-//    relTable + "_id integer references " + relTable + "(_id);";
-//  }
-//  return this;
-//};
+ActiveRecord.prototype.createRelationship = function(relTable, relationship){
+  if (relationship === "onetomany"){
+    this.inputString += "ALTER TABLE " +  this.table + " ADD " + relTable +
+    "_id INTEGER references " + relTable + "(_id);";
+  }
+  else {
+    this.inputString += "CREATE TABLE " + this.table + relTable + " ( _id serial primary key, " +
+    this.table + "_id integer references " + this.table + "(_id)" +
+    relTable + "_id integer references " + relTable + "(_id);";
+  }
+  this.inputString += "CREATE TRIGGER " + this.table+relTable  + " AFTER INSERT OR OR UPDATE ON " + table + " | " + relTable +
+  " FOR EACH ROW EXECUTE PROCEDURE update" + this.table+relTable + "();";
+  return this;
+};
 /*
 
  Postgres.createRelationship = function(table1, table2) {
