@@ -20,12 +20,13 @@ Package.onUse(function(api) {
   api.use('tracker');
   api.use('ddp');
   api.versionsFrom('1.1');
-  api.addFiles('collection.js');
-  api.export('SQL');
+  api.addFiles('collection.js', ['client', 'server']);
+  api.export('SQL', ['client', 'server']);
 });
 
-
 Package.onTest(function (api) {
+  api.versionsFrom('1.1');
+  api.use(['spacebars', 'tinytest', 'test-helpers', 'underscore', 'tracker', 'ddp']);
   api.addFiles('collection.js', ['server', 'client']);
   api.export('SQL', ['server', 'client']);
   api.addFiles('collection_tests.js', ['server', 'client']);

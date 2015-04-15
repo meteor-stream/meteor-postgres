@@ -30,3 +30,12 @@ Package.onUse(function(api) {
   api.addFiles('activerecord.js', 'server');
   api.export('ActiveRecord', 'server');
 });
+
+Package.onTest(function (api) {
+  api.versionsFrom('1.1');
+  api.use(['spacebars', 'tinytest', 'test-helpers', 'underscore', 'tracker', 'ddp']);
+  api.addFiles('postgres.js', 'server');
+  api.export('Postgres', 'server');
+  api.addFiles('postgres_tests.js', 'server');
+});
+
