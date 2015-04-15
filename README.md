@@ -60,5 +60,5 @@ Removing
 
     tasks.remove(this._id);
 
-# LICENSE
+# License
 Released under the MIT license. See the LICENSE file for more info.
