@@ -5,7 +5,6 @@
  */
 SQL = {};
 
-
 var buffer = [];
 SQL.Collection = function(connection, name) {
   var self = this;
@@ -17,6 +16,11 @@ SQL.Collection = function(connection, name) {
   // TODO: REFACTOR unvalidated TO OBJ
   var unvalidated = "";
   self._events = [];
+
+  if (this.tableName !== null && typeof this.tableName !== "string") {
+    throw new Error(
+      'First argument to new SQLCollection must be a string or null');
+  }
 
   // Defining the methods that application can interact with.
   this.createTable = function(tableDefinition) {
@@ -53,11 +57,6 @@ SQL.Collection = function(connection, name) {
     reactiveData.changed();
     Meteor.call('remove', this.tableName, dataObj);
   };
-
-  if (this.tableName !== null && typeof this.tableName !== "string") {
-    throw new Error(
-      'First argument to new SQLCollection must be a string or null');
-  }
 
   var selfConnection;
   var subscribeArgs;
