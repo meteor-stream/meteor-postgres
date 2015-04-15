@@ -59,25 +59,17 @@ ActiveRecord.prototype.joins = function() {
   return this;
 };
 
-// TODO: IN PROGRESS
-// Parameters: string only, array (where first element is a string), unlimited with first argument as string
+// TODO: PARTIALLY COMPLETE -> need to add IN statement if value is an array
+// Parameters: 1) string only (not safe), 2) array (where first element is a string), 3) unlimited with first argument as string
 // SQL: WHERE field operator comparator, WHERE field1 operator1 comparator1 AND/OR field2 operator2 comparator2
 // Special:
-// Conditions can be strings, arrays, or hashes
-// RAW is a string, arrays and hashes are safe
-// If an array is passed, the first argument is a string with ? that need to be replaced with the following elements
-// Or you can pass the first element as a string with hash keys instead of ? and pass a hash as second element
-// Alternatively, if the items are passed as separate arguments they will be treated as if in an array
-// Can also be passed an object where fields are keys and values are values
-// If value is array, it is an IN statement
-// TODO: THESE WORK
+// For example:
 // db.select('students').where('age = ? and class = ? or name = ?','18','senior','kate').fetch();
 // db.select('students').where(['age = ? and class = ? or name = ?','18','senior','kate']).fetch();
 // db.select('students').where('age = 18 and class = senior or name = kate').fetch();
-// TODO: Supports ranges
 ActiveRecord.prototype.where = function(/*Arguments*/) {
   this.whereString += ' WHERE ';
-  var where = '', redux, substring1, substring2, thisKey;
+  var where = '', redux, substring1, substring2;
   if (arguments.length === 1 && typeof arguments[0] === 'string') {
     // 1 arg, string -> raw
     this.whereString += arguments[0];
@@ -92,18 +84,6 @@ ActiveRecord.prototype.where = function(/*Arguments*/) {
       where = substring1 + arguments[0][i] + substring2;
     }
     this.whereString += where;
-  } else if (arguments.length === 2 && typeof arguments[1] === 'object') {
-    //// 2 args, string, hash -> string with keys, replacements
-    //where += arguments[0];
-    //// replace keys with key, values from hash
-    //for (var key in arguments[1]) {
-    //  redux = where.indexOf(key);
-    //  thisKey = key+'';
-    //  substring1 = where.substring(0,redux);
-    //  substring2 = where.substring(redux+1+thisKey.length,where.length);
-    //  where = substring1 + arguments[i] + substring2;
-    //}
-    //this.whereString += where;
   } else {
     // more than 2 -> treated like an array
     where += arguments[0];
@@ -119,11 +99,6 @@ ActiveRecord.prototype.where = function(/*Arguments*/) {
 
   return this;
 };
-
-// TODO: Under consideration
-ActiveRecord.prototype.where.not = function() {};
-ActiveRecord.prototype.where.and = function() {};
-ActiveRecord.prototype.where.or = function() {};
 
 // TODO: INCOMPLETE
 // Parameters: table (req)
