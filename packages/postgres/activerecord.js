@@ -375,19 +375,19 @@ ActiveRecord.prototype.createRelationship = function(relTable, relationship, col
     relTable + "_id integer references " + relTable + "(_id)," +
     this.table + relTable + " PRIMARY KEY(" + this.table + "_id, " + relTable + "_id)";
     this.inputString +=  "CREATE OR REPLACE FUNCTION " + this.table + relTable + "(" + columnNames[0][0] + " " +
-    columnNames[0][1] + ", " + columnNames[1][0] + " " + columnNames[1][1] + ") RETURNS trigger AS $$" +
-    " IF (TG_OP = 'DELETE') THEN " +
-    "DELETE FROM " + this.table + relTable + " WHERE " + this.table + relTable + "_id = OLD._id" +
-    "RETURN old;" +
+    columnNames[0][1] + ", " + columnNames[1][0] + " " + columnNames[1][1] + ") RETURNS trigger AS $$ " +
+    "IF (TG_OP = 'DELETE') THEN " +
+    "DELETE FROM " + this.table + relTable + " WHERE " + this.table + relTable + "_id = OLD._id " +
+    "RETURN old; " +
     "ELSIF (TG_OP = 'INSERT') THEN " +
     "INSERT INTO " + this.table + relTable + " ( " + this.table + "_id, " + relTable + "_id, VALUES " +
-    "(NEW._id, (SELECT _id from " + relTable + "WHERE " + relTable  + "_id = value;)" +
-    " RETURN new " +
+    "(NEW._id, (SELECT _id from " + relTable + "WHERE " + relTable  + "_id = value;) " +
+    "RETURN new " +
     "END IF; " +
     "END; " +
     "$$ LANGUAGE plpgsql; ";
-    this.inputString += "CREATE TRIGGER " + this.table+relTable  + " AFTER INSERT OR DELETE ON " + this.table + " | " + relTable +
-    " FOR EACH ROW EXECUTE PROCEDURE update" + this.table+relTable + "();";
+    this.inputString += "CREATE TRIGGER " + this.table+relTable  + " AFTER INSERT OR DELETE ON " + this.table + " | " +
+    relTable + " FOR EACH ROW EXECUTE PROCEDURE update" + this.table+relTable + "();";
   }
 
   return this;
@@ -399,7 +399,7 @@ Postgres.dropColumn = function(table, column, cb) {
 };
 
 Postgres.dropTable = function(table, cb) {
-  var inputString = 'DROP FUNCTION IF EXISTS notify_trigger() CASCADE; DROP TABLE IF EXISTS ' + table + ' CASCADE;';
+  var inputString = 'DROP TABLE IF EXISTS ' + this.table + ' CASCADE; DROP FUNCTION IF EXISTS notify_trigger_' + this.table + '() CASCADE;';
   // send request to postgresql database
 };
 
