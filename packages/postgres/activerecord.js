@@ -4,7 +4,7 @@ var conString = 'postgres://postgres:1234@localhost/postgres';
 
 ActiveRecord = function() {
   this.conString = conString;
-  this.inpustString = '';
+  this.inputString = '';
   this.table = '';
   this.selectString = '';
   this.joinString = '';
@@ -46,6 +46,7 @@ ActiveRecord.prototype.findOne = function (table /*arguments*/) {
     this.selectString = 'SELECT * FROM ' + table;
     this.caboose = ' LIMIT 1';
   }
+  return this;
 };
 
 // TODO: INCOMPLETE
@@ -59,31 +60,70 @@ ActiveRecord.prototype.joins = function() {
 };
 
 // TODO: IN PROGRESS
-// Parameters:
+// Parameters: string only, array (where first element is a string), unlimited with first argument as string
 // SQL: WHERE field operator comparator, WHERE field1 operator1 comparator1 AND/OR field2 operator2 comparator2
 // Special:
 // Conditions can be strings, arrays, or hashes
 // RAW is a string, arrays and hashes are safe
-// WHERE field operator condition
 // If an array is passed, the first argument is a string with ? that need to be replaced with the following elements
 // Or you can pass the first element as a string with hash keys instead of ? and pass a hash as second element
 // Alternatively, if the items are passed as separate arguments they will be treated as if in an array
 // Can also be passed an object where fields are keys and values are values
 // If value is array, it is an IN statement
+// TODO: THESE WORK
+// db.select('students').where('age = ? and class = ? or name = ?','18','senior','kate').fetch();
+// db.select('students').where(['age = ? and class = ? or name = ?','18','senior','kate']).fetch();
+// db.select('students').where('age = 18 and class = senior or name = kate').fetch();
 // TODO: Supports ranges
 ActiveRecord.prototype.where = function(/*Arguments*/) {
   this.whereString += ' WHERE ';
+  var where = '', redux, substring1, substring2, thisKey;
   if (arguments.length === 1 && typeof arguments[0] === 'string') {
-    // raw
+    // 1 arg, string -> raw
     this.whereString += arguments[0];
-  } else if (arguments.length === 2 && Array.isArray(arguments[1])) {
-    // Arg[0] is string with ? and Arg[1] is array of items to replace the ?
-    var redux = arguments[0].replace('?', arguments[1]);
-    //this.inputString
+  } else if (arguments.length === 1 && Array.isArray(arguments[0])) {
+    // 1 arg, array -> first is string, then replacements
+    where += arguments[0][0];
+    // replace ? with rest of array
+    for (var i = 1, count = arguments[0].length; i < count; i++) {
+      redux = where.indexOf('?');
+      substring1 = where.substring(0,redux);
+      substring2 = where.substring(redux+1,where.length);
+      where = substring1 + arguments[0][i] + substring2;
+    }
+    this.whereString += where;
+  } else if (arguments.length === 2 && typeof arguments[1] === 'object') {
+    //// 2 args, string, hash -> string with keys, replacements
+    //where += arguments[0];
+    //// replace keys with key, values from hash
+    //for (var key in arguments[1]) {
+    //  redux = where.indexOf(key);
+    //  thisKey = key+'';
+    //  substring1 = where.substring(0,redux);
+    //  substring2 = where.substring(redux+1+thisKey.length,where.length);
+    //  where = substring1 + arguments[i] + substring2;
+    //}
+    //this.whereString += where;
+  } else {
+    // more than 2 -> treated like an array
+    where += arguments[0];
+    // replace ? with rest of array
+    for (var i = 1, count = arguments.length; i < count; i++) {
+      redux = where.indexOf('?');
+      substring1 = where.substring(0,redux);
+      substring2 = where.substring(redux+1,where.length);
+      where = substring1 + arguments[i] + substring2;
+    }
+    this.whereString += where;
   }
-  this.whereString += ' ';
+
   return this;
 };
+
+// TODO: Under consideration
+ActiveRecord.prototype.where.not = function() {};
+ActiveRecord.prototype.where.and = function() {};
+ActiveRecord.prototype.where.or = function() {};
 
 // TODO: INCOMPLETE
 // Parameters: table (req)
@@ -179,20 +219,21 @@ ActiveRecord.prototype.having = function() {
 // Special: Functions with an inputString override other chainable functions because they are complete
 ActiveRecord.prototype.fetch = function() {
   var table = this.table;
+  console.log(this.inputString, 123423948098239488888888888888888888888888888888);
   var input = this.inputString.length > 0 ? this.inputString : this.selectString + this.joinString + this.whereString + this.caboose + ';';
   console.log('Fetch input:', input);
-  pg.connect(this.conString, function(err, client, done) {
-    if (err){
-      console.log(err);
-    }
-    //console.log(input);
-    client.query(input, function(error, results) {
-      if (error) {
-        console.log("error in active record " + table, error);
-      } else {
-        console.log("results in active record " + table, results.rows);
-      }
-      done();
-    });
-  });
+  //pg.connect(this.conString, function(err, client, done) {
+  //  if (err){
+  //    console.log(err);
+  //  }
+  //  //console.log(input);
+  //  client.query(input, function(error, results) {
+  //    if (error) {
+  //      console.log("error in active record " + table, error);
+  //    } else {
+  //      console.log("results in active record " + table, results.rows);
+  //    }
+  //    done();
+  //  });
+  //});
 };
