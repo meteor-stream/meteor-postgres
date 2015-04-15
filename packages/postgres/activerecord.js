@@ -344,6 +344,7 @@ ActiveRecord.prototype.fetch = function () {
   });
 };
 
+
 ActiveRecord.prototype.save = function () {
   var input = this.inputString.length > 0 ? this.inputString : this.updateString + this.joinString + this.whereString + ';';
   var prevFunc = this.prevFunc;
@@ -363,32 +364,106 @@ ActiveRecord.prototype.save = function () {
   });
 };
 
-//ActiveRecord.prototype.createRelationship = function (relTable, relationship) {
-//  if (relationship === "$onetomany") {
-//    this.inputString += "ALTER TABLE " + this.table + " ADD " + relTable +
-//    "_id INTEGER references " + relTable + "(_id);";
-//  }
-//  else {
-//    this.inputString += "CREATE TABLE " + this.table + relTable + " ( _id serial primary key, " +
-//    this.table + "_id integer references " + this.table + "(_id)" +
-//    relTable + "_id integer references " + relTable + "(_id);";
-//  }
-//  return this;
-//};
-/*
+ActiveRecord.prototype.createRelationship = function(relTable, relationship, columnNames){
+  if (relationship === "onetomany"){
+    this.inputString += "ALTER TABLE " +  this.table + " ADD " + relTable +
+    "_id INTEGER references " + relTable + "(_id);";
+  }
+  else {
+    this.inputString += "CREATE TABLE " +
+    this.table + "_id integer references " + this.table + "(_id)" +
+    relTable + "_id integer references " + relTable + "(_id)," +
+    this.table + relTable + " PRIMARY KEY(" + this.table + "_id, " + relTable + "_id)";
+    this.inputString +=  "CREATE OR REPLACE FUNCTION " + this.table + relTable + "(" + columnNames[0][0] + " " +
+    columnNames[0][1] + ", " + columnNames[1][0] + " " + columnNames[1][1] + ") RETURNS trigger AS $$" +
+    " IF (TG_OP = 'DELETE') THEN " +
+    "DELETE FROM " + this.table + relTable + " WHERE " + this.table + relTable + "_id = OLD._id" +
+    "RETURN old;" +
+    "ELSIF (TG_OP = 'INSERT') THEN " +
+    "INSERT INTO " + this.table + relTable + " ( " + this.table + "_id, " + relTable + "_id, VALUES " +
+    "(NEW._id, (SELECT _id from " + relTable + "WHERE " + relTable  + "_id = value;)" +
+    " RETURN new " +
+    "END IF; " +
+    "END; " +
+    "$$ LANGUAGE plpgsql; ";
+    this.inputString += "CREATE TRIGGER " + this.table+relTable  + " AFTER INSERT OR DELETE ON " + this.table + " | " + relTable +
+    " FOR EACH ROW EXECUTE PROCEDURE update" + this.table+relTable + "();";
+  }
 
- Postgres.createRelationship = function(table1, table2) {
- // SQL: 'CREATE TABLE table1_table2(
- //    table1_id INT NOT NULL REFERENCES table1(id) on delete cascade,
- //    table2_id INT NOT NULL REFERENCES table2(id) on delete cascade,
- //    primary key(table1_id, table2_id) );'
- var table = table1 + '_' + table2;
- var inputString = 'CREATE TABLE ' + table + '(' +
- table1 + '_id int not null references ' + table1 + '(id) on delete cascade,' +
- table2 + '_id int not null references ' + table2 + '(id) on delete cascade,' + ');';
- // send request to postgresql database
+  return this;
+};
 
- */
+Postgres.dropColumn = function(table, column, cb) {
+  var inputString = 'ALTER TABLE ' + table + ' DROP COLUMN ' + column;
+  inputString += ';';
+};
+
+Postgres.dropTable = function(table, cb) {
+  var inputString = 'DROP FUNCTION IF EXISTS notify_trigger() CASCADE; DROP TABLE IF EXISTS ' + table + ' CASCADE;';
+  // send request to postgresql database
+};
+
+
+/**
+ * TODO: foreign key associations
+ * @param {string} table
+ * @param {object} insertObj
+ * @param {string} insertObj key (field name)
+ * @param {string} insertObj value (value)
+
+Postgres.insert = function(table, insertObj) {
+  // SQL: 'INSERT INTO table (insertFields) VALUES (insertValues);'
+  // initialize input string parts
+  var inputString = 'INSERT INTO ' + table + ' (';
+  var valueString = ') VALUES (';
+  var keys = Object.keys(insertObj);
+  var insertArray = [];
+  // iterate through array arguments to populate input string parts
+  for (var i = 0, count = keys.length - 1; i < count;) {
+    inputString += keys[i] + ', ';
+    insertArray.push(insertObj[keys[i]]);
+    valueString += '$' + (++i) + ', ';
+  }
+  // combine parts and close input string
+  inputString += keys[keys.length - 1] + valueString + '$' + keys.length + ');';
+  insertArray.push(insertObj[keys[keys.length - 1]]);
+  // send request to postgresql database
+  //console.log(insertArray);
+};
+
+
+/**
+ *
+ * @param {string} table
+ * @param {object} updateObj: key, value = fieldToUpdate, valueToUpdate
+ * @param {object} selectObj: key, value = fieldToSelect, comparisonObject -> use QueryOperators for key
+
+//Postgres.update('students',{'class': 'senior', age: 30},{age: {$gt: 18}});
+//UPDATE students SET (class, age) = ('senior', 30) WHERE age > 18
+Postgres.update = function(table, updateObj, selectObj) {
+  // SQL: 'UPDATE table SET fields VALUE values WHERE fields operator comparator;'
+
+  var updateString = ''; // fields VALUE values {'class': 'senior'}
+  if (updateObj && !_emptyObject(updateObj)) {
+    var updateField = '(', updateValue = '(', keys = Object.keys(updateObj);
+    if (keys.length > 1) {
+      for (var i = 0, count = keys.length - 1; i < count; i++) {
+        updateField += keys[i] + ', ';
+        updateValue += "'" + updateObj[keys[i]] + "', ";
+      }
+      updateField += keys[keys.length - 1];
+      updateValue += "'" + updateObj[keys[keys.length - 1]] + "'";
+    } else {
+      updateField += keys[0];
+      updateValue += "'" + updateObj[keys[0]] + "'";
+    }
+    updateString += updateField + ') = ' + updateValue + ')';
+  }
+
+  var inputString = 'UPDATE ' + table + ' SET ' + updateString + _where(selectObj) + ';';
+};
+
+*/
 
 /* HELPER FUNCTIONS */
 
