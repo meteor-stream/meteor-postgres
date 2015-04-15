@@ -1,7 +1,7 @@
 // PostgreSQL connection
 pg = Npm.require('pg');
 var conString = 'postgres://postgres:1234@localhost/postgres';
-var table = 'tasks';
+//var table = 'tasks';
 
 ActiveRecord = function (table, conString) {
   this.conString = conString || 'postgres://postgres:1234@localhost/postgres';
@@ -38,11 +38,11 @@ ActiveRecord.prototype._TableConstraints = {
   $primary: 'primary key'
 };
 
-// TODO: PARTIALLY COMPLETE, NEEDS TESTING
+// TODO: COMPLETE
 // Parameters: table (req), tableObj (req), relTable (optional)
 // SQL: CREATE TABLE
 // Special:
-ActiveRecord.prototype.createTable = function (tableObj, relTable) {
+ActiveRecord.prototype.createTable = function (tableObj) {
   console.log("in posgres create table");
   // SQL: 'CREATE TABLE table (fieldName constraint);'
   // initialize input string parts
@@ -73,10 +73,6 @@ ActiveRecord.prototype.createTable = function (tableObj, relTable) {
     inputString += '_id serial primary key,';
   }
 
-  // add foreign key
-  if (relTable) {
-    inputString += ' ' + relTable + '_id' + ' integer references ' + relTable + ' (_id)';
-  }
   //inputString += ');';
   // add notify functionality and close input string
   inputString = startString + inputString;
@@ -106,18 +102,18 @@ ActiveRecord.prototype.createTable = function (tableObj, relTable) {
   return this;
 };
 
-// TODO: PARTIALLY COMPLETE, NEEDS TESTING
-// Parameters: table (req)
+// TODO: COMPLETE
+// Parameters: none
 // SQL: DROP TABLE table
 // Special: Deletes cascade
-ActiveRecord.prototype.dropTable = function (table) {
-  this.inputString = 'DROP FUNCTION IF EXISTS notify_trigger() CASCADE; DROP TABLE IF EXISTS ' + table + ' CASCADE;';
+ActiveRecord.prototype.dropTable = function () {
+  this.inputString = 'DROP TABLE IF EXISTS ' + this.table + ' CASCADE; DROP FUNCTION IF EXISTS notify_trigger_' + this.table + '() CASCADE;';
   this.prevFunc = 'DROP TABLE';
   return this;
 };
 
 // TODO: COMPLETE
-// Parameters: table (req), fields (arguments, optional)
+// Parameters: fields (arguments, optional)
 // SQL: SELECT fields FROM table, SELECT * FROM table
 // Special: May pass table, distinct, field to obtain a single record per unique value
 ActiveRecord.prototype.select = function (/*arguments*/) {
@@ -140,16 +136,17 @@ ActiveRecord.prototype.select = function (/*arguments*/) {
 };
 
 // TODO: COMPLETE
-// Parameters: table (req), id (optional)
+// Parameters: id (optional)
 // SQL: SELECT fields FROM table, SELECT * FROM table
 // Special: If no idea is passed, may be chained with a where function
-ActiveRecord.prototype.findOne = function (table /*arguments*/) {
+ActiveRecord.prototype.findOne = function (/*arguments*/) {
   if (arguments.length === 2) {
-    this.inputString = 'SELECT * FROM ' + table + ' WHERE ' + table + '._id = ' + args + ' LIMIT 1;';
+    this.inputString = 'SELECT * FROM ' + this.table + ' WHERE ' + this.table + '._id = ' + args + ' LIMIT 1;';
   } else {
-    this.selectString = 'SELECT * FROM ' + table;
+    this.selectString = 'SELECT * FROM ' + this.table;
     this.caboose = ' LIMIT 1';
   }
+  this.prevFunc = 'FINE ONE';
   return this;
 };
 
@@ -163,7 +160,7 @@ ActiveRecord.prototype.joins = function () {
   return this;
 };
 
-// TODO: PARTIALLY COMPLETE -> need to add IN statement if value is an array
+// TODO: PARTIALLY COMPLETE -> need to add IN statement if value is an array & additional selects
 // Parameters: 1) string only (not safe), 2) array (where first element is a string), 3) unlimited with first argument as string
 // SQL: WHERE field operator comparator, WHERE field1 operator1 comparator1 AND/OR field2 operator2 comparator2
 // Special:
@@ -204,13 +201,14 @@ ActiveRecord.prototype.where = function (/*Arguments*/) {
   return this;
 };
 
-// TODO: PARTIALLY COMPLETE, NEEDS TESTING
-// Parameters: table (req), inserts object (req)
+// TODO: COMPLETE
+// Parameters: inserts object (req)
 // SQL: INSERT INTO table (fields) VALUES (values)
 // Special:
 ActiveRecord.prototype.insert = function (inserts) {
   var valueString = ') VALUES (', keys = Object.keys(inserts);
   var insertString = 'INSERT INTO ' + this.table + ' (';
+  this.insertArray = [];
   // iterate through array arguments to populate input string parts
   for (var i = 0, count = keys.length; i < count;) {
     insertString += keys[i] + ', ';
@@ -223,10 +221,10 @@ ActiveRecord.prototype.insert = function (inserts) {
 };
 
 // TODO: PARTIALLY COMPLETE, NEEDS TESTING
-// Parameters: table (req), updates object (req)
+// Parameters: updates object (req)
 // SQL: UPDATE table SET (fields) = (values)
 // Special:
-ActiveRecord.prototype.update = function (table, updates) {
+ActiveRecord.prototype.update = function (updates) {
   var updateField = '(', updateValue = '(', keys = Object.keys(updates);
   if (keys.length > 1) {
     for (var i = 0, count = keys.length - 1; i < count; i++) {
@@ -239,7 +237,7 @@ ActiveRecord.prototype.update = function (table, updates) {
     updateField += keys[0];
     updateValue += "'" + updates[keys[0]] + "'";
   }
-  this.updateString = 'UPDATE ' + table + ' SET ' + updateField + ') = ' + updateValue + ')';
+  this.updateString = 'UPDATE ' + this.table + ' SET ' + updateField + ') = ' + updateValue + ')';
   this.prevFunc = 'UPDATE';
   return this;
 };
@@ -248,8 +246,9 @@ ActiveRecord.prototype.update = function (table, updates) {
 // Parameters: table (req)
 // SQL: DELETE FROM table
 // Special: May be chained with where, otherwise will remove all rows from table
-ActiveRecord.prototype.remove = function (table) {
-  this.selectString = 'DELETE FROM ' + table;
+ActiveRecord.prototype.remove = function () {
+  this.selectString = 'DELETE FROM ' + this.table;
+  this.prevFunc = 'DELETE';
   return this;
 };
 
@@ -270,35 +269,35 @@ ActiveRecord.prototype.offset = function (offset) {
 };
 
 // TODO: COMPLETE
-// Parameters: table (req), limit (optional, defaults to 1)
+// Parameters: limit (optional, defaults to 1)
 // SQL: SELECT * FROM table ORDER BY table._id ASC LIMIT 1, SELECT * FROM table ORDER BY table._id ASC LIMIT limit
 // Special: Retrieves first item, overrides all other chainable functions
-ActiveRecord.prototype.first = function (table, limit) {
-  this.table = table;
+ActiveRecord.prototype.first = function (limit) {
   limit = limit || 1;
-  this.inputString += 'SELECT * FROM ' + table + ' ORDER BY ' + table + '._id ASC LIMIT ' + limit + ';';
+  this.inputString += 'SELECT * FROM ' + this.table + ' ORDER BY ' + this.table + '._id ASC LIMIT ' + limit + ';';
+  this.prevFunc = 'FIRST';
   return this;
 };
 
 // TODO: COMPLETE
-// Parameters: table (req), limit (optional, defaults to 1)
+// Parameters: limit (optional, defaults to 1)
 // SQL: SELECT * FROM table ORDER BY table._id DESC LIMIT 1, SELECT * FROM table ORDER BY table._id DESC LIMIT limit
 // Special: Retrieves first item, overrides all other chainable functions
-ActiveRecord.prototype.last = function (table, limit) {
-  this.table = table;
+ActiveRecord.prototype.last = function (limit) {
   limit = limit || 1;
-  this.inputString += 'SELECT * FROM ' + table + ' ORDER BY ' + table + '._id DESC LIMIT ' + limit + ';';
+  this.inputString += 'SELECT * FROM ' + this.table + ' ORDER BY ' + this.table + '._id DESC LIMIT ' + limit + ';';
+  this.prevFunc = 'LAST';
   return this;
 };
 
 // TODO: COMPLETE
-// Parameters: table (req), limit (optional, defaults to 1)
+// Parameters: limit (optional, defaults to 1)
 // SQL: SELECT * FROM table LIMIT 1, SELECT * FROM table LIMIT limit
 // Special: Retrieves a record without ordering, overrides all other chainable functions
-ActiveRecord.prototype.take = function (table, limit) {
-  this.table = table;
+ActiveRecord.prototype.take = function (limit) {
   limit = limit || 1;
-  this.inputString += 'SELECT * FROM ' + table + ' LIMIT ' + limit + ';';
+  this.inputString += 'SELECT * FROM ' + this.table + ' LIMIT ' + limit + ';';
+  this.prevFunc = 'TAKE';
   return this;
 };
 
@@ -343,7 +342,6 @@ ActiveRecord.prototype.fetch = function () {
     });
   });
 };
-
 
 ActiveRecord.prototype.save = function () {
   var input = this.inputString.length > 0 ? this.inputString : this.updateString + this.joinString + this.whereString + ';';
@@ -392,86 +390,3 @@ ActiveRecord.prototype.createRelationship = function(relTable, relationship, col
 
   return this;
 };
-
-Postgres.dropColumn = function(table, column, cb) {
-  var inputString = 'ALTER TABLE ' + table + ' DROP COLUMN ' + column;
-  inputString += ';';
-};
-
-Postgres.dropTable = function(table, cb) {
-  var inputString = 'DROP TABLE IF EXISTS ' + this.table + ' CASCADE; DROP FUNCTION IF EXISTS notify_trigger_' + this.table + '() CASCADE;';
-  // send request to postgresql database
-};
-
-
-/**
- * TODO: foreign key associations
- * @param {string} table
- * @param {object} insertObj
- * @param {string} insertObj key (field name)
- * @param {string} insertObj value (value)
-
-Postgres.insert = function(table, insertObj) {
-  // SQL: 'INSERT INTO table (insertFields) VALUES (insertValues);'
-  // initialize input string parts
-  var inputString = 'INSERT INTO ' + table + ' (';
-  var valueString = ') VALUES (';
-  var keys = Object.keys(insertObj);
-  var insertArray = [];
-  // iterate through array arguments to populate input string parts
-  for (var i = 0, count = keys.length - 1; i < count;) {
-    inputString += keys[i] + ', ';
-    insertArray.push(insertObj[keys[i]]);
-    valueString += '$' + (++i) + ', ';
-  }
-  // combine parts and close input string
-  inputString += keys[keys.length - 1] + valueString + '$' + keys.length + ');';
-  insertArray.push(insertObj[keys[keys.length - 1]]);
-  // send request to postgresql database
-  //console.log(insertArray);
-};
-
-
-/**
- *
- * @param {string} table
- * @param {object} updateObj: key, value = fieldToUpdate, valueToUpdate
- * @param {object} selectObj: key, value = fieldToSelect, comparisonObject -> use QueryOperators for key
-
-//Postgres.update('students',{'class': 'senior', age: 30},{age: {$gt: 18}});
-//UPDATE students SET (class, age) = ('senior', 30) WHERE age > 18
-Postgres.update = function(table, updateObj, selectObj) {
-  // SQL: 'UPDATE table SET fields VALUE values WHERE fields operator comparator;'
-
-  var updateString = ''; // fields VALUE values {'class': 'senior'}
-  if (updateObj && !_emptyObject(updateObj)) {
-    var updateField = '(', updateValue = '(', keys = Object.keys(updateObj);
-    if (keys.length > 1) {
-      for (var i = 0, count = keys.length - 1; i < count; i++) {
-        updateField += keys[i] + ', ';
-        updateValue += "'" + updateObj[keys[i]] + "', ";
-      }
-      updateField += keys[keys.length - 1];
-      updateValue += "'" + updateObj[keys[keys.length - 1]] + "'";
-    } else {
-      updateField += keys[0];
-      updateValue += "'" + updateObj[keys[0]] + "'";
-    }
-    updateString += updateField + ') = ' + updateValue + ')';
-  }
-
-  var inputString = 'UPDATE ' + table + ' SET ' + updateString + _where(selectObj) + ';';
-};
-
-*/
-
-/* HELPER FUNCTIONS */
-
-function _emptyObject(obj) {
-  for (var prop in obj) {
-    if (Object.prototype.propertyIsEnumerable.call(obj, prop)) {
-      return false;
-    }
-  }
-  return true;
-}
