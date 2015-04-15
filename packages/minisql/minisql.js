@@ -56,7 +56,6 @@ var insertStatement = function(table, insertObj){
 };
 
 var createTableStatement = function(table, tableObj, relTable){
-  console.log(tableObj)
   alasql.fn.Date= Date;
   var _DataTypes = {
     $number: 'INT',
@@ -129,7 +128,6 @@ function _where(selectObj) {
   }
 }
 var updateStatement = function(table, updateObj, selectObj) {
-  console.log(updateObj);
   var updateString = ''; // fields VALUE values {'class': 'senior'}
   if (updateObj && !_emptyObject(updateObj)) {
     var keys = Object.keys(updateObj);
@@ -200,8 +198,6 @@ minisql.insert = function(name, params){
 };
 
 minisql.update = function(table, updateObj, selectObj){
-  console.log("minisql line 203 update obj: ", updateObj);
-  console.log("minisql line 204 select obj: ", selectObj);
   var updateString = ''; // fields VALUE values {'class': 'senior'}
   if (updateObj && !_emptyObject(updateObj)) {
     var keys = Object.keys(updateObj);
@@ -229,13 +225,10 @@ minisql.update = function(table, updateObj, selectObj){
     }
   }
   var inputString = 'UPDATE ' + table + ' SET ' + updateString + _where(selectObj) + ';';
-  console.log('minisql line 232 inputString:', inputString);
   alasql(inputString);
 };
 
 minisql.remove = function(table, selectObj){
   var inputString = 'DELETE FROM ' + table + _where(selectObj) + ';';
-  // DELETE FROM table;
-  console.log('minisql line 238 delete input string:', inputString);
   alasql(inputString);
 };

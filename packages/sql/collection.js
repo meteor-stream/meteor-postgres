@@ -13,8 +13,8 @@ SQL.Collection = function(connection, name) {
   }
   var reactiveData = new Tracker.Dependency;
   this.tableName = connection;
-  // TODO: REFACTOR unvalidated TO OBJ
-  var unvalidated = "";
+  // boolean to keep track of whether the local DB has an unvalidated entry
+  var unvalidated = false;
   self._events = [];
 
   if (this.tableName !== null && typeof this.tableName !== "string") {
@@ -40,7 +40,7 @@ SQL.Collection = function(connection, name) {
     dataObj['_id'] = -1;
     minisql.insert(this.tableName, dataObj);
     reactiveData.changed();
-    unvalidated = dataObj.text;
+    unvalidated = true;
     delete dataObj['_id'];
     // Removing ID so that server DB will automatically assign one
     Meteor.call('add', this.tableName, dataObj);
@@ -58,6 +58,53 @@ SQL.Collection = function(connection, name) {
     Meteor.call('remove', this.tableName, dataObj);
   };
 
+  // Adding listers to the client side to allow for full stack reactivity
+  if (Meteor.isClient) {
+    // Added will only be triggered on the initial population of the database client side.
+    // Data added to any chient while the page is already loaded will trigger a 'changed envent'
+    this.addEventListener('added', function(index, msg, name) {
+      for (var x = msg.results.length - 1; x >= 0; x--) {
+          minisql.insert(this.tableName, msg.results[x]);
+        }
+      // Triggering Meteor's reactive data to allow for full stack reactivity
+      reactiveData.changed();
+    });
+    // Changed will be triggered whenever the server database changed while the client has the page open.
+    // This could happen from an addition, an update, or a removal, from that specific client, or another client
+    this.addEventListener('changed', function(index, msg, name) {
+      // Checking to see if event is a removal from the DB
+      if (msg.removed) {
+        var tableId = msg.tableId;
+        // For the client that triggered the removal event, the data will have
+        // already been removed and this is redundant, but it would be inefficient to fix.
+        minisql.remove(name, {_id: {$eq: tableId}});
+      }
+      // Checking to see if event is a modification of the DB
+      else if (msg.modified) {
+        // For the client that triggered the removal event, the data will have
+        // already been removed and this is redundant.
+        minisql.update(this.tableName, msg.results, {"_id": {$eq: msg.results._id}});
+      }
+      else {
+        // The message is a new insertion of a message
+        // If the message was submitted by this client then the insert message triggered
+        // by the server should be an update rather than an insert
+        // We use the unvalidated boolean variabe to keep track of this
+        if (unvalidated) {
+          minisql.update(this.tableName, msg.results, {_id: {$eq: -1}});
+          reactiveData.changed();
+          unvalidated = false;
+        }
+        else {
+          // The data was added by another client so just a regular insert
+          minisql.insert(this.tableName, msg.results);
+        }
+      }
+      reactiveData.changed();
+    });
+  }
+
+  // setting up the connection between server and client
   var selfConnection;
   var subscribeArgs;
   if (typeof connection === 'string') {
@@ -77,8 +124,6 @@ SQL.Collection = function(connection, name) {
     subscribeArgs = Array.prototype.slice.call(arguments, 1);
   }
 
-
-  Tracker.Dependency.call(self);
   var subsBefore = _.keys(connection._subscriptions);
   _.extend(self, connection.subscribe.apply(connection, subscribeArgs));
   var subsNew = _.difference(_.keys(connection._subscriptions), subsBefore);
@@ -99,71 +144,6 @@ SQL.Collection = function(connection, name) {
     registerStore(connection, name);
   }
 
-  // Client side listeners for notifications from server
-  if (Meteor.isClient) {
-    // Added will only be triggered on the initial flow of data
-    // Adding an entry to minisql will trigger a server side insert, but this
-    // will not trigger an added event on any client
-    this.addEventListener('added', function(index, msg, name) {
-      unvalidated = "";
-      alasql("DELETE FROM " + this.tableName);
-      for (var x = msg.results.length - 1; x >= 0; x--) {
-          minisql.insert(this.tableName, msg.results[x]);
-        }
-      reactiveData.changed();
-    });
-    // Changed will be triggered whenever there is a deletion or update to Postgres
-    // It will also be triggered when there is a new entry while the client has the
-    // page loaded.
-    this.addEventListener('changed', function(index, msg, name) {
-      // Checking to see if event is a removal from the DB
-      if (msg.removed) {
-        var tableId = msg.tableId;
-        // For the client that triggered the removal event, the data will have
-        // already been removed and this is redundant.
-        minisql.remove(name, {_id: {$eq: tableId}});
-      }
-      // Checking to see if event is a modification of the DB
-      else if (msg.modified) {
-        // For the client that triggered the removal event, the data will have
-        // already been removed and this is redundant.
-        // TODO: Right now mini.sql.update is not dynamic enough to be used to update. This being
-        // worked on and evnentually the following line will replace the direct reference to
-        // alasql:
-        // minisql.update(this.tableName, msgParams) // So msgParams doesn't exist. We will have to do
-        // some logic here or in alasql.
-        minisql.update(this.tableName, msg.results, {"_id": {$eq: msg.results._id}});
-      }
-      else {
-        // The message is a new insertion of a message
-        // If the message was submitted by this client then the insert message triggered
-        // by the server should be an update rather than an insert as that entry already
-        // exists in minisql. To account for this we store that entry as 'unvalidated' variable
-        if (unvalidated !== "") {
-          // For the client that triggered the removal event, the data will have
-          // already been removed and this is redundant.
-          // TODO: Right now mini.sql.update is not dynamic enough to be used to update. This being
-          // worked on and evnentually the following line will replace the direct reference to
-          // alasql:
-          // minisql.update(this.tableName, msgParams) // So msgParams doesn't exist. We will have to do
-          // some logic here or in alasql.
-          minisql.update(this.tableName, msg.results, {_id: {$eq: -1}});
-          reactiveData.changed();
-          unvalidated = "";
-        }
-        else {
-          // TODO: Right now minisql.insert is not dynamic enough to be used to insert. This is
-          // being worked on and eventually the following line will replace the direct reference
-          // to alasql:
-          // minisql.insert(this.tableName, {id: -1, text:text, checked:checked, userID: userID});
-          // right now userID is not being passes in.
-          minisql.insert(this.tableName, msg.results);
-        }
-      }
-      reactiveData.changed();
-    });
-  }
-
 };
 
 if (Meteor.isServer) {
@@ -182,6 +162,16 @@ if (Meteor.isServer) {
       Postgres.createTable(table, paramObj);
     }
   });
+
+  SQL.Collection.getCursor = function(name, columns, selectObj, optionsObj, joinObj) {
+    var cursor = {};
+    //Creating publish
+    cursor._publishCursor = function(sub) {
+      Postgres.autoSelect(sub, name, columns, selectObj, optionsObj, joinObj);
+    };
+    cursor.autoSelect = Postgres.autoSelect;
+  return cursor;
+  };
 }
 
 
@@ -293,6 +283,7 @@ SQL.Collection.prototype.dispatchEvent = function(eventName /* arguments */) {
 };
 
 SQL.Collection.prototype.reactive = function() {
+  console.log(123);
   var self = this;
   self.depend();
   return self;
