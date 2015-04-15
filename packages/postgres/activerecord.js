@@ -386,8 +386,8 @@ ActiveRecord.prototype.createRelationship = function(relTable, relationship, col
     "END IF; " +
     "END; " +
     "$$ LANGUAGE plpgsql; ";
-    this.inputString += "CREATE TRIGGER " + this.table+relTable  + " AFTER INSERT OR DELETE ON " + this.table + " | " + relTable +
-    " FOR EACH ROW EXECUTE PROCEDURE update" + this.table+relTable + "();";
+    this.inputString += "CREATE TRIGGER " + this.table+relTable  + " AFTER INSERT OR DELETE ON " + this.table + " | " +
+    relTable + " FOR EACH ROW EXECUTE PROCEDURE update" + this.table+relTable + "();";
   }
 
   return this;
@@ -399,7 +399,7 @@ Postgres.dropColumn = function(table, column, cb) {
 };
 
 Postgres.dropTable = function(table, cb) {
-  var inputString = 'DROP FUNCTION IF EXISTS notify_trigger() CASCADE; DROP TABLE IF EXISTS ' + table + ' CASCADE;';
+  var inputString = 'DROP TABLE IF EXISTS ' + this.table + ' CASCADE; DROP FUNCTION IF EXISTS notify_trigger_' + this.table + '() CASCADE;';
   // send request to postgresql database
 };
 
