@@ -489,14 +489,12 @@ Postgres.remove = function(table, selectObj) {
 
 
 Postgres.autoSelect = function(sub, name, properties, selectObj, optionsObj, joinObj) {
-  // TODO: this needs to be modified to create and start listening on views.
-  //console.log(properties);
-  //var selectString = "select _id";
-  //for (var x = 0, count = properties.length; x < count; x++) {
-  //  selectString += ", " + properties[x];
-  //}
-  //selectString += " from " + name + " ORDER BY _id DESC LIMIT 10;";
+
+  // We need a dedicated client to watch for changes on each table. We store these clients in
+  // our clientHolder and only create a new one if one does not already exist
+
   var loadAutoSelectClient = function(name, cb){
+    // Function to load a new client, store it, and then send it to the function to add the watcher
     console.log("Loading new client for autoSelect");
     var context = this;
     pg.connect(conString, function(err, client, done) {
@@ -505,15 +503,13 @@ Postgres.autoSelect = function(sub, name, properties, selectObj, optionsObj, joi
     });
   };
 
-  var selectString = selectStatement(name, properties, selectObj, optionsObj, joinObj);
-  //console.log(selectString);
   var autoSelectHelper = function(client){
+    // Selecting all from the table
+    var selectString = selectStatement(name, properties, selectObj, optionsObj, joinObj);
     client.query(selectString, function(error, results) {
-      //console.log(name);
       if (error) {
         console.log(error, "in autoSelect top")
       } else {
-        //console.log(results.rows);
         sub._session.send({
           msg: 'added',
           collection: sub._name,
@@ -526,6 +522,7 @@ Postgres.autoSelect = function(sub, name, properties, selectObj, optionsObj, joi
         return results.rows;
       }
     });
+    // Adding notification triggers
     var query = client.query("LISTEN notify_trigger_" + name);
     client.on('notification', function(msg) {
       var returnMsg = eval("(" + msg.payload + ")");
@@ -591,6 +588,7 @@ Postgres.autoSelect = function(sub, name, properties, selectObj, optionsObj, joi
     });
   };
 
+  // Checking to see if this table already has a dedicated client before adding the listers
   if(clientHolder[name]){
     autoSelectHelper(clientHolder[name]);
   } else{
