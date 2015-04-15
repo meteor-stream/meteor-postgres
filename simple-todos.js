@@ -60,9 +60,9 @@ if (Meteor.isServer) {
   // Postgres.createTable('tasks', {text: ['$string'], checked: ["$bool", {$default: false}]});
 
   Meteor.publish('tasks', function () {
-    return Postgres.getCursor('tasks', ['_id', 'text', 'checked', 'created_at'], {}, {}, {});
+    return SQL.Collection.getCursor('tasks', ['_id', 'text', 'checked', 'created_at'], {}, {}, {});
   });
   Meteor.publish('users1', function(){
-    return Postgres.getCursor('users1', ['_id', 'name', 'created_at'], {}, {}, {});
+    return SQL.Collection.getCursor('users1', ['_id', 'name', 'created_at'], {}, {}, {});
   })
 }

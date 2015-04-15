@@ -125,7 +125,6 @@ SQL.Collection = function(connection, name) {
   }
 
   var subsBefore = _.keys(connection._subscriptions);
-  console.log(subsBefore);
   _.extend(self, connection.subscribe.apply(connection, subscribeArgs));
   var subsNew = _.difference(_.keys(connection._subscriptions), subsBefore);
   if (subsNew.length !== 1) throw new Error('Subscription failed!');
@@ -163,6 +162,16 @@ if (Meteor.isServer) {
       Postgres.createTable(table, paramObj);
     }
   });
+
+  SQL.Collection.getCursor = function(name, columns, selectObj, optionsObj, joinObj) {
+    var cursor = {};
+    //Creating publish
+    cursor._publishCursor = function(sub) {
+      Postgres.autoSelect(sub, name, columns, selectObj, optionsObj, joinObj);
+    };
+    cursor.autoSelect = Postgres.autoSelect;
+  return cursor;
+  };
 }
 
 

@@ -599,16 +599,6 @@ Postgres.autoSelect = function(sub, name, properties, selectObj, optionsObj, joi
 
 };
 
-Postgres.getCursor = function(name, columns, selectObj, optionsObj, joinObj) {
-  var cursor = {};
-  //Creating publish
-  cursor._publishCursor = function(sub) {
-    this.autoSelect(sub, name, columns, selectObj, optionsObj, joinObj);
-  };
-  cursor.autoSelect = this.autoSelect;
-  return cursor;
-};
-
 
 // TODO: Accept AND / OR statements
 function _where(selectObj) {
