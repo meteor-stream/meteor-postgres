@@ -56,6 +56,7 @@ var insertStatement = function(table, insertObj){
 };
 
 var createTableStatement = function(table, tableObj, relTable){
+  console.log(tableObj)
   alasql.fn.Date= Date;
   var _DataTypes = {
     $number: 'INT',
@@ -108,7 +109,6 @@ var createTableStatement = function(table, tableObj, relTable){
   // add notify functionality and close input string
   inputString = startString + inputString;
   inputString += " created_at Date); ";
-  console.log(inputString);
   return inputString;
 };
 function _where(selectObj) {

@@ -1,19 +1,27 @@
-var selfConnection;
-var buffer = [];
-var reactiveData = new Tracker.Dependency;
 
-SQLCollection = function(connection, name /* arguments */) {
+/**
+ * @summary Namespace for SQL-related items
+ * @namespace
+ */
+SQL = {};
+
+
+var buffer = [];
+SQL.Collection = function(connection, name) {
   var self = this;
-  var tableName = connection;
+  if (!(self instanceof SQL.Collection)) {
+    throw new Error('Use new to construct a SQLCollection');
+  }
+  var reactiveData = new Tracker.Dependency;
   this.tableName = connection;
-  var initiated = false;
+  // TODO: REFACTOR unvalidated TO OBJ
   var unvalidated = "";
-  var subscribeArgs;
+  self._events = [];
 
   // Defining the methods that application can interact with.
-  this.createTable = function(tableName, tableDefinition) {
+  this.createTable = function(tableDefinition) {
     // TODO: This will take the configuration from the cursor and will be modeled after a view
-    minisql.createTable(tableName, tableDefinition);
+    minisql.createTable(this.tableName, tableDefinition);
     // TODO: This will also create a postgres view for the data specified by the cursor
     //var usersTable = {name: ['$string', '$notnull']};
     //Meteor.call('createTable', 'users1', usersTable);
@@ -21,43 +29,38 @@ SQLCollection = function(connection, name /* arguments */) {
 
   this.select = function(returnFields, selectObj, optionsObj) {
     reactiveData.depend();
-    return minisql.select(tableName, returnFields);
+    return minisql.select(this.tableName, returnFields);
   };
 
   this.insert = function(dataObj) {
     dataObj['_id'] = -1;
-    minisql.insert(tableName, dataObj);
+    minisql.insert(this.tableName, dataObj);
     reactiveData.changed();
     unvalidated = dataObj.text;
     delete dataObj['_id'];
     // Removing ID so that server DB will automatically assign one
-    Meteor.call('add', tableName, dataObj);
+    Meteor.call('add', this.tableName, dataObj);
   };
 
-  this.update = function(tableName, dataObj, selectObj) {
-    console.log(dataObj);
-    minisql.update(tableName, dataObj, selectObj);
+  this.update = function(dataObj, selectObj) {
+    minisql.update(this.tableName, dataObj, selectObj);
     reactiveData.changed();
-    Meteor.call('update', tableName, dataObj, selectObj);
+    Meteor.call('update', this.tableName, dataObj, selectObj);
   };
 
   this.remove = function(dataObj) {
-    minisql.remove(tableName, dataObj);
+    minisql.remove(this.tableName, dataObj);
     reactiveData.changed();
-    Meteor.call('remove', tableName, dataObj);
+    Meteor.call('remove', this.tableName, dataObj);
   };
 
-  self._events = [];
-
-  if (!(self instanceof SQLCollection)) {
-    throw new Error('Use new to construct a SQLCollection');
-  }
-
-  if (tableName !== null && typeof tableName !== "string") {
+  if (this.tableName !== null && typeof this.tableName !== "string") {
     throw new Error(
       'First argument to new SQLCollection must be a string or null');
   }
 
+  var selfConnection;
+  var subscribeArgs;
   if (typeof connection === 'string') {
     // Using default connection
     subscribeArgs = Array.prototype.slice.call(arguments, 0);
@@ -97,21 +100,16 @@ SQLCollection = function(connection, name /* arguments */) {
     registerStore(connection, name);
   }
 
-  // Server side methods to route to Postgres object
-
-
   // Client side listeners for notifications from server
   if (Meteor.isClient) {
     // Added will only be triggered on the initial flow of data
     // Adding an entry to minisql will trigger a server side insert, but this
     // will not trigger an added event on any client
-    // CAN WE RENAME TO POPULATE?
-    // TODO: This needs to be modified in order to respond to the view
     this.addEventListener('added', function(index, msg, name) {
       unvalidated = "";
-      alasql("DELETE FROM " + tableName);
+      alasql("DELETE FROM " + this.tableName);
       for (var x = msg.results.length - 1; x >= 0; x--) {
-          minisql.insert(tableName, msg.results[x]);
+          minisql.insert(this.tableName, msg.results[x]);
         }
       reactiveData.changed();
     });
@@ -133,9 +131,9 @@ SQLCollection = function(connection, name /* arguments */) {
         // TODO: Right now mini.sql.update is not dynamic enough to be used to update. This being
         // worked on and evnentually the following line will replace the direct reference to
         // alasql:
-        // minisql.update(tableName, msgParams) // So msgParams doesn't exist. We will have to do
+        // minisql.update(this.tableName, msgParams) // So msgParams doesn't exist. We will have to do
         // some logic here or in alasql.
-        minisql.update(tableName, msg.results, {"_id": {$eq: msg.results._id}});
+        minisql.update(this.tableName, msg.results, {"_id": {$eq: msg.results._id}});
       }
       else {
         // The message is a new insertion of a message
@@ -148,9 +146,9 @@ SQLCollection = function(connection, name /* arguments */) {
           // TODO: Right now mini.sql.update is not dynamic enough to be used to update. This being
           // worked on and evnentually the following line will replace the direct reference to
           // alasql:
-          // minisql.update(tableName, msgParams) // So msgParams doesn't exist. We will have to do
+          // minisql.update(this.tableName, msgParams) // So msgParams doesn't exist. We will have to do
           // some logic here or in alasql.
-          minisql.update(tableName, msg.results, {_id: {$eq: -1}});
+          minisql.update(this.tableName, msg.results, {_id: {$eq: -1}});
           reactiveData.changed();
           unvalidated = "";
         }
@@ -158,9 +156,9 @@ SQLCollection = function(connection, name /* arguments */) {
           // TODO: Right now minisql.insert is not dynamic enough to be used to insert. This is
           // being worked on and eventually the following line will replace the direct reference
           // to alasql:
-          // minisql.insert(tableName, {id: -1, text:text, checked:checked, userID: userID});
+          // minisql.insert(this.tableName, {id: -1, text:text, checked:checked, userID: userID});
           // right now userID is not being passes in.
-          minisql.insert(tableName, msg.results);
+          minisql.insert(this.tableName, msg.results);
         }
       }
       reactiveData.changed();
@@ -170,6 +168,7 @@ SQLCollection = function(connection, name /* arguments */) {
 };
 
 if (Meteor.isServer) {
+  // Meteor server side methods that delegate to postgres object
   Meteor.methods({
     add: function(table, paramObj) {
       Postgres.insert(table, paramObj);
@@ -180,9 +179,7 @@ if (Meteor.isServer) {
     remove: function(table, paramObj) {
       Postgres.remove(table, paramObj);
     },
-    // TODO: In its current state this not useful. We dont want the client to be firing off create tables.
     createTable: function(table, paramObj) {
-      console.log("in create table method");
       Postgres.createTable(table, paramObj);
     }
   });
@@ -230,15 +227,15 @@ var registerStore = function(connection, name) {
 };
 
 // Inherit from Array and Tracker.Dependency
-SQLCollection.prototype = new Array;
-_.extend(SQLCollection.prototype, Tracker.Dependency.prototype);
+SQL.Collection.prototype = new Array;
+_.extend(SQL.Collection.prototype, Tracker.Dependency.prototype);
 
 
-SQLCollection.prototype._eventRoot = function(eventName) {
+SQL.Collection.prototype._eventRoot = function(eventName) {
   return eventName.split('.')[0];
 };
 
-SQLCollection.prototype._selectEvents = function(eventName, invert) {
+SQL.Collection.prototype._selectEvents = function(eventName, invert) {
   var self = this;
   var eventRoot, testKey, testVal;
   if (!(eventName instanceof RegExp)) {
@@ -262,7 +259,7 @@ SQLCollection.prototype._selectEvents = function(eventName, invert) {
   });
 };
 
-SQLCollection.prototype.addEventListener = function(eventName, listener) {
+SQL.Collection.prototype.addEventListener = function(eventName, listener) {
   var self = this;
   if (typeof listener !== 'function')
     throw new Error('invalid-listener');
@@ -273,18 +270,18 @@ SQLCollection.prototype.addEventListener = function(eventName, listener) {
   });
 };
 
-SQLCollection.prototype.initialValue = function(eventName, listener) {
+SQL.Collection.prototype.initialValue = function(eventName, listener) {
   return Postgres.select(this.tableName);
 };
 
 // @param {string} eventName - Remove events of this name, pass without suffix
 //                             to remove all events matching root.
-SQLCollection.prototype.removeEventListener = function(eventName) {
+SQL.Collection.prototype.removeEventListener = function(eventName) {
   var self = this;
   self._events = self._selectEvents(eventName, true);
 };
 
-SQLCollection.prototype.dispatchEvent = function(eventName /* arguments */) {
+SQL.Collection.prototype.dispatchEvent = function(eventName /* arguments */) {
   var self = this;
   var listenerArgs = Array.prototype.slice.call(arguments, 1);
   var listeners = self._selectEvents(eventName);
@@ -296,7 +293,7 @@ SQLCollection.prototype.dispatchEvent = function(eventName /* arguments */) {
   return true;
 };
 
-SQLCollection.prototype.reactive = function() {
+SQL.Collection.prototype.reactive = function() {
   var self = this;
   self.depend();
   return self;

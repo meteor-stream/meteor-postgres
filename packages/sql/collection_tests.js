@@ -1,9 +1,9 @@
 Tinytest.add(
-  'SQLcollection - call SQLCollection without new',
+  'SQL.collection - call SQL.Collection without new',
   function (test) {
     test.throws(
       function () {
-        SQLCollection(null);
+        SQL.Collection(null);
       },
       /Use new to construct a SQLCollection/
     );
@@ -13,14 +13,14 @@ Tinytest.add(
     */
     test.throws(
       function() {
-        var test1 = new SQLCollection();
+        var test1 = new SQL.Collection();
       },
-      /First argument to new SQLCollection must be a string or null/
+      /First argument to new SQL.Collection must be a string or null/
     );
   }
 );
 
 Tinytest.add('Livedata - server method - tests', function (test) {
-  var testCollection = new SQLCollection('test');
+  var testCollection = new SQL.Collection('test');
   //no event name error handle
 });
