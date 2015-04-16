@@ -288,7 +288,38 @@ ActiveRecord.prototype.take = function (limit) {
 // SQL: GROUP BY
 // Special:
 ActiveRecord.prototype.group = function () {
-  //this.caboose +=
+  var args = '';
+  if (arguments.length >= 1) {
+    for (var i = 0; i < arguments.length; i++) {
+      if (arguments[i] === 'distinct') {
+        args += 'DISTINCT ';
+      } else {
+        args += arguments[i] + ', ';
+      }
+    }
+    args = args.substring(0, args.length - 2);
+  } else {
+    args += '*';
+  }
+  this.caboose += 'GROUP BY ' + args;
+  return this;
+};
+
+ActiveRecord.prototype.order = function () {
+  var args = '';
+  if (arguments.length >= 1) {
+    for (var i = 0; i < arguments.length; i++) {
+      if (arguments[i] === 'distinct') {
+        args += 'DISTINCT ';
+      } else {
+        args += arguments[i] + ', ';
+      }
+    }
+    args = args.substring(0, args.length - 2);
+  } else {
+    args += '*';
+  }
+  this.caboose += 'ORDER BY ' + args;
   return this;
 };
 

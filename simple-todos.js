@@ -61,10 +61,9 @@ if (Meteor.isServer) {
   //tasks.createTable({text: ['$string'], checked: ["$bool", {$default: false}]}).save();
   //tasks.insert({text: 'this is a task', checked: false}).save();
   //tasks.insert({text: 'this is another task', checked: true}).save();
-  //tasks.select()
   //tasks.createRelationship('users1', '$onetomany').save();
 
-  tasks.select('users1.name', 'tasks.text').join(['INNER JOIN'], ["users1_id"], [["users1", '_id']]).fetch();
+  tasks.select('users1.name', 'tasks.text').join(['INNER JOIN'], ["users1_id"], [["users1", '_id']]).where("users1.name = ?", "kate").order('tasks.text DESC').fetch();
 
   Meteor.publish('tasks', function () {
     return SQL.Collection.getCursor('tasks', ['_id', 'text', 'checked', 'created_at'], {}, {}, {});
