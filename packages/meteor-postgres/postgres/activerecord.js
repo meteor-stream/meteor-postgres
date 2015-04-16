@@ -122,6 +122,59 @@ ActiveRecord.prototype.dropTable = function () {
   return this;
 };
 
+// Parameters: inserts object (req)
+// SQL: INSERT INTO table (fields) VALUES (values)
+// Special:
+// QUERY/INPUT STRING & DATA ARRAY
+ActiveRecord.prototype.insert = function (inserts) {
+  var valueString = ') VALUES (', keys = Object.keys(inserts);
+  var insertString = 'INSERT INTO ' + this.table + ' (';
+  this.dataArray = [];
+  // iterate through array arguments to populate input string parts
+  for (var i = 0, count = keys.length; i < count;) {
+    insertString += keys[i] + ', ';
+    this.dataArray.push(inserts[keys[i]]);
+    valueString += '$' + (++i) + ', ';
+  }
+  this.inputString = insertString.substring(0, insertString.length - 2) + valueString.substring(0, valueString.length - 2) + ');';
+  this.prevFunc = 'INSERT';
+  return this;
+};
+
+// TODO
+// Parameters: updates object (req)
+// SQL: UPDATE table SET (fields) = (values)
+// Special:
+// STATEMENT STARTER/UPDATE STRING
+ActiveRecord.prototype.update = function (updates) {
+  var updateField = '(', updateValue = '(', keys = Object.keys(updates);
+  if (keys.length > 1) {
+    for (var i = 0, count = keys.length - 1; i < count; i++) {
+      updateField += keys[i] + ', ';
+      updateValue += "'" + updates[keys[i]] + "', ";
+    }
+    updateField += keys[keys.length - 1];
+    updateValue += "'" + updates[keys[keys.length - 1]] + "'";
+  } else {
+    updateField += keys[0];
+    updateValue += "'" + updates[keys[0]] + "'";
+  }
+  this.updateString = 'UPDATE ' + this.table + ' SET ' + updateField + ') = ' + updateValue + ')';
+  this.prevFunc = 'UPDATE';
+  return this;
+};
+
+// Parameters: none
+// SQL: DELETE FROM table
+// Special: May be chained with where, otherwise will remove all rows from table
+// STATEMENT STARTER/DELETE STRING
+ActiveRecord.prototype.remove = function () {
+  this.deleteString = 'DELETE FROM ' + this.table;
+  this.prevFunc = 'DELETE';
+  return this;
+};
+
+// TODO
 // Parameters: fields (arguments, optional)
 // SQL: SELECT fields FROM table, SELECT * FROM table
 // Special: May pass table, distinct, field to obtain a single record per unique value
@@ -179,8 +232,8 @@ ActiveRecord.prototype.join = function (joinType, fields, joinTable) {
 // Parameters: string with ?'s followed by an argument for each of the ?'s
 // SQL: WHERE field operator comparator, WHERE field1 operator1 comparator1 AND/OR field2 operator2 comparator2
 // Special:
-// For example:
 // db.select('students').where('age = ? and class = ? or name = ?','18','senior','kate').fetch();
+// STATEMENT/WHERE STRING & DATA ARRAY
 ActiveRecord.prototype.where = function (/*Arguments*/) {
   this.dataArray = [];
   var where = '', redux, substring1, substring2;
@@ -197,144 +250,46 @@ ActiveRecord.prototype.where = function (/*Arguments*/) {
   return this;
 };
 
-// TODO: COMPLETE
-// Parameters: inserts object (req)
-// SQL: INSERT INTO table (fields) VALUES (values)
-// Special:
-ActiveRecord.prototype.insert = function (inserts) {
-  var valueString = ') VALUES (', keys = Object.keys(inserts);
-  var insertString = 'INSERT INTO ' + this.table + ' (';
-  this.dataArray = [];
-  // iterate through array arguments to populate input string parts
-  for (var i = 0, count = keys.length; i < count;) {
-    insertString += keys[i] + ', ';
-    this.dataArray.push(inserts[keys[i]]);
-    valueString += '$' + (++i) + ', ';
-  }
-  this.inputString = insertString.substring(0, insertString.length - 2) + valueString.substring(0, valueString.length - 2) + ');';
-  this.prevFunc = 'INSERT';
-  return this;
-};
-
-// TODO: PARTIALLY COMPLETE, NEEDS TESTING
-// Parameters: updates object (req)
-// SQL: UPDATE table SET (fields) = (values)
-// Special:
-ActiveRecord.prototype.update = function (updates) {
-  var updateField = '(', updateValue = '(', keys = Object.keys(updates);
-  if (keys.length > 1) {
-    for (var i = 0, count = keys.length - 1; i < count; i++) {
-      updateField += keys[i] + ', ';
-      updateValue += "'" + updates[keys[i]] + "', ";
+// Parameters: order fields (req)
+// SQL: ORDER BY fields
+// Special: ASC is default
+// CABOOSE/ORDER STRING
+ActiveRecord.prototype.order = function (/*arguments*/) {
+  var args = '';
+  if (arguments.length > 1) {
+    for (var i = 0; i < arguments.length; i++) {
+      args += arguments[i] + ', ';
     }
-    updateField += keys[keys.length - 1];
-    updateValue += "'" + updates[keys[keys.length - 1]] + "'";
+    args = args.substring(0, args.length - 2);
   } else {
-    updateField += keys[0];
-    updateValue += "'" + updates[keys[0]] + "'";
+    args = arguments[0];
   }
-  this.updateString = 'UPDATE ' + this.table + ' SET ' + updateField + ') = ' + updateValue + ')';
-  this.prevFunc = 'UPDATE';
+  this.orderString = 'ORDER BY ' + args;
   return this;
 };
 
-// TODO: COMPLETE
-// Parameters: none
-// SQL: DELETE FROM table
-// Special: May be chained with where, otherwise will remove all rows from table
-ActiveRecord.prototype.remove = function () {
-  this.deleteString = 'DELETE FROM ' + this.table;
-  this.prevFunc = 'DELETE';
-  return this;
-};
-
-// TODO: COMPLETE
 // Parameters: limit integer
 // SQL: LIMIT number
+// CABOOSE / LIMIT STRING
 ActiveRecord.prototype.limit = function (limit) {
   this.limitString = ' LIMIT ' + limit;
   return this;
 };
 
-// TODO: COMPLETE
 // Parameters: offset integer
 // SQL: OFFSET number
+// CABOOSE/OFFSET STRING
 ActiveRecord.prototype.offset = function (offset) {
-  this.caboose += ' OFFSET ' + offset;
+  this.offsetString = ' OFFSET ' + offset;
   return this;
 };
 
-// TODO: COMPLETE
-// Parameters: limit (optional, defaults to 1)
-// SQL: SELECT * FROM table ORDER BY table._id ASC LIMIT 1, SELECT * FROM table ORDER BY table._id ASC LIMIT limit
-// Special: Retrieves first item, overrides all other chainable functions
-ActiveRecord.prototype.first = function (limit) {
-  limit = limit || 1;
-  this.inputString += 'SELECT * FROM ' + this.table + ' ORDER BY ' + this.table + '._id ASC LIMIT ' + limit + ';';
-  this.prevFunc = 'FIRST';
-  return this;
-};
-
-// TODO: COMPLETE
-// Parameters: limit (optional, defaults to 1)
-// SQL: SELECT * FROM table ORDER BY table._id DESC LIMIT 1, SELECT * FROM table ORDER BY table._id DESC LIMIT limit
-// Special: Retrieves first item, overrides all other chainable functions
-ActiveRecord.prototype.last = function (limit) {
-  limit = limit || 1;
-  this.inputString += 'SELECT * FROM ' + this.table + ' ORDER BY ' + this.table + '._id DESC LIMIT ' + limit + ';';
-  this.prevFunc = 'LAST';
-  return this;
-};
-
-// TODO: COMPLETE
-// Parameters: limit (optional, defaults to 1)
-// SQL: SELECT * FROM table LIMIT 1, SELECT * FROM table LIMIT limit
-// Special: Retrieves a record without ordering, overrides all other chainable functions
-ActiveRecord.prototype.take = function (limit) {
-  limit = limit || 1;
-  this.inputString += 'SELECT * FROM ' + this.table + ' LIMIT ' + limit + ';';
-  this.prevFunc = 'TAKE';
-  return this;
-};
-
-// TODO: INCOMPLETE
-// Parameters:
-// SQL: GROUP BY
+// Parameters: group field
+// SQL: GROUP BY field
 // Special:
-ActiveRecord.prototype.group = function () {
-  var args = '';
-  if (arguments.length >= 1) {
-    for (var i = 0; i < arguments.length; i++) {
-      if (arguments[i] === 'distinct') {
-        args += 'DISTINCT ';
-      } else {
-        args += arguments[i] + ', ';
-      }
-    }
-    args = args.substring(0, args.length - 2);
-  } else {
-    args += '';
-  }
-  this.caboose += 'GROUP BY ' + args;
-  return this;
-};
-
-ActiveRecord.prototype.order = function () {
-  this.orderString = '';
-  var args = '';
-  if (arguments.length >= 1) {
-    for (var i = 0; i < arguments.length; i++) {
-      if (arguments[i] === 'distinct') {
-        args += 'DISTINCT ';
-      } else {
-        args += arguments[i] + ', ';
-      }
-    }
-    args = args.substring(0, args.length - 2);
-  } else {
-    args += '';
-  }
-  this.orderString += 'ORDER BY ' + args;
+// CABOOSE/GROUP BY STRING
+ActiveRecord.prototype.group = function (group) {
+  this.groupString = 'GROUP BY ' + group;
   return this;
 };
 
@@ -347,16 +302,54 @@ ActiveRecord.prototype.having = function () {
   return this;
 };
 
-// TODO: COMPLETE
-// Parameters: None
-// SQL: Combines previously chained items to create a SQL statement
-// Special: Functions with an inputString override other chainable functions because they are complete
+
+// Parameters: limit (optional, defaults to 1)
+// SQL: SELECT * FROM table ORDER BY table._id ASC LIMIT 1, SELECT * FROM table ORDER BY table._id ASC LIMIT limit
+// Special: Retrieves first item, overrides all other chainable functions
+// QUERY/INPUT STRING
+ActiveRecord.prototype.first = function (limit) {
+  limit = limit || 1;
+  this.inputString += 'SELECT * FROM ' + this.table + ' ORDER BY ' + this.table + '._id ASC LIMIT ' + limit + ';';
+  this.prevFunc = 'FIRST';
+  return this;
+};
+
+// Parameters: limit (optional, defaults to 1)
+// SQL: SELECT * FROM table ORDER BY table._id DESC LIMIT 1, SELECT * FROM table ORDER BY table._id DESC LIMIT limit
+// Special: Retrieves first item, overrides all other chainable functions
+// QUERY/INPUT STRING
+ActiveRecord.prototype.last = function (limit) {
+  limit = limit || 1;
+  this.inputString += 'SELECT * FROM ' + this.table + ' ORDER BY ' + this.table + '._id DESC LIMIT ' + limit + ';';
+  this.prevFunc = 'LAST';
+  return this;
+};
+
+// Parameters: limit (optional, defaults to 1)
+// SQL: SELECT * FROM table LIMIT 1, SELECT * FROM table LIMIT limit
+// Special: Retrieves a record without ordering, overrides all other chainable functions
+// QUERY/INPUT STRING
+ActiveRecord.prototype.take = function (limit) {
+  limit = limit || 1;
+  this.inputString += 'SELECT * FROM ' + this.table + ' LIMIT ' + limit + ';';
+  this.prevFunc = 'TAKE';
+  return this;
+};
+
+
+// Data function that retrieves data from database
 ActiveRecord.prototype.fetch = function (cb) {
-  var cb = cb || function(prevFunc, table, results) {return console.log("results in " + prevFunc + ' ' + table, results.rows)};
+
   var table = this.table;
   var dataArray = this.dataArray;
   var prevFunc = this.prevFunc;
-  var input = this.inputString.length > 0 ? this.inputString : this.selectString + this.joinString + this.whereString + this.orderString + this.limitString + ';';
+
+  var starter = this.updateString || this.deleteString || this.selectString;
+
+  var input = this.inputString.length > 0 ? this.inputString : starter + this.joinString + this.whereString + this.orderString + this.limitString +
+  this.offsetString + this.groupString + this.havingString + ';';
+
+  cb = cb || function(prevFunc, table, results) {return console.log("results in " + prevFunc + ' ' + table, results.rows)};
   console.log('FETCH:', input, dataArray);
   pg.connect(this.conString, function (err, client, done) {
     if (err) {
@@ -372,19 +365,20 @@ ActiveRecord.prototype.fetch = function (cb) {
       done();
     });
   });
+  this.clearAll();
 };
 
+// Data function that saves information to database
 ActiveRecord.prototype.save = function (cb) {
-  var input = this.inputString.length > 0 ? this.inputString : this.updateString + this.deleteString + this.joinString + this.whereString + ';';
+
+  var table = this.table;
   var dataArray = this.dataArray;
   var prevFunc = this.prevFunc;
-  var table = this.table;
-  this.inputString = '';
-  this.updateString = '';
-  this.deleteString = '';
-  this.joinString = '';
-  this.whereString = '';
-  this.dataArray = [];
+
+  var starter = this.updateString || this.deleteString || this.selectString;
+
+  var input = this.inputString.length > 0 ? this.inputString : starter + this.joinString + this.whereString + ';';
+
   var callback = function (err, results) {
       console.log(err, results);
     };
@@ -394,22 +388,51 @@ ActiveRecord.prototype.save = function (cb) {
       console.log(err, "in " + prevFunc + ' ' + table);
     }
     client.query(input, dataArray, function (error, results) {
-      // callback(error, results);
       if (cb) { cb(error, results); }
     });
     done();
   });
+  this.clearAll();
 };
 
+// Data function that clears all strings after a fetch or save
+ActiveRecord.prototype.clearAll = function() {
+  this.inputString = '';
+  this.autoSelectData = '';
+  this.autoSelectInput = '';
 
+  // statement starters
+  this.selectString = '';
+  this.updateString = '';
+  this.deleteString = '';
 
+  // chaining statements
+  this.joinString = '';
+  this.whereString = '';
+
+  // caboose statements
+  this.orderString = '';
+  this.limitString = '';
+  this.offsetString = '';
+  this.groupString = '';
+  this.havingString = '';
+
+  this.dataArray = [];
+
+  // error logging
+  this.prevFunc = '';
+};
+
+// Parameters: table (req), relationship type (req)
+// SQL:
+// QUERY/INPUT STATEMENT
 ActiveRecord.prototype.createRelationship = function(relTable, relationship){
   if (relationship === "$onetomany"){
-    this.inputString += "ALTER TABLE " +  this.table + " ADD " + relTable +
+    this.inputString = "ALTER TABLE " +  this.table + " ADD " + relTable +
     "_id INTEGER references " + relTable + "(_id);";
   }
   else {
-    this.inputString += "CREATE TABLE IF NOT EXISTS" +
+    this.inputString = "CREATE TABLE IF NOT EXISTS" +
     this.table + relTable + " (" + this.table + "_id integer references " + this.table + "(_id), " +
     relTable + "_id integer references " + relTable + "(_id), " +
     "PRIMARY KEY(" + this.table + "_id, " + relTable + "_id)); ";
@@ -423,7 +446,6 @@ ActiveRecord.prototype.createRelationship = function(relTable, relationship){
     this.inputString += "CREATE TRIGGER " + this.table+relTable  + " AFTER DELETE ON " + relTable +
     " FOR EACH ROW EXECUTE PROCEDURE " + this.table + relTable + "(); ";
   }
-  console.log(this.inputString);
   return this;
 };
 
