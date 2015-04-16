@@ -33,6 +33,8 @@ ActiveRecord = function (table, conString) {
 
   // error logging
   this.prevFunc = '';
+
+  this.prototype = ActiveRecord.prototype;
 };
 
 ActiveRecord.prototype._DataTypes = {
@@ -372,7 +374,7 @@ ActiveRecord.prototype.fetch = function (cb) {
   });
 };
 
-ActiveRecord.prototype.save = function () {
+ActiveRecord.prototype.save = function (cb) {
   var input = this.inputString.length > 0 ? this.inputString : this.updateString + this.deleteString + this.joinString + this.whereString + ';';
   var dataArray = this.dataArray;
   var prevFunc = this.prevFunc;
@@ -392,7 +394,8 @@ ActiveRecord.prototype.save = function () {
       console.log(err, "in " + prevFunc + ' ' + table);
     }
     client.query(input, dataArray, function (error, results) {
-      callback(error, results);
+      // callback(error, results);
+      if (cb) { cb(error, results); }
     });
     done();
   });
