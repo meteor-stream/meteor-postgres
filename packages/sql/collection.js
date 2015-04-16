@@ -148,6 +148,12 @@ SQL.Collection = function(connection, name) {
 
 if (Meteor.isServer) {
   // Meteor server side methods that delegate to postgres object
+  SQL.Collection.getActiveRecord = function(){
+    // Alternativly you could add to the SQL.Collection object with:
+    // this.ActiveRecord = ActiveRecord
+    return ActiveRecord;
+  }
+
   Meteor.methods({
     add: function(table, paramObj) {
       name.insert(paramObj.insert)
