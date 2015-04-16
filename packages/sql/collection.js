@@ -150,8 +150,12 @@ if (Meteor.isServer) {
   // Meteor server side methods that delegate to postgres object
   Meteor.methods({
     add: function(table, paramObj) {
+<<<<<<< HEAD
       console.log(Postgres);
       console.log(ActiveRecord);
+=======
+      name.insert(paramObj.insert)
+>>>>>>> b412a4ad4d7511d482d399a0c3e0993c296dbe5f
       Postgres.insert(table, paramObj);
     },
     update: function(table, paramObj, selectObj) {

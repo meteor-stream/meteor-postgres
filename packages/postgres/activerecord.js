@@ -2,6 +2,9 @@
 pg = Npm.require('pg');
 var conString = 'postgres://postgres:1234@localhost/postgres';
 
+var clientHolder = {};
+
+
 // TODO: Remove default values for connection string and table
 ActiveRecord = function (table, conString) {
   this.conString = conString || 'postgres://postgres:1234@localhost/postgres';
@@ -15,6 +18,8 @@ ActiveRecord = function (table, conString) {
   this.joinString = '';
   this.whereString = '';
   this.caboose = '';
+  this.orderby = '';
+  this.limitby = '';
   // passes previous function name into data functions for error logging
   this.prevFunc = '';
 };
@@ -130,7 +135,7 @@ ActiveRecord.prototype.select = function (/*arguments*/) {
   } else {
     args += '*';
   }
-  this.selectString = 'SELECT ' + args + ' FROM ' + this.table;
+  this.selectString = 'SELECT ' + args + ' FROM ' + this.table + " ";
   this.prevFunc = 'SELECT';
   return this;
 };
@@ -238,7 +243,7 @@ ActiveRecord.prototype.remove = function () {
 // Parameters: limit integer
 // SQL: LIMIT number
 ActiveRecord.prototype.limit = function (limit) {
-  this.caboose += ' LIMIT ' + limit;
+  this.limitby = ' LIMIT ' + limit;
   return this;
 };
 
@@ -299,13 +304,14 @@ ActiveRecord.prototype.group = function () {
     }
     args = args.substring(0, args.length - 2);
   } else {
-    args += '*';
+    args += '';
   }
   this.caboose += 'GROUP BY ' + args;
   return this;
 };
 
 ActiveRecord.prototype.order = function () {
+  this.orderby = '';
   var args = '';
   if (arguments.length >= 1) {
     for (var i = 0; i < arguments.length; i++) {
@@ -317,9 +323,9 @@ ActiveRecord.prototype.order = function () {
     }
     args = args.substring(0, args.length - 2);
   } else {
-    args += '*';
+    args += '';
   }
-  this.caboose += 'ORDER BY ' + args;
+  this.orderby += 'ORDER BY ' + args;
   return this;
 };
 
@@ -336,11 +342,12 @@ ActiveRecord.prototype.having = function () {
 // Parameters: None
 // SQL: Combines previously chained items to create a SQL statement
 // Special: Functions with an inputString override other chainable functions because they are complete
-ActiveRecord.prototype.fetch = function () {
+ActiveRecord.prototype.fetch = function (cb) {
+  var cb = cb || function(prevFunc, table, results) {return console.log("results in " + prevFunc + ' ' + table, results.rows)};
   var table = this.table;
   var dataArray = this.dataArray;
   var prevFunc = this.prevFunc;
-  var input = this.inputString.length > 0 ? this.inputString : this.selectString + this.joinString + this.whereString + this.caboose + ';';
+  var input = this.inputString.length > 0 ? this.inputString : this.selectString + this.joinString + this.whereString + this.orderby + this.limitby + ';';
   console.log('FETCH:', input, dataArray);
   pg.connect(this.conString, function (err, client, done) {
     if (err) {
@@ -351,7 +358,7 @@ ActiveRecord.prototype.fetch = function () {
       if (error) {
         console.log("error in " + prevFunc + ' ' + table, error);
       } else {
-        console.log("results in " + prevFunc + ' ' + table, results.rows);
+        cb(prevFunc, table, results);
       }
       done();
     });
@@ -410,4 +417,122 @@ ActiveRecord.prototype.createRelationship = function(relTable, relationship){
   }
   console.log(this.inputString);
   return this;
+};
+
+ActiveRecord.prototype.autoSelect = function(sub) {
+
+  // We need a dedicated client to watch for changes on each table. We store these clients in
+  // our clientHolder and only create a new one if one does not already exist
+
+  var table = this.table;
+  var dataArray = this.dataArray;
+  var prevFunc = this.prevFunc;
+  //console.log(this.inputString);
+  console.log(this.selectString);
+  //console.log(this.joinString);
+  //console.log(this.whereString);
+  console.log(this.orderby);
+  var input = this.inputString.length > 0 ? this.inputString : this.selectString + this.joinString + this.whereString + this.orderby + this.limitby + ';';
+  console.log('audo:', input, dataArray);
+
+
+  var loadAutoSelectClient = function(name, cb){
+    // Function to load a new client, store it, and then send it to the function to add the watcher
+    console.log("Loading new client for autoSelect");
+    var context = this;
+    pg.connect(conString, function(err, client, done) {
+      clientHolder[name] = client;
+      cb(client);
+    });
+  };
+
+  var autoSelectHelper = function(client){
+    // Selecting all from the table
+    console.log(input);
+    client.query(input, function(error, results) {
+      if (error) {
+        console.log(error, "in autoSelect top")
+      } else {
+        sub._session.send({
+          msg: 'added',
+          collection: sub._name,
+          id: sub._subscriptionId,
+          fields: {
+            reset: false,
+            results: results.rows
+          }
+        });
+      }
+    });
+    // Adding notification triggers
+    var query = client.query("LISTEN notify_trigger_" + table);
+    client.on('notification', function(msg) {
+      var returnMsg = eval("(" + msg.payload + ")");
+      var k = sub._name;
+      if (returnMsg[1].operation === "DELETE") {
+        var tableId = parseInt(returnMsg[0][k]);
+        sub._session.send({
+          msg: 'changed',
+          collection: sub._name,
+          id: sub._subscriptionId,
+          index: tableId,
+          fields: {
+            removed: true,
+            reset: false,
+            tableId:tableId
+          }
+        });
+      }
+      else if (returnMsg[1].operation === "UPDATE") {
+        client.query(input, dataArray, function(error, results) {
+          if (error) {
+            console.log(error, "in autoSelect update");
+          } else {
+            //console.log(results.rows[0]);
+            sub._session.send({
+              msg: 'changed',
+              collection: sub._name,
+              id: sub._subscriptionId,
+              index: tableId,
+              fields: {
+                modified: true,
+                removed: false,
+                reset: false,
+                results: results.rows[0]
+              }
+            });
+          }
+        });
+      }
+      else if (returnMsg[1].operation === "INSERT") {
+        //var selectString = selectStatement(name, properties, {_id: {$eq: returnMsg[0][sub._name]}}, optionsObj, joinObj);
+        client.query(input, dataArray, function(error, results) {
+          //console.log("insert", selectString);
+          if (error) {
+            console.log(selectString);
+            console.log(error, "in autoSelect insert")
+          } else {
+            sub._session.send({
+              msg: 'changed',
+              collection: sub._name,
+              id: sub._subscriptionId,
+              fields: {
+                removed: false,
+                reset: false,
+                results: results.rows[0]
+              }
+            });
+          }
+        });
+      }
+    });
+  };
+
+  // Checking to see if this table already has a dedicated client before adding the listers
+  if(clientHolder[table]){
+    autoSelectHelper(clientHolder[table]);
+  } else{
+    loadAutoSelectClient(table, autoSelectHelper);
+  }
+
 };
