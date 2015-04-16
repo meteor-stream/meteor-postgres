@@ -1,14 +1,55 @@
-Statements may be chained. Do not use more than one starter per query.
-Cabooses must be attached to statements. 
-Queries will override all other items in the chain.
-Data functions must be attached to interact with the database. 
-There is no alter table function here, since you cannot alter a table once there is data. You can drop and re add it.
+### GENERAL USE
+
+There are four types of methods in this ORM. <br/>
+1. Statements may be chained. You must use one (and only one) starter per chain. <br/>
+2. Cabooses may only be added to the end of statement chains.  <br/>
+3. Queries override all other chains and should only be used by themselves. <br/> 
+4. Data methods should be used in all cases to save or retrieve your data.  <br/>
+
+Note: There is no alter table function as you cannot alter tables after data has been entered. It is recommended that <br/>
+you drop the table and re-create it.  <br/>
+
+### CREATE TABLE QUERY
+**Parameters:** tableObj (req) <br/>
+**SQL:** CREATE TABLE field data type constraint <br/>
+**Special:** Function is required for all SQL collections, primary key added unless _id field is supplied <br/>
+
+**Example:** 
+`ActiveRecord.createTable('students', {` <br/>
+  `name: ['$string', '$notnull'],` <br/>
+  `age: ['$number'],` <br/>
+  `class: ['$string', {$default: '2015'}]` <br/>
+`});` <br/>
+
+`CREATE TABLE students(id serial primary key not null, name varchar(255) not null, age integer, <br/> 
+  class varchar(255) default 2015);` <br/>
+
+**Data types available:**
+  $number: 'integer',
+  $string: 'varchar(255)',
+  $json: 'json',
+  $datetime: 'date',
+  $float: 'decimal',
+  $seq: 'serial',
+  $bool: 'boolean'
+  
+**Table constraints available:**
+    $unique: 'unique',
+    $check: 'check ', // value
+    $exclude: 'exclude',
+    $notnull: 'not null',
+    $default: 'default ', // value
+    $primary: 'primary key'
+
+### DROP TABLE QUERY
+**Parameters:** none <br/>
+**SQL:** DROP TABLE table  <br/>
+**Special:** Deletes cascade  <br/>
 
 ### SELECT STATEMENT STARTER
-// Parameters: fields (arguments, optional)
-// SQL: SELECT fields FROM table, SELECT * FROM table
-// Special: May pass table, distinct, field to obtain a single record per unique value
-ActiveRecord.prototype.select = function(table /*arguments*/) {};
+**Parameters:** fields (arguments, optional) <br/>
+**SQL:** SELECT fields FROM table, SELECT * FROM table <br/>
+**Special:** May pass table, distinct, field to obtain a single record per unique value  <br/>
 
 ### FIND ONE STATEMENT STARTER
 // Parameters: id (optional)
@@ -95,28 +136,10 @@ ActiveRecord.prototype.having = function() {};
 // Special: Functions with an inputString override other chainable functions because they are complete
 ActiveRecord.prototype.fetch = function() {};
 
-### CREATE TABLE QUERY
-// TODO: CREATE TABLE EXAMPLES. The first element in the array must be the data type from the _DataType object above
-//ActiveRecord.createTable('students', {
-//  name: ['$string', '$notnull'],
-//  age: ['$number'],
-//  class: ['$string', {$default: '2015'}]
-//});
-//CREATE TABLE students(id serial primary key not null, name varchar(255) not null, age integer, class varchar(255) default 2015,
 
-//Postgres.createTable('students', {
-//  name: ['$string', '$notnull'],
-//  age: ['$number'],
-//  class: ['$string', {$default: '2015'}],
-//  _id: ['$number', '$notnull', '$primary', '$unique']
-//});
-//CREATE TABLE students (name varchar(255) not null, age integer, class varchar(255) default 2015, _id integer not null primary unique,
+    
 
 ### SAVE DATA 
 
-// TODO: PARTIALLY COMPLETE, NEEDS TESTING
-// Parameters: table (req)
-// SQL: DROP TABLE table
-// Special: Deletes cascade
-ActiveRecord.prototype.dropTable = function(table) {
+
 

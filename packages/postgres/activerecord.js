@@ -1,8 +1,8 @@
 // PostgreSQL connection
 pg = Npm.require('pg');
 var conString = 'postgres://postgres:1234@localhost/postgres';
-//var table = 'tasks';
 
+// TODO: Remove default values for connection string and table
 ActiveRecord = function (table, conString) {
   this.conString = conString || 'postgres://postgres:1234@localhost/postgres';
   this.table = table || 'tasks';
@@ -39,9 +39,9 @@ ActiveRecord.prototype._TableConstraints = {
 };
 
 // TODO: COMPLETE
-// Parameters: table (req), tableObj (req), relTable (optional)
-// SQL: CREATE TABLE
-// Special:
+// Parameters: tableObj (req)
+// SQL: CREATE TABLE field data type constraint
+// Special: Function is required for all SQL collections
 ActiveRecord.prototype.createTable = function (tableObj) {
   console.log("in posgres create table");
   // SQL: 'CREATE TABLE table (fieldName constraint);'
@@ -182,17 +182,6 @@ ActiveRecord.prototype.where = function (/*Arguments*/) {
   this.whereString += where;
   return this;
 };
-
-// update tasks set text = 'test'
-// where userid = (select _id from users1 where name = 'paulo');
-// tasks.update({text: 'test'}).where(').save();
-// tasks.update({text: 'test'}).where('userid = ? (select ? from ? where name = ?','18','senior','kate').fetch();
-// db.select('students').where(['age = ? and class = ? or name = ?','18','senior','kate']).fetch();
-// db.select('students').where('age = 18 and class = senior or name = kate').fetch();
-ActiveRecord.prototype.parameterizedWhere = function() {
-
-};
-
 
 // TODO: COMPLETE
 // Parameters: inserts object (req)
