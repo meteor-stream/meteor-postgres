@@ -63,7 +63,7 @@ if (Meteor.isServer) {
   //tasks.insert({text: 'this is another task', checked: true}).save();
   //tasks.createRelationship('users1', '$onetomany').save();
 
-  tasks.select('users1.name', 'tasks.text').join(['INNER JOIN'], ["users1_id"], [["users1", '_id']]).where("users1.name = ?", "kate").fetch();
+  tasks.select('users1.name', 'tasks.text').join(['INNER JOIN'], ["users1_id"], [["users1", '_id']]).where("users1.name = ?", "kate").order('tasks.text DESC').fetch();
 
   Meteor.publish('tasks', function () {
     return SQL.Collection.getCursor('tasks', ['_id', 'text', 'checked', 'created_at'], {}, {}, {});
