@@ -8,9 +8,12 @@ SQL = {};
 var buffer = [];
 SQL.Collection = function(connection, name) {
   var self = this;
-  if (!(self instanceof SQL.Collection)) {
-    throw new Error('Use new to construct a SQLCollection');
-  }
+  this.getActiveRecord = function(connection){
+    // Alternativly you could add to the SQL.Collection object with:
+    self.ActiveRecord = new ActiveRecord(connection);
+    return;
+  };
+
   var reactiveData = new Tracker.Dependency;
   this.tableName = connection;
   // boolean to keep track of whether the local DB has an unvalidated entry
@@ -36,14 +39,14 @@ SQL.Collection = function(connection, name) {
     return minisql.select(this.tableName, returnFields);
   };
 
-  this.insert = function(dataObj) {
+  this.insert = function(dataObj, tasks){
     dataObj['_id'] = -1;
     minisql.insert(this.tableName, dataObj);
     reactiveData.changed();
     unvalidated = true;
     delete dataObj['_id'];
     // Removing ID so that server DB will automatically assign one
-    Meteor.call('add', this.tableName, dataObj);
+    Meteor.call('add', this, dataObj);
   };
 
   this.update = function(dataObj, selectObj) {
@@ -58,11 +61,20 @@ SQL.Collection = function(connection, name) {
     Meteor.call('remove', this.tableName, dataObj);
   };
 
-  // Adding listers to the client side to allow for full stack reactivity
+  // Adding listers to the client side to allow for full stack
+  if (Meteor.isServer) {
+    // Meteor server side methods that delegate to postgres object
+    this.ActiveRecord = this.getActiveRecord(connection);
+    if (!(self instanceof SQL.Collection)) {
+      throw new Error('Use new to construct a SQLCollection');
+    }
+  }
+
   if (Meteor.isClient) {
     // Added will only be triggered on the initial population of the database client side.
     // Data added to any chient while the page is already loaded will trigger a 'changed envent'
     this.addEventListener('added', function(index, msg, name) {
+      minisql.remove(this.tableName);
       for (var x = msg.results.length - 1; x >= 0; x--) {
           minisql.insert(this.tableName, msg.results[x]);
         }
@@ -143,37 +155,40 @@ SQL.Collection = function(connection, name) {
     }).length === 1) {
     registerStore(connection, name);
   }
-
 };
 
 if (Meteor.isServer) {
   // Meteor server side methods that delegate to postgres object
-  SQL.Collection.getActiveRecord = function(){
-    // Alternativly you could add to the SQL.Collection object with:
-    // this.ActiveRecord = ActiveRecord
-    return ActiveRecord;
-  }
-
-  Meteor.methods({
-    add: function(table, paramObj) {
-      name.insert(paramObj.insert)
-      Postgres.insert(table, paramObj);
-    },
-    update: function(table, paramObj, selectObj) {
-      Postgres.update(table, paramObj, selectObj);
-    },
-    remove: function(table, paramObj) {
-      Postgres.remove(table, paramObj);
-    },
-    createTable: function(table, paramObj) {
-      Postgres.createTable(table, paramObj);
-    }
-  });
+  //SQL.Collection.prototype.getActiveRecord = function(name){
+  //  // Alternatively you could add to the SQL.Collection object with:
+  //  //console.log(this);
+  //   this.ActiveRecord = new ActiveRecord(name);
+  //  return;
+  //};
+  //Meteor.methods({
+  //  add: function(table, paramObj) {
+  //    console.log("this is table:", table);
+  //    table.AcriveRecord = this.getActiveRecord('tasks');
+  //    table.ActiveRecord.insert(paramObj.insert);
+  //  },
+  //  update: function(table, paramObj, selectObj){
+  //    table.ActiveRecord.update(paramObj).where("_id = ?", selectObj._id.$eq);
+  //  },
+  //  remove: function(table, paramObj){
+  //    table.ActiveRecord.remove().where("_id = ?", paramObj._id.$eq);
+  //  },
+  //  createTable: function(table, paramObj){
+  //    table.createTable(table, paramObj);
+  //  }
+  //});
 
   SQL.Collection.getCursor = function(name, columns, selectObj, optionsObj, joinObj) {
     var cursor = {};
+    //cursore.ActiveRecord = new ActiveRecord()
+
     //Creating publish
     cursor._publishCursor = function(sub) {
+
       Postgres.autoSelect(sub, name, columns, selectObj, optionsObj, joinObj);
     };
     cursor.autoSelect = Postgres.autoSelect;
