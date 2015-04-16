@@ -7,8 +7,7 @@ insecure
 less
 accounts-password
 tinytest
-meteor-steam:postgres
-meteor-steam:minisql
+spaceelephant:meteor-postgres
 underscore
 
->>>>>>>>>>>>>>>>>> EDDIE >>>>>>>>>>>>>>>>>>>>>>>>
+>>>>>>>>>>>>>>>>>> END >>>>>>>>>>>>>>>>>>>>>>>>>>

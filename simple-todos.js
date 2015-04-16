@@ -64,7 +64,7 @@ if (Meteor.isServer) {
   ////tasks.createTable({text: ['$string'], checked: ["$bool", {$default: false}]}).save();
   ////tasks.insert({text: 'this is a task', checked: false}).save();
   ////tasks.insert({text: 'this is another task', checked: true}).save();
-  //tasks.ActiveRecord.createRelationship('users1', '$onetomany').save();
+  tasks.ActiveRecord.createRelationship('users1', '$onetomany').save();
 
   //tasks.select('users1.name', 'tasks.text').join(['INNER JOIN'], ["users1_id"], [["users1", '_id']]).where("users1.name = ?", "kate").order('tasks.text DESC').fetch();
   Meteor.methods({
