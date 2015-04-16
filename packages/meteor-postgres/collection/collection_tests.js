@@ -1,21 +1,25 @@
 Tinytest.add(
-  'SQL.collection - call SQL.Collection without new',
+  'SQL.collection - SQL.Collection instantiation',
   function (test) {
     test.throws(
       function () {
-        SQL.Collection(null);
+        SQL.Collection(null, null);
       },
       /Use new to construct a SQLCollection/
     );
 
-    /**
-    * This part is going to handle the input of SQLCollection()
-    */
     test.throws(
       function() {
         var test1 = new SQL.Collection();
       },
-      /First argument to new SQL.Collection must be a string or null/
+      /First argument to new SQLCollection must exist/
+    );
+
+    test.throws(
+      function() {
+        var test2 = new SQL.Collection(1234);
+      },
+      /First argument to new SQLCollection must be a string or null/
     );
   }
 );
