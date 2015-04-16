@@ -1,29 +1,37 @@
-// PostgreSQL connection
-pg = Npm.require('pg');
-var conString = 'postgres://postgres:1234@localhost/postgres';
+pg = Npm.require('pg'); // Node-Postgres
+var clientHolder = {}; // TODO: WTF
 
-var clientHolder = {};
-
-
-// TODO: Remove default values for connection string and table
 ActiveRecord = function (table, conString) {
-  this.conString = conString || 'postgres://postgres:1234@localhost/postgres';
-  this.table = table || 'tasks';
+
+  // initialize class
+  this.conString = conString || 'postgres://postgres:1234@localhost/postgres'; // TODO: REMOVE
+  this.table = table;
+
   // inputString used by queries, overrides other strings
+  // includes: create table, create relationship, drop table, insert
   this.inputString = '';
   this.autoSelectData = '';
   this.autoSelectInput = '';
-  // strings used by chaining statements
+
+  // statement starters
   this.selectString = '';
   this.updateString = '';
   this.deleteString = '';
-  this.dataArray = [];
+
+  // chaining statements
   this.joinString = '';
   this.whereString = '';
-  this.caboose = '';
-  this.orderby = '';
-  this.limitby = '';
-  // passes previous function name into data functions for error logging
+
+  // caboose statements
+  this.orderString = '';
+  this.limitString = '';
+  this.offsetString = '';
+  this.groupString = '';
+  this.havingString = '';
+
+  this.dataArray = [];
+
+  // error logging
   this.prevFunc = '';
 };
 
@@ -46,18 +54,14 @@ ActiveRecord.prototype._TableConstraints = {
   $primary: 'primary key'
 };
 
-// TODO: COMPLETE
 // Parameters: tableObj (req)
 // SQL: CREATE TABLE field data type constraint
 // Special: Function is required for all SQL collections
+// QUERY/INPUT STRING/MUST USE PRESCRIBED DATA TYPES & TABLE CONSTRAINTS
 ActiveRecord.prototype.createTable = function (tableObj) {
-  console.log("in posgres create table");
-  // SQL: 'CREATE TABLE table (fieldName constraint);'
-  // initialize input string parts
-  var table = this.table;
-  var startString = 'CREATE TABLE ' + table + ' (';
+
+  var startString = 'CREATE TABLE ' + this.table + ' (';
   var item, subKey, valOperator, inputString = '';
-  // iterate through array arguments to populate input string parts
 
   for (var key in tableObj) {
     inputString += key + ' ';
@@ -76,54 +80,50 @@ ActiveRecord.prototype.createTable = function (tableObj) {
     }
     inputString += ', ';
   }
-  // check to see if id provided
+  // check to see if _id already provided
   if (inputString.indexOf('_id') === -1) {
-    inputString += '_id serial primary key,';
+    startString += '_id serial primary key,';
   }
 
-  //inputString += ');';
-  // add notify functionality and close input string
-  inputString = startString + inputString;
-  inputString += " created_at TIMESTAMP default now()); " +
-  "CREATE OR REPLACE FUNCTION notify_trigger_" + table + "() RETURNS trigger AS $$" +
+  this.inputString = startString + inputString + " created_at TIMESTAMP default now()); " +
+  "CREATE OR REPLACE FUNCTION notify_trigger_" + this.table + "() RETURNS trigger AS $$" +
   "BEGIN" +
   " IF (TG_OP = 'DELETE') THEN " +
-  "PERFORM pg_notify('notify_trigger_" + table + "', '[{' || TG_TABLE_NAME || ':' || OLD._id || '}, { operation: " +
+  "PERFORM pg_notify('notify_trigger_" + this.table + "', '[{' || TG_TABLE_NAME || ':' || OLD._id || '}, { operation: " +
   "\"' || TG_OP || '\"}]');" +
   "RETURN old;" +
   "ELSIF (TG_OP = 'INSERT') THEN " +
-  "PERFORM pg_notify('notify_trigger_" + table + "', '[{' || TG_TABLE_NAME || ':' || NEW._id || '}, { operation: " +
+  "PERFORM pg_notify('notify_trigger_" + this.table + "', '[{' || TG_TABLE_NAME || ':' || NEW._id || '}, { operation: " +
   "\"' || TG_OP || '\"}]');" +
   "RETURN new; " +
   "ELSIF (TG_OP = 'UPDATE') THEN " +
-  "PERFORM pg_notify('notify_trigger_" + table + "', '[{' || TG_TABLE_NAME || ':' || NEW._id || '}, { operation: " +
+  "PERFORM pg_notify('notify_trigger_" + this.table + "', '[{' || TG_TABLE_NAME || ':' || NEW._id || '}, { operation: " +
   "\"' || TG_OP || '\"}]');" +
   "RETURN new; " +
   "END IF; " +
   "END; " +
   "$$ LANGUAGE plpgsql; " +
-  "CREATE TRIGGER watched_table_trigger AFTER INSERT OR DELETE OR UPDATE ON " + table +
-  " FOR EACH ROW EXECUTE PROCEDURE notify_trigger_" + table + "();";
+  "CREATE TRIGGER watched_table_trigger AFTER INSERT OR DELETE OR UPDATE ON " + this.table +
+  " FOR EACH ROW EXECUTE PROCEDURE notify_trigger_" + this.table + "();";
 
-  this.inputString = inputString;
   this.prevFunc = 'CREATE TABLE';
   return this;
 };
 
-// TODO: COMPLETE
 // Parameters: none
 // SQL: DROP TABLE table
 // Special: Deletes cascade
+// QUERY/INPUT STRING
 ActiveRecord.prototype.dropTable = function () {
   this.inputString = 'DROP TABLE IF EXISTS ' + this.table + ' CASCADE; DROP FUNCTION IF EXISTS notify_trigger_' + this.table + '() CASCADE;';
   this.prevFunc = 'DROP TABLE';
   return this;
 };
 
-// TODO: COMPLETE
 // Parameters: fields (arguments, optional)
 // SQL: SELECT fields FROM table, SELECT * FROM table
 // Special: May pass table, distinct, field to obtain a single record per unique value
+// STATEMENT STARTER/SELECT STRING
 ActiveRecord.prototype.select = function (/*arguments*/) {
   var args = '';
   if (arguments.length >= 1) {
@@ -143,32 +143,37 @@ ActiveRecord.prototype.select = function (/*arguments*/) {
   return this;
 };
 
-// TODO: COMPLETE
 // Parameters: id (optional)
 // SQL: SELECT fields FROM table, SELECT * FROM table
 // Special: If no idea is passed, may be chained with a where function
+// QUERY/INPUT STRING
 ActiveRecord.prototype.findOne = function (/*arguments*/) {
   if (arguments.length === 2) {
     this.inputString = 'SELECT * FROM ' + this.table + ' WHERE ' + this.table + '._id = ' + args + ' LIMIT 1;';
   } else {
-    this.selectString = 'SELECT * FROM ' + this.table;
-    this.caboose = ' LIMIT 1';
+    this.inputString = 'SELECT * FROM ' + this.table + ' LIMIT 1';
   }
-  this.prevFunc = 'FINE ONE';
+  this.prevFunc = 'FIND ONE';
   return this;
 };
 
-// TODO: INCOMPLETE
-// can accept string
-//ActiveRecord.prototype.joins = function () {
-//  if (arguments.length === 1 && typeof arguments[0] === 'string') {
-//    var joinTable = arguments[0];
-//    this.joinString += ' INNER JOIN ' + joinTable + ' ON ' + joinTable + '._id = ' + this.table + '.' + joinTable + '_id';
-//  }
-//  return this;
-//};
+// Parameters: join type, fields, join table (all strings or all arrays)
+// SQL: JOIN joinTable ON field = field
+// Special:
+// STATEMENT/JOIN STRING
+ActiveRecord.prototype.join = function (joinType, fields, joinTable) {
+  if (Array.isArray(joinType)) {
+    for (var x = 0, count = fields.length; x < count; x++){
+      this.joinString = " " + joinType[x] + " " + joinTable[x][0] + " ON " + this.table + "." + fields[x] + " = " + joinTable[x][0] + "." + joinTable[x][1];
+    }
+  } else {
+    this.joinString = " " + joinType + " " + joinTable + " ON " + this.table + "." + fields + " = " + joinTable + "." + joinTable;
+  }
+  this.prevFunc = "JOIN";
+  return this;
+};
 
-// TODO: PARTIALLY COMPLETE -> need to add IN statement if value is an array & additional selects & prevent use of words that are not SQL words
+// TODO: PARTIALLY COMPLETE -> need to add IN statement if value is an array
 // Parameters: string with ?'s followed by an argument for each of the ?'s
 // SQL: WHERE field operator comparator, WHERE field1 operator1 comparator1 AND/OR field2 operator2 comparator2
 // Special:
@@ -245,7 +250,7 @@ ActiveRecord.prototype.remove = function () {
 // Parameters: limit integer
 // SQL: LIMIT number
 ActiveRecord.prototype.limit = function (limit) {
-  this.limitby = ' LIMIT ' + limit;
+  this.limitString = ' LIMIT ' + limit;
   return this;
 };
 
@@ -313,7 +318,7 @@ ActiveRecord.prototype.group = function () {
 };
 
 ActiveRecord.prototype.order = function () {
-  this.orderby = '';
+  this.orderString = '';
   var args = '';
   if (arguments.length >= 1) {
     for (var i = 0; i < arguments.length; i++) {
@@ -327,7 +332,7 @@ ActiveRecord.prototype.order = function () {
   } else {
     args += '';
   }
-  this.orderby += 'ORDER BY ' + args;
+  this.orderString += 'ORDER BY ' + args;
   return this;
 };
 
@@ -349,7 +354,7 @@ ActiveRecord.prototype.fetch = function (cb) {
   var table = this.table;
   var dataArray = this.dataArray;
   var prevFunc = this.prevFunc;
-  var input = this.inputString.length > 0 ? this.inputString : this.selectString + this.joinString + this.whereString + this.orderby + this.limitby + ';';
+  var input = this.inputString.length > 0 ? this.inputString : this.selectString + this.joinString + this.whereString + this.orderString + this.limitString + ';';
   console.log('FETCH:', input, dataArray);
   pg.connect(this.conString, function (err, client, done) {
     if (err) {
@@ -393,15 +398,7 @@ ActiveRecord.prototype.save = function () {
   });
 };
 
-ActiveRecord.prototype.join = function (joinType, tableValues, compValues) {
-  for (var x = 0, count = tableValues.length; x < count; x++){
-    this.selectString += " " + joinType[x] + " " + compValues[x][0] + " ON " + this.table + "." + tableValues[x] + " = " + compValues[x][0] + "." + compValues[x][1];
-  }
 
-  this.prevFunc = "JOIN";
-  console.log(this.selectString);
-  return this;
-};
 
 ActiveRecord.prototype.createRelationship = function(relTable, relationship){
   if (relationship === "$onetomany"){
@@ -431,7 +428,7 @@ ActiveRecord.prototype.autoSelect = function(sub) {
 
   // We need a dedicated client to watch for changes on each table. We store these clients in
   // our clientHolder and only create a new one if one does not already exist
-
+  var conString = this.conString;
   var table = this.table;
   var prevFunc = this.prevFunc;
   var newWhere = this.whereString;
@@ -442,9 +439,9 @@ ActiveRecord.prototype.autoSelect = function(sub) {
   //console.log(this.selectString);
   //console.log(this.joinString);
   //console.log(this.whereString);
-  //console.log(this.orderby);
+  //console.log(this.orderString);
   //console.log(this.autoSelectInput);
-  this.autoSelectInput = this.autoSelectInput !== "" ? this.autoSelectInput : this.selectString + this.joinString + newWhere + this.orderby + this.limitby + ';';
+  this.autoSelectInput = this.autoSelectInput !== "" ? this.autoSelectInput : this.selectString + this.joinString + newWhere + this.orderString + this.limitString + ';';
   this.autoSelectData = this.autoSelectData !== "" ? this.autoSelectData  : this.dataArray;
   //console.log('auto:', this.autoSelectInput, this.autoSelectData);
   var value = this.autoSelectInput;

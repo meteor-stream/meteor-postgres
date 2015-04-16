@@ -57,14 +57,20 @@ if (Meteor.isClient) {
 if (Meteor.isServer) {
   //tasks = new SQL.Collection('tasks');
   //users1 = new SQL.Collection('users1');
+
   tasks.getActiveRecord('tasks');
   users1.getActiveRecord('users1');
-  //console.log('tasks =============',tasks.getActiveRecord);
+  console.log('tasks =============',tasks.getActiveRecord);
   //users1.ActiveRecord.createTable({name: ['$string']}).save();
   ////tasks.createTable({text: ['$string'], checked: ["$bool", {$default: false}]}).save();
   ////tasks.insert({text: 'this is a task', checked: false}).save();
   ////tasks.insert({text: 'this is another task', checked: true}).save();
   //tasks.ActiveRecord.createRelationship('users1', '$onetomany').save();
+
+  //KATE SHIT
+  //kate = new ActiveRecord('kate');
+  //kate.createTable({text: ['$string'], checked: ["$bool", {$default: false}]}).save();
+
 
   //tasks.select('users1.name', 'tasks.text').join(['INNER JOIN'], ["users1_id"], [["users1", '_id']]).where("users1.name = ?", "kate").order('tasks.text DESC').fetch();
   Meteor.methods({
@@ -76,6 +82,9 @@ if (Meteor.isServer) {
     },
     remove: function(table, paramObj){
       tasks.ActiveRecord.remove().where("_id = ?", paramObj._id.$eq).save();
+    },
+    createTable: function(table, paramObj){
+      tasks.createTable(table, paramObj);
     }
   });
 
