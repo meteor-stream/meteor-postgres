@@ -395,7 +395,7 @@ ActiveRecord.prototype.save = function (cb) {
     }
     client.query(input, dataArray, function (error, results) {
       // callback(error, results);
-      cb(error, results);
+      if (cb) { cb(error, results); }
     });
     done();
   });
