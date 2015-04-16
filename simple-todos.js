@@ -49,6 +49,9 @@ if (Meteor.isClient) {
     },
     "click .delete": function () {
       tasks.remove({_id: {$eq: this._id}});
+    },
+    "change .catselect": function(event){
+      console.log(event.target.value);
     }
   });
 
