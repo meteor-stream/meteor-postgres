@@ -39,5 +39,8 @@ Package.onTest(function (api) {
   api.addFiles('collection/collection.js', ['server', 'client']);
   api.export('SQL', ['server', 'client']);
   api.addFiles('collection/collection_tests.js');
+  api.addFiles('postgres/activerecord.js', 'server');
+  api.export('ActiveRecord', 'server');
+  api.addFiles('postgres/activerecord_tests.js', 'server');
 });
 
