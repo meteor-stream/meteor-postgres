@@ -106,3 +106,5 @@ if (Meteor.isServer) {
     return cursor;
   })
 }
+
+ //tasks.ActiveRecord. value = tasks.select('_id', 'text', 'checked', 'created_at').where(_id:this.user_id).order('created_at DESC').limit(10))
