@@ -35,7 +35,7 @@ if (Meteor.isClient) {
       tasks.insert({
         text:text,
         checked:false
-      });
+      }, tasks);
 
       // Clear form
       event.target.text.value = "";
@@ -55,28 +55,48 @@ if (Meteor.isClient) {
 }
 
 if (Meteor.isServer) {
-  console.log(SQL.Collection.getActiveRecord(), "THIS IS ACTIVERECORD");
-  var users1 = new SQL.Collection.getActiveRecord('users1');
-  //users.createTable({name: ['$string']}).save();
-  var tasks = new SQL.Collection.getActiveRecord('tasks');
-  //tasks.createTable({text: ['$string'], checked: ["$bool", {$default: false}]}).save();
-  //tasks.insert({text: 'this is a task', checked: false}).save();
-  //tasks.insert({text: 'this is another task', checked: true}).save();
-  //tasks.createRelationship('users1', '$onetomany').save();
+  //tasks = new SQL.Collection('tasks');
+  //users1 = new SQL.Collection('users1');
+  tasks.getActiveRecord('tasks');
+  users1.getActiveRecord('users1');
+  console.log('tasks =============',tasks.getActiveRecord);
+  //users1.ActiveRecord.createTable({name: ['$string']}).save();
+  ////tasks.createTable({text: ['$string'], checked: ["$bool", {$default: false}]}).save();
+  ////tasks.insert({text: 'this is a task', checked: false}).save();
+  ////tasks.insert({text: 'this is another task', checked: true}).save();
+  //tasks.ActiveRecord.createRelationship('users1', '$onetomany').save();
 
   //tasks.select('users1.name', 'tasks.text').join(['INNER JOIN'], ["users1_id"], [["users1", '_id']]).where("users1.name = ?", "kate").order('tasks.text DESC').fetch();
-
+  Meteor.methods({
+    add: function(table, paramObj) {
+      tasks.ActiveRecord.insert(paramObj).save();
+    },
+    update: function(table, paramObj, selectObj){
+      tasks.ActiveRecord.update(paramObj).where("_id = ?", selectObj._id.$eq).save();
+    },
+    remove: function(table, paramObj){
+      tasks.ActiveRecord.remove().where("_id = ?", paramObj._id.$eq).save();
+    },
+    createTable: function(table, paramObj){
+      tasks.createTable(table, paramObj);
+    }
+  });
 
   Meteor.publish('tasks', function () {
     var cursor = {};
-    //Creating publish
     cursor._publishCursor = function(sub) {
-      tasks.select('_id', 'text', 'checked', 'created_at').order('created_at ASC').limit(10).autoSelect(sub);
+      tasks.ActiveRecord.select('_id', 'text', 'checked', 'created_at').order('created_at DESC').limit(10).autoSelect(sub);
     };
-    cursor.autoSelect =  tasks.select('_id', 'text', 'checked', 'created_at').order('created_at ASC').limit(10).autoSelect;
+    cursor.autoSelect = tasks.ActiveRecord.select('_id', 'text', 'checked', 'created_at').order('created_at DESC').limit(10).autoSelect;
     return cursor;
   });
+
   Meteor.publish('users1', function(){
-    return SQL.Collection.getCursor('users1', ['_id', 'name', 'created_at'], {}, {}, {});
+    var cursor = {};
+    cursor._publishCursor = function(sub) {
+      users1.ActiveRecord.select('_id', 'name').limit(10).autoSelect(sub);
+    };
+    cursor.autoSelect = users1.ActiveRecord.select('_id', 'name').limit(10).autoSelect;
+    return cursor;
   })
 }

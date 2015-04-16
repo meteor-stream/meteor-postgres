@@ -11,9 +11,12 @@ ActiveRecord = function (table, conString) {
   this.table = table || 'tasks';
   // inputString used by queries, overrides other strings
   this.inputString = '';
+  this.autoSelectData = '';
+  this.autoSelectInput = '';
   // strings used by chaining statements
   this.selectString = '';
   this.updateString = '';
+  this.deleteString = '';
   this.dataArray = [];
   this.joinString = '';
   this.whereString = '';
@@ -173,7 +176,6 @@ ActiveRecord.prototype.findOne = function (/*arguments*/) {
 // db.select('students').where('age = ? and class = ? or name = ?','18','senior','kate').fetch();
 ActiveRecord.prototype.where = function (/*Arguments*/) {
   this.dataArray = [];
-  this.whereString += ' WHERE ';
   var where = '', redux, substring1, substring2;
   where += arguments[0];
   // replace ? with rest of array
@@ -184,7 +186,7 @@ ActiveRecord.prototype.where = function (/*Arguments*/) {
     where = substring1 + '$' + i + substring2;
     this.dataArray.push(arguments[i]);
   }
-  this.whereString += where;
+  this.whereString = ' WHERE ' + where;
   return this;
 };
 
@@ -230,11 +232,11 @@ ActiveRecord.prototype.update = function (updates) {
 };
 
 // TODO: COMPLETE
-// Parameters: table (req)
+// Parameters: none
 // SQL: DELETE FROM table
 // Special: May be chained with where, otherwise will remove all rows from table
 ActiveRecord.prototype.remove = function () {
-  this.selectString = 'DELETE FROM ' + this.table;
+  this.deleteString = 'DELETE FROM ' + this.table;
   this.prevFunc = 'DELETE';
   return this;
 };
@@ -366,10 +368,16 @@ ActiveRecord.prototype.fetch = function (cb) {
 };
 
 ActiveRecord.prototype.save = function () {
-  var input = this.inputString.length > 0 ? this.inputString : this.updateString + this.joinString + this.whereString + ';';
+  var input = this.inputString.length > 0 ? this.inputString : this.updateString + this.deleteString + this.joinString + this.whereString + ';';
   var dataArray = this.dataArray;
   var prevFunc = this.prevFunc;
   var table = this.table;
+  this.inputString = '';
+  this.updateString = '';
+  this.deleteString = '';
+  this.joinString = '';
+  this.whereString = '';
+  this.dataArray = [];
   var callback = function (err, results) {
       console.log(err, results);
     };
@@ -425,20 +433,26 @@ ActiveRecord.prototype.autoSelect = function(sub) {
   // our clientHolder and only create a new one if one does not already exist
 
   var table = this.table;
-  var dataArray = this.dataArray;
   var prevFunc = this.prevFunc;
+  var newWhere = this.whereString;
+  var newSelect = newSelect || this.selectString;
+  var newJoin = newJoin || this.selectString;
+
   //console.log(this.inputString);
-  console.log(this.selectString);
+  //console.log(this.selectString);
   //console.log(this.joinString);
   //console.log(this.whereString);
-  console.log(this.orderby);
-  var input = this.inputString.length > 0 ? this.inputString : this.selectString + this.joinString + this.whereString + this.orderby + this.limitby + ';';
-  console.log('audo:', input, dataArray);
+  //console.log(this.orderby);
+  //console.log(this.autoSelectInput);
+  this.autoSelectInput = this.autoSelectInput !== "" ? this.autoSelectInput : this.selectString + this.joinString + newWhere + this.orderby + this.limitby + ';';
+  this.autoSelectData = this.autoSelectData !== "" ? this.autoSelectData  : this.dataArray;
+  //console.log('auto:', this.autoSelectInput, this.autoSelectData);
+  var value = this.autoSelectInput;
 
 
   var loadAutoSelectClient = function(name, cb){
     // Function to load a new client, store it, and then send it to the function to add the watcher
-    console.log("Loading new client for autoSelect");
+    //console.log("Loading new client for autoSelect");
     var context = this;
     pg.connect(conString, function(err, client, done) {
       clientHolder[name] = client;
@@ -448,8 +462,8 @@ ActiveRecord.prototype.autoSelect = function(sub) {
 
   var autoSelectHelper = function(client){
     // Selecting all from the table
-    console.log(input);
-    client.query(input, function(error, results) {
+    //console.log(value);
+    client.query(value, function(error, results) {
       if (error) {
         console.log(error, "in autoSelect top")
       } else {
@@ -484,9 +498,10 @@ ActiveRecord.prototype.autoSelect = function(sub) {
         });
       }
       else if (returnMsg[1].operation === "UPDATE") {
-        client.query(input, dataArray, function(error, results) {
+        var selectString1 = newJoin + " WHERE " + table + "._id = " + returnMsg[0][table];
+        client.query(selectString1, this.autoSelectData, function(error, results) {
           if (error) {
-            console.log(error, "in autoSelect update");
+            //console.log(error, "in autoSelect update");
           } else {
             //console.log(results.rows[0]);
             sub._session.send({
@@ -505,12 +520,15 @@ ActiveRecord.prototype.autoSelect = function(sub) {
         });
       }
       else if (returnMsg[1].operation === "INSERT") {
+        //console.log(newSelect, 'select string');
+        //console.log(newJoin, 'join string');
+        var selectString1 = newJoin + " WHERE " + table + "._id = " + returnMsg[0][table];
         //var selectString = selectStatement(name, properties, {_id: {$eq: returnMsg[0][sub._name]}}, optionsObj, joinObj);
-        client.query(input, dataArray, function(error, results) {
+        client.query(selectString1, this.autoSelectData, function(error, results) {
           //console.log("insert", selectString);
           if (error) {
-            console.log(selectString);
-            console.log(error, "in autoSelect insert")
+            //console.log("========================", selectString1);
+            //console.log(error, "in autoSelect insert")
           } else {
             sub._session.send({
               msg: 'changed',
