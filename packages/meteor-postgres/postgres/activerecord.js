@@ -141,7 +141,6 @@ ActiveRecord.prototype.insert = function (inserts) {
   return this;
 };
 
-// TODO
 // Parameters: updates object (req)
 // SQL: UPDATE table SET (fields) = (values)
 // Special:
@@ -174,7 +173,6 @@ ActiveRecord.prototype.remove = function () {
   return this;
 };
 
-// TODO
 // Parameters: fields (arguments, optional)
 // SQL: SELECT fields FROM table, SELECT * FROM table
 // Special: May pass table, distinct, field to obtain a single record per unique value
@@ -228,7 +226,6 @@ ActiveRecord.prototype.join = function (joinType, fields, joinTable) {
   return this;
 };
 
-// TODO: PARTIALLY COMPLETE -> need to add IN statement if value is an array
 // Parameters: string with ?'s followed by an argument for each of the ?'s
 // SQL: WHERE field operator comparator, WHERE field1 operator1 comparator1 AND/OR field2 operator2 comparator2
 // Special:
@@ -249,6 +246,8 @@ ActiveRecord.prototype.where = function (/*Arguments*/) {
   this.whereString = ' WHERE ' + where;
   return this;
 };
+
+// TODO WHEREIN
 
 // Parameters: order fields (req)
 // SQL: ORDER BY fields
@@ -293,15 +292,7 @@ ActiveRecord.prototype.group = function (group) {
   return this;
 };
 
-// TODO: INCOMPLETE
-// Parameters:
-// SQL: HAVING
-// Special:
-ActiveRecord.prototype.having = function () {
-  //this.caboose +=
-  return this;
-};
-
+// TODO: HAVING
 
 // Parameters: limit (optional, defaults to 1)
 // SQL: SELECT * FROM table ORDER BY table._id ASC LIMIT 1, SELECT * FROM table ORDER BY table._id ASC LIMIT limit
@@ -335,7 +326,6 @@ ActiveRecord.prototype.take = function (limit) {
   this.prevFunc = 'TAKE';
   return this;
 };
-
 
 // Data function that retrieves data from database
 ActiveRecord.prototype.fetch = function (cb) {
