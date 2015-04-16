@@ -2,6 +2,9 @@
 pg = Npm.require('pg');
 var conString = 'postgres://postgres:1234@localhost/postgres';
 
+var clientHolder = {};
+
+
 // TODO: Remove default values for connection string and table
 ActiveRecord = function (table, conString) {
   this.conString = conString || 'postgres://postgres:1234@localhost/postgres';
@@ -15,6 +18,8 @@ ActiveRecord = function (table, conString) {
   this.joinString = '';
   this.whereString = '';
   this.caboose = '';
+  this.orderby = '';
+  this.limitby = '';
   // passes previous function name into data functions for error logging
   this.prevFunc = '';
 };
@@ -238,7 +243,7 @@ ActiveRecord.prototype.remove = function () {
 // Parameters: limit integer
 // SQL: LIMIT number
 ActiveRecord.prototype.limit = function (limit) {
-  this.caboose += ' LIMIT ' + limit;
+  this.limitby = ' LIMIT ' + limit;
   return this;
 };
 
@@ -299,27 +304,28 @@ ActiveRecord.prototype.group = function () {
     }
     args = args.substring(0, args.length - 2);
   } else {
-    args += '*';
+    args += '';
   }
   this.caboose += 'GROUP BY ' + args;
   return this;
 };
 
-ActiveRecord.prototype.order = function (value) {
-  //var args = '';
-  //if (arguments.length >= 1) {
-  //  for (var i = 0; i < arguments.length; i++) {
-  //    if (arguments[i] === 'distinct') {
-  //      args += 'DISTINCT ';
-  //    } else {
-  //      args += arguments[i] + ', ';
-  //    }
-  //  }
-  //  args = args.substring(0, args.length - 2);
-  //} else {
-  //  args += '*';
-  //}
-  this.caboose += 'ORDER BY ' + value;
+ActiveRecord.prototype.order = function () {
+  this.orderby = '';
+  var args = '';
+  if (arguments.length >= 1) {
+    for (var i = 0; i < arguments.length; i++) {
+      if (arguments[i] === 'distinct') {
+        args += 'DISTINCT ';
+      } else {
+        args += arguments[i] + ', ';
+      }
+    }
+    args = args.substring(0, args.length - 2);
+  } else {
+    args += '';
+  }
+  this.orderby += 'ORDER BY ' + args;
   return this;
 };
 
@@ -341,7 +347,7 @@ ActiveRecord.prototype.fetch = function (cb) {
   var table = this.table;
   var dataArray = this.dataArray;
   var prevFunc = this.prevFunc;
-  var input = this.inputString.length > 0 ? this.inputString : this.selectString + this.joinString + this.whereString + this.caboose + ';';
+  var input = this.inputString.length > 0 ? this.inputString : this.selectString + this.joinString + this.whereString + this.orderby + this.limitby + ';';
   console.log('FETCH:', input, dataArray);
   pg.connect(this.conString, function (err, client, done) {
     if (err) {
@@ -425,8 +431,8 @@ ActiveRecord.prototype.autoSelect = function(sub) {
   console.log(this.selectString);
   //console.log(this.joinString);
   //console.log(this.whereString);
-  console.log(this.caboose);
-  var input = this.inputString.length > 0 ? this.inputString : this.selectString + this.joinString + this.whereString + this.caboose + ';';
+  console.log(this.orderby);
+  var input = this.inputString.length > 0 ? this.inputString : this.selectString + this.joinString + this.whereString + this.orderby + this.limitby + ';';
   console.log('audo:', input, dataArray);
 
 
@@ -442,6 +448,7 @@ ActiveRecord.prototype.autoSelect = function(sub) {
 
   var autoSelectHelper = function(client){
     // Selecting all from the table
+    console.log(input);
     client.query(input, function(error, results) {
       if (error) {
         console.log(error, "in autoSelect top")
