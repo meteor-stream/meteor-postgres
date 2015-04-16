@@ -11,12 +11,7 @@ Package.describe({
 });
 
 Npm.depends({
-  'pg'            :  '4.3.0',
-  'babel-runtime' :  '5.0.9',
-  'lodash'        :  '3.6.0',
-  'random-strings':  '0.0.1',
-  'murmurhash-js' :  '1.0.0',
-  'pg-live-query' :  '0.0.3'
+  'pg'            :  '4.3.0'
 });
 
 Package.onUse(function(api) {
