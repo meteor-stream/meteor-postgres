@@ -374,6 +374,7 @@ ActiveRecord.prototype.save = function (cb) {
   var callback = function (err, results) {
       console.log(err, results);
     };
+
   console.log('SAVE:', input, dataArray);
   pg.connect(this.conString, function (err, client, done) {
     if (err) {
@@ -463,7 +464,7 @@ ActiveRecord.prototype.autoSelect = function(sub) {
   var prevFunc = this.prevFunc;
   var newWhere = this.whereString;
   var newSelect = newSelect || this.selectString;
-  var newJoin = newJoin || this.selectString;
+  var newJoin = newJoin || this.joinString;
 
   //console.log(this.inputString);
   //console.log(this.selectString);
@@ -475,6 +476,7 @@ ActiveRecord.prototype.autoSelect = function(sub) {
   this.autoSelectData = this.autoSelectData !== "" ? this.autoSelectData  : this.dataArray;
   //console.log('auto:', this.autoSelectInput, this.autoSelectData);
   var value = this.autoSelectInput;
+  this.clearAll();
 
 
   var loadAutoSelectClient = function(name, cb){
@@ -526,12 +528,14 @@ ActiveRecord.prototype.autoSelect = function(sub) {
         });
       }
       else if (returnMsg[1].operation === "UPDATE") {
-        var selectString1 = newJoin + " WHERE " + table + "._id = " + returnMsg[0][table];
+        var selectString1 = newSelect + newJoin + " WHERE " + table + "._id = " + returnMsg[0][table];
+        console.log(530, selectString1);
         client.query(selectString1, this.autoSelectData, function(error, results) {
+          console.log('fired');
           if (error) {
-            //console.log(error, "in autoSelect update");
+            console.log(error, "in autoSelect update");
           } else {
-            //console.log(results.rows[0]);
+            console.log(results.rows[0]);
             sub._session.send({
               msg: 'changed',
               collection: sub._name,
@@ -550,13 +554,13 @@ ActiveRecord.prototype.autoSelect = function(sub) {
       else if (returnMsg[1].operation === "INSERT") {
         //console.log(newSelect, 'select string');
         //console.log(newJoin, 'join string');
-        var selectString1 = newJoin + " WHERE " + table + "._id = " + returnMsg[0][table];
+        var selectString1 = newSelect + newJoin + " WHERE " + table + "._id = " + returnMsg[0][table];
         //var selectString = selectStatement(name, properties, {_id: {$eq: returnMsg[0][sub._name]}}, optionsObj, joinObj);
         client.query(selectString1, this.autoSelectData, function(error, results) {
-          //console.log("insert", selectString);
+          console.log("insert", selectString1);
           if (error) {
             //console.log("========================", selectString1);
-            //console.log(error, "in autoSelect insert")
+            console.log(error, "in autoSelect insert")
           } else {
             sub._session.send({
               msg: 'changed',

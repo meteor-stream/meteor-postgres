@@ -96,6 +96,7 @@ SQL.Collection = function(connection, name) {
     // This could happen from an addition, an update, or a removal, from that specific client, or another client
     this.addEventListener('changed', function(index, msg, name) {
       // Checking to see if event is a removal from the DB
+      console.log(91, msg);
       if (msg.removed) {
         var tableId = msg.tableId;
         // For the client that triggered the removal event, the data will have
@@ -106,6 +107,7 @@ SQL.Collection = function(connection, name) {
       else if (msg.modified) {
         // For the client that triggered the removal event, the data will have
         // already been removed and this is redundant.
+        console.log(116, msg.results);
         minisql.update(this.tableName, msg.results, {"_id": {$eq: msg.results._id}});
       }
       else {
@@ -114,12 +116,14 @@ SQL.Collection = function(connection, name) {
         // by the server should be an update rather than an insert
         // We use the unvalidated boolean variabe to keep track of this
         if (unvalidated) {
+          console.log(109, msg.results);
           minisql.update(this.tableName, msg.results, {_id: {$eq: -1}});
           reactiveData.changed();
           unvalidated = false;
         }
         else {
           // The data was added by another client so just a regular insert
+          console.log(116, msg.results);
           minisql.insert(this.tableName, msg.results);
         }
       }
