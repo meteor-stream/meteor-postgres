@@ -1,5 +1,5 @@
 Package.describe({
-  name: 'spaceelephant:meteor-postgres',
+  name: 'meteorsteam:meteor-postgres',
   version: '0.0.1',
   // Brief, one-line summary of the package.
   summary: 'PostgreSQL support for Meteor',
@@ -16,7 +16,7 @@ Npm.depends({
 
 Package.onUse(function(api) {
   // The order these files are imported is very important
-  api.versionsFrom('1.1');
+  api.versionsFrom('1.1.0.1');
   api.use('underscore');
   api.use('tracker');
   api.use('ddp');
