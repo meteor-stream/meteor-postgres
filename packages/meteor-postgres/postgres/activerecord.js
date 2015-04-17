@@ -347,11 +347,13 @@ ActiveRecord.prototype.fetch = function (cb) {
     }
     //console.log(input);
     client.query(input, dataArray, function (error, results) {
-      if (error) {
-        console.log("error in " + prevFunc + ' ' + table, error);
-      } else {
-        cb(prevFunc, table, results);
-      }
+      // if (error) {
+      //   console.log("error in " + prevFunc + ' ' + table, error);
+      // } else {
+      //   // cb(prevFunc, table, results);
+      //   cb(error, results);
+      // }
+      cb(error, results);
       done();
     });
   });
