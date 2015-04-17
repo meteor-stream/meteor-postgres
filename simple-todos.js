@@ -74,15 +74,18 @@ if (Meteor.isServer) {
   users1.getActiveRecord('users1');
   //console.log('tasks =============',tasks.getActiveRecord);
   //users1.ActiveRecord.createTable({name: ['$string']}).save();
-  ////tasks.createTable({text: ['$string'], checked: ["$bool", {$default: false}]}).save();
-  ////tasks.insert({text: 'this is a task', checked: false}).save();
-  ////tasks.insert({text: 'this is another task', checked: true}).save();
+  //tasks.createTable({text: ['$string'], checked: ["$bool", {$default: false}]}).save();
+  //tasks.insert({text: 'this is a task', checked: false}).save();
+  //tasks.insert({text: 'this is another task', checked: true}).save();
   //tasks.ActiveRecord.createRelationship('users1', '$onetomany').save();
-
+  //newTasks = new ActiveRecord('newTasks');
+  //newUsers = new ActiveRecord('newUsers');
   //KATE SHIT
   //kate = new ActiveRecord('kate');
   //kate.createTable({text: ['$string'], checked: ["$bool", {$default: false}]}).save();
-
+  //newTasks.createTable({text: ['$string'], checked: ["$bool", {$default: false}]}).save();
+  //newUsers.createTable({name: ['$string']}).save();
+  //newTasks.createRelationship('newUsers', '$onetomany').save();
 
   //tasks.ActiveRecord.select('users1.name', 'tasks.text').join(['INNER JOIN'], ["users1_id"], [["users1", '_id']]).where("users1.name = ?", "kate").order('tasks.text DESC').fetch();
   Meteor.methods({
@@ -100,13 +103,13 @@ if (Meteor.isServer) {
     }
   });
 
+
   Meteor.publish('tasks', function () {
     var cursor = {};
     cursor._publishCursor = function(sub) {
       tasks.ActiveRecord.select('tasks._id as _id', 'tasks.text', 'tasks.checked', 'tasks.created_at', 'users1._id as users_id', 'users1.name').join(['INNER JOIN'], ["users1_id"], [["users1", '_id']]).order('created_at DESC').limit(10).autoSelect(sub);
     };
-    cursor.autoSelect = tasks.ActiveRecord.select('tasks._id as _id', 'tasks.text', 'tasks.checked', 'tasks.created_at', 'users1._id as users_id', 'users1._name').join('INNER JOIN', ['_id'], ['users1:_id']).order('created_at DESC').limit(10).autoSelect;
-    return cursor;
+    cursor.autoSelect = tasks.ActiveRecord.select('tasks._id as _id', 'tasks.text', 'tasks.checked', 'tasks.created_at', 'users1._id as users_id', 'users1._name').join('INNER JOIN', ['_id'], ['users1:_id']).order('created_at DESC').limit(10).autoSelect;    return cursor;
   });
 
   Meteor.publish('users1', function(){

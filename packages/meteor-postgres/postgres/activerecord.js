@@ -422,22 +422,13 @@ ActiveRecord.prototype.clearAll = function() {
 ActiveRecord.prototype.createRelationship = function(relTable, relationship){
   if (relationship === "$onetomany"){
     this.inputString = "ALTER TABLE " +  this.table + " ADD " + relTable +
-    "_id INTEGER references " + relTable + "(_id);";
+    "_id INTEGER references " + relTable + "(_id) ON DELETE CASCADE;";
   }
   else {
     this.inputString = "CREATE TABLE IF NOT EXISTS" +
-    this.table + relTable + " (" + this.table + "_id integer references " + this.table + "(_id), " +
-    relTable + "_id integer references " + relTable + "(_id), " +
+    this.table + relTable + " (" + this.table + "_id integer references " + this.table + "(_id) ON DELETE CASCADE, " +
+    relTable + "_id integer references " + relTable + "(_id) ON DELETE CASCADE, " +
     "PRIMARY KEY(" + this.table + "_id, " + relTable + "_id)); ";
-    this.inputString +=  "CREATE OR REPLACE FUNCTION " + this.table + relTable + "() RETURNS trigger AS $$ " +
-    "BEGIN DELETE FROM " + this.table + relTable + " WHERE TG_TABLE_NAME || _id = OLD._id; " +
-    "RETURN old; " +
-    "END; " +
-    "$$ LANGUAGE plpgsql; ";
-    this.inputString += "CREATE TRIGGER " + this.table+relTable  + " AFTER DELETE ON " + this.table +
-    " FOR EACH ROW EXECUTE PROCEDURE " + this.table + relTable + "(); ";
-    this.inputString += "CREATE TRIGGER " + this.table+relTable  + " AFTER DELETE ON " + relTable +
-    " FOR EACH ROW EXECUTE PROCEDURE " + this.table + relTable + "(); ";
   }
   return this;
 };
