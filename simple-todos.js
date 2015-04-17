@@ -4,10 +4,13 @@
 if (Meteor.isClient) {
   // TODO: Move the table definition into SQLCollection
   // To mirror the Mongo interface we should make it so taht 1 collection is 1 table
+  var newUser = 'ko';
   var taskTable = {
     _id: ['$number'],
     text: ['$string', '$notnull'],
-    checked: ['$bool']
+    checked: ['$bool'],
+    name: ['$string'],
+    users1_id: ['$number']
   };
   tasks.createTable(taskTable);
 
@@ -31,10 +34,15 @@ if (Meteor.isClient) {
     "submit .new-task": function (event) {
       //console.log(event.target.category.value); // How to access name
       // This function is called when the new task form is submitted
+      //console.log(newUser);
+      var user = alasql('select _id from users1 where name = ?', [newUser])[0]._id;
+      //console.log(user);
       var text = event.target.text.value;
       tasks.insert({
         text:text,
-        checked:false
+        checked:false,
+        name: newUser,
+        users1_id: user
       }, tasks);
 
       // Clear form
@@ -51,7 +59,8 @@ if (Meteor.isClient) {
       tasks.remove({_id: {$eq: this._id}});
     },
     "change .catselect": function(event){
-      console.log(event.target.value);
+      newUser = event.target.value;
+      //console.log(event.target.value);
     }
   });
 
@@ -63,7 +72,7 @@ if (Meteor.isServer) {
 
   tasks.getActiveRecord('tasks');
   users1.getActiveRecord('users1');
-  console.log('tasks =============',tasks.getActiveRecord);
+  //console.log('tasks =============',tasks.getActiveRecord);
   //users1.ActiveRecord.createTable({name: ['$string']}).save();
   ////tasks.createTable({text: ['$string'], checked: ["$bool", {$default: false}]}).save();
   ////tasks.insert({text: 'this is a task', checked: false}).save();
@@ -75,7 +84,7 @@ if (Meteor.isServer) {
   //kate.createTable({text: ['$string'], checked: ["$bool", {$default: false}]}).save();
 
 
-  //tasks.select('users1.name', 'tasks.text').join(['INNER JOIN'], ["users1_id"], [["users1", '_id']]).where("users1.name = ?", "kate").order('tasks.text DESC').fetch();
+  //tasks.ActiveRecord.select('users1.name', 'tasks.text').join(['INNER JOIN'], ["users1_id"], [["users1", '_id']]).where("users1.name = ?", "kate").order('tasks.text DESC').fetch();
   Meteor.methods({
     add: function(table, paramObj) {
       tasks.ActiveRecord.insert(paramObj).save();
@@ -94,9 +103,9 @@ if (Meteor.isServer) {
   Meteor.publish('tasks', function () {
     var cursor = {};
     cursor._publishCursor = function(sub) {
-      tasks.ActiveRecord.select('_id', 'text', 'checked', 'created_at').order('created_at DESC').limit(10).autoSelect(sub);
+      tasks.ActiveRecord.select('tasks._id as _id', 'tasks.text', 'tasks.checked', 'tasks.created_at', 'users1._id as users_id', 'users1.name').join(['INNER JOIN'], ["users1_id"], [["users1", '_id']]).order('created_at DESC').limit(10).autoSelect(sub);
     };
-    cursor.autoSelect = tasks.ActiveRecord.select('_id', 'text', 'checked', 'created_at').order('created_at DESC').limit(10).autoSelect;
+    cursor.autoSelect = tasks.ActiveRecord.select('tasks._id as _id', 'tasks.text', 'tasks.checked', 'tasks.created_at', 'users1._id as users_id', 'users1._name').join('INNER JOIN', ['_id'], ['users1:_id']).order('created_at DESC').limit(10).autoSelect;
     return cursor;
   });
 
