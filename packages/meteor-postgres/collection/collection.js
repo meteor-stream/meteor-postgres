@@ -40,6 +40,7 @@ SQL.Collection = function(connection, name) {
   };
 
   this.insert = function(dataObj, tasks){
+    console.log("in insert");
     dataObj['_id'] = -1;
     minisql.insert(this.tableName, dataObj);
     reactiveData.changed();
