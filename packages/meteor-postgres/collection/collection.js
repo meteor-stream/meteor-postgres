@@ -8,6 +8,10 @@ SQL = {};
 var buffer = [];
 SQL.Collection = function(connection, name) {
   var self = this;
+  if (!(self instanceof SQL.Collection)) {
+    throw new Error('Use new to construct a SQLCollection');
+  };
+
   this.getActiveRecord = function(connection){
     // Alternativly you could add to the SQL.Collection object with:
     self.ActiveRecord = new ActiveRecord(connection);
@@ -19,6 +23,10 @@ SQL.Collection = function(connection, name) {
   // boolean to keep track of whether the local DB has an unvalidated entry
   var unvalidated = false;
   self._events = [];
+
+  if (!this.tableName) {
+    throw new Error('First argument to new SQLCollection must exist');
+  }
 
   if (this.tableName !== null && typeof this.tableName !== "string") {
     throw new Error(

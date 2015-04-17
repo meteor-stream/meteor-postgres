@@ -35,7 +35,9 @@ Tinytest.add('activerecord - instantiate failure', function(test) {
 });
 
 Tinytest.add('activerecord - basic - success', function(test) {
-
+  var testVal = testTasks.findOne().wrapFetch();
+  test.equal(typeof testVal.rows[0], 'object');
+  test.equal(testVal.rows.length, 1);
 });
 
 Tinytest.add('activerecord - basic - failure', function(test) {

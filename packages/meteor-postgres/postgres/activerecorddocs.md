@@ -3,7 +3,7 @@
 There are four types of methods in this ORM. <br/>
 1. Statements may be chained. You must use one (and only one) starter per chain. <br/>
 2. Cabooses may only be added to the end of statement chains.  <br/>
-3. Queries override all other chains and should only be used by themselves. <br/> 
+3. Queries override all other chains and should only be used by themselves. <br/>
 4. Data methods should be used in all cases to save or retrieve your data.  <br/>
 
 Note: There is no alter table function as you cannot alter tables after data has been entered. It is recommended that <br/>
@@ -14,14 +14,14 @@ you drop the table and re-create it.  <br/>
 **SQL:** CREATE TABLE field data type constraint <br/>
 **Special:** Function is required for all SQL collections, primary key added unless _id field is supplied <br/>
 
-**Example:** 
+**Example:**
 `ActiveRecord.createTable('students', {` <br/>
   `name: ['$string', '$notnull'],` <br/>
   `age: ['$number'],` <br/>
   `class: ['$string', {$default: '2015'}]` <br/>
 `});` <br/>
 
-`CREATE TABLE students(id serial primary key not null, name varchar(255) not null, age integer, <br/> 
+`CREATE TABLE students(id serial primary key not null, name varchar(255) not null, age integer, <br/>
   class varchar(255) default 2015);` <br/>
 
 **Data types available:**
@@ -32,7 +32,7 @@ you drop the table and re-create it.  <br/>
   $float: 'decimal',
   $seq: 'serial',
   $bool: 'boolean'
-  
+
 **Table constraints available:**
     $unique: 'unique',
     $check: 'check ', // value
@@ -73,7 +73,7 @@ ActiveRecord.prototype.joins = function() {
 ActiveRecord.prototype.where = function(/*Arguments*/) {};
 
 ### PARTIALLY COMPLETE: INSERT QUERY
-// Parameters: inserts object (req) 
+// Parameters: inserts object (req)
 // SQL: INSERT INTO table (fields) VALUES (values)
 // Special:
 ActiveRecord.prototype.insert = function() {};
@@ -130,16 +130,16 @@ ActiveRecord.prototype.group = function() {};
 // Special:
 ActiveRecord.prototype.having = function() {};
 
-### FETCH DATA  
+### FETCH DATA
 // Parameters: None
 // SQL: Combines previously chained items to create a SQL statement
 // Special: Functions with an inputString override other chainable functions because they are complete
 ActiveRecord.prototype.fetch = function() {};
 
 
-    
 
-### SAVE DATA 
+
+### SAVE DATA
 
 
 
