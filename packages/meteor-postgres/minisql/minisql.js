@@ -187,7 +187,8 @@ minisql.select = function(name, returnFields, selectObj, optionsObj) {
   //var limit = object.limit ? ' LIMIT ' + object.limit : '';
   //var offset = object.offset ? ' OFFSET ' + object.offset : '';
   //var initString = 'SELECT ' + columnNames + ' FROM ' + name + groupBy + limit + offset + ';';
-  var initString = selectStatement(name, returnFields);
+  var initString = selectStatement(name, returnFields, selectObj);
+  console.log(initString);
   return alasql(initString);
 };
 

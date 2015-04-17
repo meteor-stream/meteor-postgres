@@ -46,6 +46,7 @@ SQL.Collection = function(connection, name) {
     reactiveData.changed();
     unvalidated = true;
     delete dataObj['_id'];
+    delete dataObj['name'];
     // Removing ID so that server DB will automatically assign one
     Meteor.call('add', this, dataObj);
   };
@@ -76,6 +77,7 @@ SQL.Collection = function(connection, name) {
     // Data added to any chient while the page is already loaded will trigger a 'changed envent'
     this.addEventListener('added', function(index, msg, name) {
       minisql.remove(this.tableName);
+      //console.log(msg.results);
       for (var x = msg.results.length - 1; x >= 0; x--) {
           minisql.insert(this.tableName, msg.results[x]);
         }

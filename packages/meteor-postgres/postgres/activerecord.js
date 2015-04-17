@@ -263,7 +263,7 @@ ActiveRecord.prototype.order = function (/*arguments*/) {
   } else {
     args = arguments[0];
   }
-  this.orderString = 'ORDER BY ' + args;
+  this.orderString = ' ORDER BY ' + args;
   return this;
 };
 
@@ -439,6 +439,19 @@ ActiveRecord.prototype.createRelationship = function(relTable, relationship){
   return this;
 };
 
+ActiveRecord.prototype.returnSql = function(){
+  var table = this.table;
+  var dataArray = this.dataArray;
+  var prevFunc = this.prevFunc;
+
+  var starter = this.updateString || this.deleteString || this.selectString;
+
+  var input = this.inputString.length > 0 ? this.inputString : starter + this.joinString + this.whereString + this.orderString + this.limitString +
+  this.offsetString + this.groupString + this.havingString + ';';
+
+  return input
+};
+
 ActiveRecord.prototype.autoSelect = function(sub) {
 
   // We need a dedicated client to watch for changes on each table. We store these clients in
@@ -479,6 +492,7 @@ ActiveRecord.prototype.autoSelect = function(sub) {
       if (error) {
         console.log(error, "in autoSelect top")
       } else {
+        //console.log(results.rows);
         sub._session.send({
           msg: 'added',
           collection: sub._name,
