@@ -1,0 +1,41 @@
+<head>
+  <title>Todo List</title>
+</head>
+
+
+<body>
+
+  <div class="container">
+    <header>
+      <h1>Todo List</h1>
+
+      <form class="new-task">
+        <input type="text" name="text" placeholder="Type to add new tasks" />
+          <div class="menu">
+          <select class="catselect" name="category">
+            {{ #each categories }}
+            <option value="{{ name }}">{{ name }}</option>
+            {{ /each }}
+          </select>
+        </div>
+      </form>
+    </header>
+
+    <ul>
+      {{#each tasks}}
+        {{> task}}
+      {{/each}}
+    </ul>
+  </div>
+</body>
+
+<!-- replace the existing task template with this code -->
+<template name="task">
+  <li class="{{#if checked}}checked{{/if}}">
+    <button class="delete">&times;</button>
+
+    <input type="checkbox" checked="{{checked}}" class="toggle-checked" />
+
+    <span class="text">{{text}}</span>
+  </li>
+</template>
