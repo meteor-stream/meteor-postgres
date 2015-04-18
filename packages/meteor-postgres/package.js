@@ -25,8 +25,8 @@ Package.onUse(function(api) {
   api.addFiles(['minisql/alasql.js', 'minisql/alasql.js.map', 'minisql/minisql.js'], 'client');
   api.export('minisql', 'client');
 
-  api.addFiles('collection/collectionClass.js');
-  api.export('Collection');
+  api.addFiles('collection/collection.js');
+  api.export('SQL');
 
   //api.addFiles('collection/collection.js');
   //api.export('SQL');
