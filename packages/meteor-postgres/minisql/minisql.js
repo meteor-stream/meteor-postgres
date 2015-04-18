@@ -102,17 +102,6 @@ miniSQL.prototype.dropTable = function() {
 miniSQL.prototype.insert = function(serverInserts, clientInserts) {
   console.log(this.tableElements);
   // server
-  this.dataArray = [];
-  var insertString = 'INSERT INTO ' + this.table + ' (';
-  var valueString = ') VALUES (', j = 1;
-  for (var key in serverInserts) {
-    insertString += key + ', ';     // field
-    this.dataArray.push(serverInserts[key]); // data
-    valueString += '$' + j++ + ', ';   // $1, $2, etc
-  }
-
-  this.inputString = insertString.substring(0, insertString.length - 2) + valueString.substring(0, valueString.length - 2) + ');';
-
   if (clientInserts) {
     // client
     this.dataArray2 = [];
@@ -131,6 +120,23 @@ miniSQL.prototype.insert = function(serverInserts, clientInserts) {
     this.server = true;
     this.inputString2 = insertString2.substring(0, insertString2.length - 2) + valueString2.substring(0, valueString2.length - 2) + ');';
   }
+
+  this.dataArray = [];
+  if (serverInserts['id'] === -1){
+    delete serverInserts['id'];
+  }
+  var insertString = 'INSERT INTO ' + this.table + ' (';
+  var valueString = ') VALUES (', j = 1;
+  for (var key in serverInserts) {
+    insertString += key + ', ';     // field
+    this.dataArray.push(serverInserts[key]); // data
+    valueString += '$' + j++ + ', ';   // $1, $2, etc
+  }
+
+  this.inputString = insertString.substring(0, insertString.length - 2) + valueString.substring(0, valueString.length - 2) + ');';
+
+
+
   this.prevFunc = 'INSERT';
   return this;
 };
