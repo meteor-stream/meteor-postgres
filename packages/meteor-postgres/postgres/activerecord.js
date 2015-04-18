@@ -355,7 +355,7 @@ ActiveRecord.prototype.fetch = function (input, data, cb) {
       //   // cb(prevFunc, table, results);
       //   cb(error, results);
       // }
-      //console.log(error, results);
+      console.log(error, results);
       done();
     });
   });
@@ -485,7 +485,7 @@ ActiveRecord.prototype.autoSelect = function(sub) {
       if (error) {
         console.log(error, "in autoSelect top")
       } else {
-        //console.log(results.rows);
+        console.log(results.rows);
         sub._session.send({
           msg: 'added',
           collection: sub._name,

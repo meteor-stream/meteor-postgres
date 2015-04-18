@@ -28,7 +28,7 @@ if (Meteor.isClient) {
     tasks: function () {
       // this should call tasks.select. which should delegate to tasks.miniActiveRecord
       // Also where are the params for the search?
-      var uTasks = tasks.miniActiveRecord.select('tasks.id', 'tasks.text', 'tasks.checked', 'tasks.createdat', 'users1.name').join(['INNER JOIN'], ['users1id'], [['users1', ['id']]]).fetch('client');
+      var uTasks = tasks.miniActiveRecord.select('tasks.id', 'tasks.text', 'tasks.checked', 'tasks.createdat', 'users1.name').join(['OUTER JOIN'], ['users1id'], [['users1', ['id']]]).fetch('client');
       return uTasks;
     },
     categories: function () {
