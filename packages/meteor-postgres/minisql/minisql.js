@@ -1,41 +1,44 @@
-//this file will generate the minisql on the client side necessary to match the postgres database
+miniSQL = function(Collection){
 
-MiniSQL = function (table) {
-
-  // initialize class
-  this.table = table;
+  Collection = Collection || {};
+  Collection.table = Collection.tableName;
 
   // inputString used by queries, overrides other strings
   // includes: create table, create relationship, drop table, insert
-  this.inputString = '';
-  this.autoSelectData = '';
-  this.autoSelectInput = '';
+  Collection.inputString = '';
+  Collection.inputString2 = '';
+  Collection.autoSelectData = '';
+  Collection.autoSelectInput = '';
+  Collection.tableElements = {};
 
   // statement starters
-  this.selectString = '';
-  this.updateString = '';
-  this.deleteString = '';
+  Collection.selectString = '';
+  Collection.updateString = '';
+  Collection.deleteString = '';
 
   // chaining statements
-  this.joinString = '';
-  this.whereString = '';
+  Collection.joinString = '';
+  Collection.whereString = '';
+  Collection.clientWhereString = '';
+  Collection.serverWhereString = '';
 
   // caboose statements
-  this.orderString = '';
-  this.limitString = '';
-  this.offsetString = '';
-  this.groupString = '';
-  this.havingString = '';
+  Collection.orderString = '';
+  Collection.limitString = '';
+  Collection.offsetString = '';
+  Collection.groupString = '';
+  Collection.havingString = '';
 
-  this.dataArray = [];
+  Collection.dataArray = [];
+  Collection.dataArray2 = [];
+  Collection.server = null;
 
   // error logging
-  this.prevFunc = '';
-
-  this.prototype = MiniSQL.prototype;
+  Collection.prevFunc = '';
+  return Collection;
 };
 
-MiniSQL.prototype.createTable = function (tableObj) {
+miniSQL.prototype.createTable = function(tableObj) {
   var _DataTypes = {
     $number: 'integer',
     $string: 'varchar(255)',
@@ -61,6 +64,7 @@ MiniSQL.prototype.createTable = function (tableObj) {
   var item, subKey, valOperator, inputString = '';
 
   for (var key in tableObj) {
+    this.tableElements[key] = key;
     inputString += key + ' ';
     inputString += _DataTypes[tableObj[key][0]];
     if (Array.isArray(tableObj[key]) && tableObj[key].length > 1) {
@@ -77,62 +81,82 @@ MiniSQL.prototype.createTable = function (tableObj) {
     }
     inputString += ', ';
   }
-  // check to see if _id already provided
-  if (inputString.indexOf('_id') === -1) {
-    startString += '_id serial primary key,';
+  // check to see if id already provided
+  if (inputString.indexOf('id') === -1) {
+    startString += 'id serial primary key,';
   }
 
-  this.inputString = startString + inputString + " created_at Date); ";
+  this.inputString = startString + inputString + " createdat Date); ";
   this.prevFunc = 'CREATE TABLE';
+   alasql(this.inputString);
+   this.clearAll();
   return this;
 };
 
-MiniSQL.prototype.dropTable = function () {
+miniSQL.prototype.dropTable = function() {
   this.inputString = 'DROP TABLE IF EXISTS ' + this.table + ' CASCADE;';
   this.prevFunc = 'DROP TABLE';
   return this;
 };
 
-MiniSQL.prototype.insert = function (inserts) {
-  var valueString = ') VALUES (', keys = Object.keys(inserts);
-  var insertString = 'INSERT INTO ' + this.table + ' (';
+miniSQL.prototype.insert = function(serverInserts, clientInserts) {
+  console.log(this.tableElements);
+  // server
   this.dataArray = [];
-  // iterate through array arguments to populate input string parts
-  for (var i = 0, count = keys.length; i < count;) {
-    insertString += keys[i] + ', ';
-    this.dataArray.push(inserts[keys[i]]);
-    valueString += '$' + (++i) + ', ';
+  var insertString = 'INSERT INTO ' + this.table + ' (';
+  var valueString = ') VALUES (', j = 1;
+  for (var key in serverInserts) {
+    insertString += key + ', ';     // field
+    this.dataArray.push(serverInserts[key]); // data
+    valueString += '$' + j++ + ', ';   // $1, $2, etc
   }
+
   this.inputString = insertString.substring(0, insertString.length - 2) + valueString.substring(0, valueString.length - 2) + ');';
+
+  if (clientInserts) {
+    // client
+    this.dataArray2 = [];
+    var insertString2 = 'INSERT INTO ' + this.table + ' (';
+    var valueString2 = ') VALUES (';
+    for (var key2 in clientInserts) {
+      insertString2 += key2 + ', ';
+      this.dataArray2.push(clientInserts[key2]);
+      valueString2 += '?, ';
+    }
+    for (var key3 in serverInserts) {
+      insertString2 += key3 + ', ';
+      this.dataArray2.push(serverInserts[key3]);
+      valueString2 += '?, ';
+    }
+    this.server = true;
+    this.inputString2 = insertString2.substring(0, insertString2.length - 2) + valueString2.substring(0, valueString2.length - 2) + ');';
+  }
   this.prevFunc = 'INSERT';
   return this;
 };
 
-MiniSQL.prototype.update = function (updates) {
-  var updateField = '(', updateValue = '(', keys = Object.keys(updates);
-  if (keys.length > 1) {
-    for (var i = 0, count = keys.length - 1; i < count; i++) {
-      updateField += keys[i] + ', ';
-      updateValue += "'" + updates[keys[i]] + "', ";
+miniSQL.prototype.update = function(updates) {
+  this.updateString = 'UPDATE ' + this.table + ' SET ';
+  for (var key in updates) {
+    if (typeof updates[key] === 'number' && !isNaN(updates[key]) || typeof(updates[key]) === "boolean"){
+      this.updateString += key + ' = ' + updates[key] + ', ';
     }
-    updateField += keys[keys.length - 1];
-    updateValue += "'" + updates[keys[keys.length - 1]] + "'";
-  } else {
-    updateField += keys[0];
-    updateValue += "'" + updates[keys[0]] + "'";
+    else {
+      this.updateString += key + ' = "' + updates[key] + '", ';
+    }
   }
-  this.updateString = 'UPDATE ' + this.table + ' SET ' + updateField + ') = ' + updateValue + ')';
+  this.updateString = this.updateString.substring(0,this.updateString.length-2);
   this.prevFunc = 'UPDATE';
   return this;
 };
 
-MiniSQL.prototype.remove = function () {
+miniSQL.prototype.remove = function() {
   this.deleteString = 'DELETE FROM ' + this.table;
   this.prevFunc = 'DELETE';
   return this;
 };
 
-MiniSQL.prototype.select = function (/*arguments*/) {
+miniSQL.prototype.select = function(/*arguments*/) {
   var args = '';
   if (arguments.length >= 1) {
     for (var i = 0; i < arguments.length; i++) {
@@ -151,9 +175,9 @@ MiniSQL.prototype.select = function (/*arguments*/) {
   return this;
 };
 
-MiniSQL.prototype.findOne = function (/*arguments*/) {
+miniSQL.prototype.findOne = function(/*arguments*/) {
   if (arguments.length === 2) {
-    this.inputString = 'SELECT * FROM ' + this.table + ' WHERE ' + this.table + '._id = ' + args + ' LIMIT 1;';
+    this.inputString = 'SELECT * FROM ' + this.table + ' WHERE ' + this.table + '.id = ' + args + ' LIMIT 1;';
   } else {
     this.inputString = 'SELECT * FROM ' + this.table + ' LIMIT 1';
   }
@@ -161,9 +185,9 @@ MiniSQL.prototype.findOne = function (/*arguments*/) {
   return this;
 };
 
-MiniSQL.prototype.join = function (joinType, fields, joinTable) {
+miniSQL.prototype.join = function(joinType, fields, joinTable) {
   if (Array.isArray(joinType)) {
-    for (var x = 0, count = fields.length; x < count; x++){
+    for (var x = 0, count = fields.length; x < count; x++) {
       this.joinString = " " + joinType[x] + " " + joinTable[x][0] + " ON " + this.table + "." + fields[x] + " = " + joinTable[x][0] + "." + joinTable[x][1];
     }
   } else {
@@ -173,8 +197,10 @@ MiniSQL.prototype.join = function (joinType, fields, joinTable) {
   return this;
 };
 
-MiniSQL.prototype.where = function (/*Arguments*/) {
+miniSQL.prototype.where = function(/*Arguments*/) {
   this.dataArray = [];
+  this.dataArray2 = [];
+
   var where = '', redux, substring1, substring2;
   where += arguments[0];
   // replace ? with rest of array
@@ -185,11 +211,56 @@ MiniSQL.prototype.where = function (/*Arguments*/) {
     where = substring1 + '$' + i + substring2;
     this.dataArray.push(arguments[i]);
   }
-  this.whereString = ' WHERE ' + where;
+  this.serverWhereString = ' WHERE ' + where;
+
+  var where = '', redux, substring1, substring2;
+  where += arguments[0];
+  // replace ? with rest of array
+  for (var i = 1, count = arguments.length; i < count; i++) {
+    redux = where.indexOf('?');
+    this.dataArray2.push(arguments[i]);
+  }
+  this.clientWhereString = ' WHERE ' + where;
+
+
   return this;
+
+  //this.dataArray = [];
+  //var where = '';
+  //if (client === 'client') {
+  //  if (Array.isArray(arguments[1])) {
+  //    var array = arguments[1];
+  //    where += array[1];
+  //    for (var i = 1, count = array.length; i < count; i++) {
+  //      this.dataArray.push(array[i]);
+  //    }
+  //  } else {
+  //    where += arguments[0];
+  //    for (var i = 1, count = arguments.length; i < count; i++) {
+  //      this.dataArray.push(arguments[i]);
+  //    }
+  //  }
+  //  this.whereString = ' WHERE ' + where;
+  //} else {
+  //  var redux, substring1, substring2;
+  //  var argsArray = arguments;
+  //  where += argsArray[0];
+  //  for (var i = 1, count = argsArray.length; i < count; i++) {
+  //    redux = where.indexOf('?');
+  //    substring1 = where.substring(0, redux);
+  //    substring2 = where.substring(redux + 1, where.length);
+  //    where = substring1 + '$' + i + substring2;
+  //    this.dataArray.push(argsArray[i]);
+  //  }
+  //  this.whereString = ' WHERE ' + where;
+  //}
+
+  //console.log(this.whereString);
+  //return this;
 };
 
-MiniSQL.prototype.order = function (/*arguments*/) {
+miniSQL.prototype.order = function(/*arguments*/) {
+
   var args = '';
   if (arguments.length > 1) {
     for (var i = 0; i < arguments.length; i++) {
@@ -203,44 +274,45 @@ MiniSQL.prototype.order = function (/*arguments*/) {
   return this;
 };
 
-MiniSQL.prototype.limit = function (limit) {
+miniSQL.prototype.limit = function(limit) {
   this.limitString = ' LIMIT ' + limit;
   return this;
 };
 
-MiniSQL.prototype.offset = function (offset) {
+miniSQL.prototype.offset = function(offset) {
   this.offsetString = ' OFFSET ' + offset;
   return this;
 };
 
-MiniSQL.prototype.group = function (group) {
+miniSQL.prototype.group = function(group) {
   this.groupString = 'GROUP BY ' + group;
   return this;
 };
 
-MiniSQL.prototype.first = function (limit) {
+miniSQL.prototype.first = function(limit) {
   limit = limit || 1;
-  this.inputString += 'SELECT * FROM ' + this.table + ' ORDER BY ' + this.table + '._id ASC LIMIT ' + limit + ';';
+  this.inputString += 'SELECT * FROM ' + this.table + ' ORDER BY ' + this.table + '.id ASC LIMIT ' + limit + ';';
   this.prevFunc = 'FIRST';
   return this;
 };
 
-MiniSQL.prototype.last = function (limit) {
+miniSQL.prototype.last = function(limit) {
   limit = limit || 1;
-  this.inputString += 'SELECT * FROM ' + this.table + ' ORDER BY ' + this.table + '._id DESC LIMIT ' + limit + ';';
+  this.inputString += 'SELECT * FROM ' + this.table + ' ORDER BY ' + this.table + '.id DESC LIMIT ' + limit + ';';
   this.prevFunc = 'LAST';
   return this;
 };
 
-MiniSQL.prototype.take = function (limit) {
+miniSQL.prototype.take = function(limit) {
   limit = limit || 1;
   this.inputString += 'SELECT * FROM ' + this.table + ' LIMIT ' + limit + ';';
   this.prevFunc = 'TAKE';
   return this;
 };
 
-MiniSQL.prototype.clearAll = function() {
+miniSQL.prototype.clearAll = function() {
   this.inputString = '';
+  this.inputString2 = '';
   this.autoSelectData = '';
   this.autoSelectInput = '';
 
@@ -252,6 +324,8 @@ MiniSQL.prototype.clearAll = function() {
   // chaining statements
   this.joinString = '';
   this.whereString = '';
+  this.clientWhereString = '';
+  this.serverWhereString = '';
 
   // caboose statements
   this.orderString = '';
@@ -261,39 +335,62 @@ MiniSQL.prototype.clearAll = function() {
   this.havingString = '';
 
   this.dataArray = [];
+  this.dataArray2 = [];
+  this.server = null;
 
   // error logging
   this.prevFunc = '';
 };
 
-MiniSQL.prototype.fetch = function () {
+miniSQL.prototype.fetch = function(client) {
 
-  //var table = this.table;
-  //var prevFunc = this.prevFunc;
+  this.reactiveData.depend();
 
   var dataArray = this.dataArray;
   var starter = this.updateString || this.deleteString || this.selectString;
 
-  var input = this.inputString.length > 0 ? this.inputString : starter + this.joinString + this.whereString + this.orderString + this.limitString +
+  var input = this.inputString.length > 0 ? this.inputString : starter + this.joinString + this.clientWhereString + this.orderString + this.limitString +
   this.offsetString + this.groupString + this.havingString + ';';
 
-  // alaSQL
-  return alasql(input, dataArray);
 
+  // alaSQL
+  var result = alasql(input, dataArray);
+
+  // postgres
+  console.log(505, result);
+  var name = this.table + 'fetch';
+  if (client !== "client") {
+    input = this.inputString.length > 0 ? this.inputString : starter + this.joinString + this.serverWhereString + this.orderString + this.limitString +
+    this.offsetString + this.groupString + this.havingString + ';';
+    Meteor.call(name, input, dataArray);
+  }
   this.clearAll();
+  return result;
 };
 
-MiniSQL.prototype.save = function () {
+miniSQL.prototype.save = function(client) {
 
   //var table = this.table;
   //var prevFunc = this.prevFunc;
 
   var dataArray = this.dataArray;
+  var dataArray2 = this.dataArray2;
   var starter = this.updateString || this.deleteString || this.selectString;
-  var input = this.inputString.length > 0 ? this.inputString : starter + this.joinString + this.whereString + ';';
-
+  var input = this.inputString2.length > 0 ? this.inputString2 : starter + this.joinString + this.clientWhereString + ';';
   // alaSQL
-  alasql(input, dataArray);
+  //if (input = ";"){
+  //  throw 'error';
+  //}
+  var result = alasql(input, dataArray2);
+  // postgres
+  var self = this;
+  var name = this.table + 'save';
+  if (client !== "client") {
+    input = this.inputString.length > 0 ? this.inputString : starter + this.joinString + this.serverWhereString + ';';
+    Meteor.call(name, input, dataArray);
+  }
+  this.reactiveData.changed();
 
   this.clearAll();
+  return result;
 };

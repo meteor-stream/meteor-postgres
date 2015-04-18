@@ -11,7 +11,6 @@ if (Meteor.isClient) {
     users1id: ['$number']
   };
 
-  // This should call tasks.create table which should delgate to tasks.miniActiveRecord
   tasks.createTable(taskTable);
 
   var usersTable = {
@@ -23,7 +22,6 @@ if (Meteor.isClient) {
 
   Template.body.helpers({
     tasks: function () {
-      // this should call tasks.select. which should delegate to tasks.miniActiveRecord
       // Also where are the params for the search?
       var uTasks = tasks.select('tasks.id', 'tasks.text', 'tasks.checked', 'tasks.createdat', 'users1.name').join(['OUTER JOIN'], ['users1id'], [['users1', ['id']]]).fetch('client');
       return uTasks;
@@ -39,7 +37,6 @@ if (Meteor.isClient) {
       var user = alasql('select id from users1 where name = ?', [newUser]);
       user = user[0].id;
       var text = event.target.text.value;
-      // this should call tasks.insert which should delegate to tasks.miniactive record
       tasks.insert({
         text:text,
         checked:false,

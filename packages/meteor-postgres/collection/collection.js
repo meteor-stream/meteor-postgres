@@ -29,8 +29,8 @@ SQL.Collection = function(connection, conString) {
   }
 
   if (Meteor.isClient) {
-    // Sets certain properties used for miniActiveRecord
-    miniActiveRecord(this);
+    // Sets certain properties used for miniSQL
+    miniSQL(this);
   }
 
   if (Meteor.isServer){
@@ -174,8 +174,8 @@ var registerStore = function(connection, name) {
 SQL.Collection.prototype = new Array;
 _.extend(SQL.Collection.prototype, Tracker.Dependency.prototype);
 if (Meteor.isClient) {
-  // extends the proto with miniActiveRecord Methods
-  _.extend(SQL.Collection.prototype, miniActiveRecord.prototype);
+  // extends the proto with miniSQL Methods
+  _.extend(SQL.Collection.prototype, miniSQL.prototype);
 }
 
 if (Meteor.isServer){
