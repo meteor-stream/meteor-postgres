@@ -80,7 +80,8 @@ Collection = function(connection, name) {
       else if (msg.modified) {
         // For the client that triggered the removal event, the data will have
         // already been removed and this is redundant.
-        this.miniActiveRecord.update(msg.results).where("_id = ?", tableId).save('client');
+        console.log(msg.results);
+        this.miniActiveRecord.update(msg.results).where("_id = ?", msg.results._id).save('client');
       }
       else {
         // The message is a new insertion of a message
