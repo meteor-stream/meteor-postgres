@@ -6,7 +6,7 @@ if (Meteor.isClient) {
   tasks.getminiActiveRecord('tasks');
   tasks.miniActiveRecord.extra = 'name';
   users1.getminiActiveRecord('users1');
-  var newUser = 'paulo';
+  var newUser = 'ko';
   var taskTable = {
     _id: ['$number'],
     text: ['$string', '$notnull'],
