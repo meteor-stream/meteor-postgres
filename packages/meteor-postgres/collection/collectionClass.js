@@ -60,9 +60,7 @@ Collection = function(connection, name) {
     // Data added to any client while the page is already loaded will trigger a 'changed event'
     this.addEventListener('added', function(index, msg, name) {
       //this.miniActiveRecord.remove().save('client');
-      console.log(msg.results);
       for (var x = msg.results.length - 1; x >= 0; x--) {
-        console.log('fired');
         this.miniActiveRecord.insert(msg.results[x], {}).save('client');
       }
       // Triggering Meteor's reactive data to allow for full stack reactivity
@@ -72,7 +70,6 @@ Collection = function(connection, name) {
     // This could happen from an addition, an update, or a removal, from that specific client, or another client
     this.addEventListener('changed', function(index, msg, name) {
       // Checking to see if event is a removal from the DB
-      console.log(91, msg);
       if (msg.removed) {
         var tableId = msg.tableId;
         // For the client that triggered the removal event, the data will have
@@ -83,7 +80,6 @@ Collection = function(connection, name) {
       else if (msg.modified) {
         // For the client that triggered the removal event, the data will have
         // already been removed and this is redundant.
-        console.log(116, msg.results);
         this.miniActiveRecord.update(msg.results).where("_id = ?", tableId).save('client');
       }
       else {
@@ -91,16 +87,13 @@ Collection = function(connection, name) {
         // If the message was submitted by this client then the insert message triggered
         // by the server should be an update rather than an insert
         // We use the unvalidated boolean variabe to keep track of this
-        console.log(this.unvalidated);
         if (this.unvalidated) {
-          console.log(109, msg.results);
           this.miniActiveRecord.update(msg.results).where("_id = ?", -1).save('client');
           //reactiveData.changed();
           this.unvalidated = false;
         }
         else {
           // The data was added by another client so just a regular insert
-          console.log(116, msg.results);
           this.miniActiveRecord.insert(msg.results, {}).save('client');
           //reactiveData.changed();
         }
@@ -234,7 +227,6 @@ var miniActiveRecord = function(connection, reactiveData){
 
   this.inputString = startString + inputString + " created_at Date); ";
   this.prevFunc = 'CREATE TABLE';
-   console.log(this.inputString);
    alasql(this.inputString);
    this.clearAll();
   return this;
@@ -279,10 +271,6 @@ miniActiveRecord.prototype.insert = function(serverInserts, clientInserts) {
     this.inputString2 = insertString2.substring(0, insertString2.length - 2) + valueString2.substring(0, valueString2.length - 2) + ');';
   }
   this.prevFunc = 'INSERT';
-  console.log(this.dataArray);
-  console.log(this.dataArray2);
-  console.log(this.inputString);
-  console.log(this.inputString2);
   return this;
 };
 
@@ -501,7 +489,6 @@ miniActiveRecord.prototype.fetch = function(client) {
 
   var input = this.inputString.length > 0 ? this.inputString : starter + this.joinString + this.clientWhereString + this.orderString + this.limitString +
   this.offsetString + this.groupString + this.havingString + ';';
-  console.log(456, input);
   // alaSQL
   var result = alasql(input, dataArray);
 
@@ -514,7 +501,6 @@ miniActiveRecord.prototype.fetch = function(client) {
     Meteor.call(name, input, dataArray);
   }
   this.clearAll();
-  console.log(454, result);
   return result;
 };
 
@@ -528,10 +514,6 @@ miniActiveRecord.prototype.save = function(client) {
   var starter = this.updateString || this.deleteString || this.selectString;
   var input = this.inputString2.length > 0 ? this.inputString2 : starter + this.joinString + this.clientWhereString + ';';
   // alaSQL
-  console.log(481, input);
-  console.log(482, dataArray2);
-  console.log(483, this.inputString2);
-  console.log(484, this.inputString2);
   //if (input = ";"){
   //  throw 'error';
   //}
@@ -541,7 +523,6 @@ miniActiveRecord.prototype.save = function(client) {
   var name = this.table + 'save';
   if (client !== "client") {
     input = this.inputString.length > 0 ? this.inputString : starter + this.joinString + this.serverWhereString + ';';
-    console.log('line 470 colClass: ', name, input, dataArray);
     Meteor.call(name, input, dataArray);
   }
   this.reactiveData.changed();
@@ -670,7 +651,6 @@ Collection.prototype.dispatchEvent = function(eventName /* arguments */) {
 };
 
 Collection.prototype.reactive = function() {
-  console.log(123);
   var self = this;
   self.depend();
   return self;

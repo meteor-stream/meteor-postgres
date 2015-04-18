@@ -1,10 +1,10 @@
 pg = Npm.require('pg'); // Node-Postgres
-var clientHolder = {}; // TODO: WTF
+var clientHolder = {};
 
 ActiveRecord = function (table, conString) {
 
   // initialize class
-  this.conString = conString || 'postgres://postgres:1234@localhost/postgres'; // TODO: REMOVE
+  this.conString = conString || 'postgres://postgres:1234@localhost/postgres';
   this.table = table;
 
   // inputString used by queries, overrides other strings
@@ -461,12 +461,6 @@ ActiveRecord.prototype.autoSelect = function(sub) {
   var newSelect = newSelect || this.selectString;
   var newJoin = newJoin || this.joinString;
 
-  //console.log(this.inputString);
-  //console.log(this.selectString);
-  //console.log(this.joinString);
-  //console.log(this.whereString);
-  //console.log(this.orderString);
-  //console.log(this.autoSelectInput);
   this.autoSelectInput = this.autoSelectInput !== "" ? this.autoSelectInput : this.selectString + this.joinString + newWhere + this.orderString + this.limitString + ';';
   this.autoSelectData = this.autoSelectData !== "" ? this.autoSelectData  : this.dataArray;
   //console.log('auto:', this.autoSelectInput, this.autoSelectData);
