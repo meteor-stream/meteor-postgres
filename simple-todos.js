@@ -40,7 +40,7 @@ if (Meteor.isClient) {
   Template.body.events({
     "submit .new-task": function (event) {
       //console.log(event.target.category.value); // How to access name
-      var user = alasql('select _id from users1 where name = ?', [newUser])
+      var user = alasql('select _id from users1 where name = ?', [newUser]);
       console.log(user);
       user = user[0]._id;
       var text = event.target.text.value;
