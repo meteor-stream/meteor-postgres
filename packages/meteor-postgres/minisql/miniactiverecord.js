@@ -1,39 +1,38 @@
-miniActiveRecord = function(connection, reactiveData){
-  this.table = connection;
-  this.reactiveData = new Tracker.Dependency;
+miniActiveRecord = function(Collection){
+  Collection.table = Collection.tableName;
 
   // inputString used by queries, overrides other strings
   // includes: create table, create relationship, drop table, insert
-  this.inputString = '';
-  this.inputString2 = '';
-  this.autoSelectData = '';
-  this.autoSelectInput = '';
-  this.tableElements = {};
+  Collection.inputString = '';
+  Collection.inputString2 = '';
+  Collection.autoSelectData = '';
+  Collection.autoSelectInput = '';
+  Collection.tableElements = {};
 
   // statement starters
-  this.selectString = '';
-  this.updateString = '';
-  this.deleteString = '';
+  Collection.selectString = '';
+  Collection.updateString = '';
+  Collection.deleteString = '';
 
   // chaining statements
-  this.joinString = '';
-  this.whereString = '';
-  this.clientWhereString = '';
-  this.serverWhereString = '';
+  Collection.joinString = '';
+  Collection.whereString = '';
+  Collection.clientWhereString = '';
+  Collection.serverWhereString = '';
 
   // caboose statements
-  this.orderString = '';
-  this.limitString = '';
-  this.offsetString = '';
-  this.groupString = '';
-  this.havingString = '';
+  Collection.orderString = '';
+  Collection.limitString = '';
+  Collection.offsetString = '';
+  Collection.groupString = '';
+  Collection.havingString = '';
 
-  this.dataArray = [];
-  this.dataArray2 = [];
-  this.server = null;
+  Collection.dataArray = [];
+  Collection.dataArray2 = [];
+  Collection.server = null;
 
   // error logging
-  this.prevFunc = '';
+  Collection.prevFunc = '';
 };
 
 miniActiveRecord.prototype.createTable = function(tableObj) {

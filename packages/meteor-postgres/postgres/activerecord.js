@@ -1,40 +1,37 @@
 pg = Npm.require('pg'); // Node-Postgres
 var clientHolder = {};
 
-ActiveRecord = function (table, conString) {
+ActiveRecord = function (Collection) {
 
   // initialize class
-  this.conString = conString || 'postgres://postgres:1234@localhost/postgres';
-  this.table = table;
+  Collection.table = Collection.tableName;
 
   // inputString used by queries, overrides other strings
   // includes: create table, create relationship, drop table, insert
-  this.inputString = '';
-  this.autoSelectData = '';
-  this.autoSelectInput = '';
+  Collection.inputString = '';
+  Collection.autoSelectData = '';
+  Collection.autoSelectInput = '';
 
   // statement starters
-  this.selectString = '';
-  this.updateString = '';
-  this.deleteString = '';
+  Collection.selectString = '';
+  Collection.updateString = '';
+  Collection.deleteString = '';
 
   // chaining statements
-  this.joinString = '';
-  this.whereString = '';
+  Collection.joinString = '';
+  Collection.whereString = '';
 
   // caboose statements
-  this.orderString = '';
-  this.limitString = '';
-  this.offsetString = '';
-  this.groupString = '';
-  this.havingString = '';
+  Collection.orderString = '';
+  Collection.limitString = '';
+  Collection.offsetString = '';
+  Collection.groupString = '';
+  Collection.havingString = '';
 
-  this.dataArray = [];
+  Collection.dataArray = [];
 
   // error logging
-  this.prevFunc = '';
-
-  this.prototype = ActiveRecord.prototype;
+  Collection.prevFunc = '';
 };
 
 ActiveRecord.prototype._DataTypes = {
@@ -474,18 +471,17 @@ ActiveRecord.prototype.autoSelect = function(sub) {
     var context = this;
     pg.connect(conString, function(err, client, done) {
       clientHolder[name] = client;
+      console.log(err);
       cb(client);
     });
   };
 
   var autoSelectHelper = function(client){
     // Selecting all from the table
-    //console.log(value);
     client.query(value, function(error, results) {
       if (error) {
         console.log(error, "in autoSelect top")
       } else {
-        console.log(results.rows);
         sub._session.send({
           msg: 'added',
           collection: sub._name,
@@ -518,13 +514,11 @@ ActiveRecord.prototype.autoSelect = function(sub) {
       }
       else if (returnMsg[1].operation === "UPDATE") {
         var selectString1 = newSelect + newJoin + " WHERE " + table + ".id = " + returnMsg[0][table];
-        console.log(530, selectString1);
         client.query(selectString1, this.autoSelectData, function(error, results) {
           console.log('fired');
           if (error) {
             console.log(error, "in autoSelect update");
           } else {
-            console.log(results.rows[0]);
             sub._session.send({
               msg: 'changed',
               collection: sub._name,
