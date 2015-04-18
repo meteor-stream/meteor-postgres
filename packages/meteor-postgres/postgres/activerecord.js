@@ -3,6 +3,7 @@ var clientHolder = {};
 
 ActiveRecord = function (Collection) {
 
+  Collection = Collection || {};
   // initialize class
   Collection.table = Collection.tableName;
 
@@ -32,6 +33,7 @@ ActiveRecord = function (Collection) {
 
   // error logging
   Collection.prevFunc = '';
+  return Collection;
 };
 
 ActiveRecord.prototype._DataTypes = {
