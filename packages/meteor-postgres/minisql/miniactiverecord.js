@@ -1,4 +1,6 @@
 miniActiveRecord = function(Collection){
+
+  Collection = Collection || {};
   Collection.table = Collection.tableName;
 
   // inputString used by queries, overrides other strings
@@ -33,6 +35,7 @@ miniActiveRecord = function(Collection){
 
   // error logging
   Collection.prevFunc = '';
+  return Collection;
 };
 
 miniActiveRecord.prototype.createTable = function(tableObj) {
