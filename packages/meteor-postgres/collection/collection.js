@@ -17,26 +17,14 @@ SQL.Collection = function(connection, name) {
     throw new Error('Use new to construct a SQLCollection');
   }
 
-  this.getActiveRecord = function(connection) {
-    // Alternately you could add to the Collection object with:
-    self.ActiveRecord = new ActiveRecord(connection);
-    return;
-  };
-
-  this.getminiActiveRecord = function(connection) {
-    // Alternately you could add to the Collection object with:
-    console.log(miniActiveRecord);
-    self.miniActiveRecord = new miniActiveRecord(connection);
-    return;
-  };
-
   if (Meteor.isClient) {
-    this.getminiActiveRecord(connection);
+    self.miniActiveRecord = new miniActiveRecord(connection);
   }
 
   if (Meteor.isServer){
-    this.getActiveRecord(connection);
+    self.ActiveRecord = new ActiveRecord(connection);
   }
+
   this.tableName = connection;
   // boolean to keep track of whether the local DB has an unvalidated entry
   self._events = [];

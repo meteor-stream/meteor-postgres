@@ -67,8 +67,6 @@ if (Meteor.isClient) {
 }
 
 if (Meteor.isServer) {
-  tasks.getActiveRecord('tasks');
-  users1.getActiveRecord('users1');
 
   //tasks.ActiveRecord.createTable({text: ['$string'], checked: ["$bool", {$default: false}]}).save();
   //users1.ActiveRecord.createTable({name: ['$string']}).save();
