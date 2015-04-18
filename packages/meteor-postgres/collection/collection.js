@@ -46,7 +46,7 @@ SQL.Collection = function(connection, name) {
     // Added will only be triggered on the initial population of the database client side.
     // Data added to any client while the page is already loaded will trigger a 'changed event'
     this.addEventListener('added', function(index, msg, name) {
-      //this.miniActiveRecord.remove().save('client');
+      this.miniActiveRecord.remove().save('client');
       for (var x = msg.results.length - 1; x >= 0; x--) {
         this.miniActiveRecord.insert(msg.results[x], {}).save('client');
       }
@@ -61,14 +61,14 @@ SQL.Collection = function(connection, name) {
         var tableId = msg.tableId;
         // For the client that triggered the removal event, the data will have
         // already been removed and this is redundant, but it would be inefficient to fix.
-        this.miniActiveRecord.remove().where("_id = ?", tableId).save('client');
+        this.miniActiveRecord.remove().where("id = ?", tableId).save('client');
       }
       // Checking to see if event is a modification of the DB
       else if (msg.modified) {
         // For the client that triggered the removal event, the data will have
         // already been removed and this is redundant.
         console.log(msg.results);
-        this.miniActiveRecord.update(msg.results).where("_id = ?", msg.results._id).save('client');
+        this.miniActiveRecord.update(msg.results).where("id = ?", msg.results.id).save('client');
       }
       else {
         // The message is a new insertion of a message
@@ -76,7 +76,7 @@ SQL.Collection = function(connection, name) {
         // by the server should be an update rather than an insert
         // We use the unvalidated boolean variabe to keep track of this
         if (this.unvalidated) {
-          this.miniActiveRecord.update(msg.results).where("_id = ?", -1).save('client');
+          this.miniActiveRecord.update(msg.results).where("id = ?", -1).save('client');
           //reactiveData.changed();
           this.unvalidated = false;
         }
@@ -139,6 +139,7 @@ var miniActiveRecord = function(connection, reactiveData){
   this.inputString2 = '';
   this.autoSelectData = '';
   this.autoSelectInput = '';
+  this.tableElements = {};
 
   // statement starters
   this.selectString = '';
@@ -192,6 +193,7 @@ var miniActiveRecord = function(connection, reactiveData){
   var item, subKey, valOperator, inputString = '';
 
   for (var key in tableObj) {
+    this.tableElements[key] = key;
     inputString += key + ' ';
     inputString += _DataTypes[tableObj[key][0]];
     if (Array.isArray(tableObj[key]) && tableObj[key].length > 1) {
@@ -208,12 +210,12 @@ var miniActiveRecord = function(connection, reactiveData){
     }
     inputString += ', ';
   }
-  // check to see if _id already provided
-  if (inputString.indexOf('_id') === -1) {
-    startString += '_id serial primary key,';
+  // check to see if id already provided
+  if (inputString.indexOf('id') === -1) {
+    startString += 'id serial primary key,';
   }
 
-  this.inputString = startString + inputString + " created_at Date); ";
+  this.inputString = startString + inputString + " createdat Date); ";
   this.prevFunc = 'CREATE TABLE';
    alasql(this.inputString);
    this.clearAll();
@@ -227,7 +229,7 @@ miniActiveRecord.prototype.dropTable = function() {
 };
 
 miniActiveRecord.prototype.insert = function(serverInserts, clientInserts) {
-
+  console.log(this.tableElements);
   // server
   this.dataArray = [];
   var insertString = 'INSERT INTO ' + this.table + ' (';
@@ -304,7 +306,7 @@ miniActiveRecord.prototype.select = function(/*arguments*/) {
 
 miniActiveRecord.prototype.findOne = function(/*arguments*/) {
   if (arguments.length === 2) {
-    this.inputString = 'SELECT * FROM ' + this.table + ' WHERE ' + this.table + '._id = ' + args + ' LIMIT 1;';
+    this.inputString = 'SELECT * FROM ' + this.table + ' WHERE ' + this.table + '.id = ' + args + ' LIMIT 1;';
   } else {
     this.inputString = 'SELECT * FROM ' + this.table + ' LIMIT 1';
   }
@@ -418,14 +420,14 @@ miniActiveRecord.prototype.group = function(group) {
 
 miniActiveRecord.prototype.first = function(limit) {
   limit = limit || 1;
-  this.inputString += 'SELECT * FROM ' + this.table + ' ORDER BY ' + this.table + '._id ASC LIMIT ' + limit + ';';
+  this.inputString += 'SELECT * FROM ' + this.table + ' ORDER BY ' + this.table + '.id ASC LIMIT ' + limit + ';';
   this.prevFunc = 'FIRST';
   return this;
 };
 
 miniActiveRecord.prototype.last = function(limit) {
   limit = limit || 1;
-  this.inputString += 'SELECT * FROM ' + this.table + ' ORDER BY ' + this.table + '._id DESC LIMIT ' + limit + ';';
+  this.inputString += 'SELECT * FROM ' + this.table + ' ORDER BY ' + this.table + '.id DESC LIMIT ' + limit + ';';
   this.prevFunc = 'LAST';
   return this;
 };
@@ -482,11 +484,12 @@ miniActiveRecord.prototype.fetch = function(client) {
 
   var input = this.inputString.length > 0 ? this.inputString : starter + this.joinString + this.clientWhereString + this.orderString + this.limitString +
   this.offsetString + this.groupString + this.havingString + ';';
+  console.log(input);
   // alaSQL
   var result = alasql(input, dataArray);
 
   // postgres
-  //console.log(448, result);
+  console.log(505, result);
   var name = this.table + 'fetch';
   if (client !== "client") {
     input = this.inputString.length > 0 ? this.inputString : starter + this.joinString + this.serverWhereString + this.orderString + this.limitString +

@@ -8,18 +8,17 @@ if (Meteor.isClient) {
   users1.getminiActiveRecord('users1');
   var newUser = 'ko';
   var taskTable = {
-    _id: ['$number'],
+    id: ['$number'],
     text: ['$string', '$notnull'],
     checked: ['$bool'],
-    name: ['$string'],
-    users1_id: ['$number']
+    users1id: ['$number']
   };
 
   // This should call tasks.create table which should delgate to tasks.miniActiveRecord
   tasks.miniActiveRecord.createTable(taskTable);
 
   var usersTable = {
-    _id: ['$number'],
+    id: ['$number'],
     name: ['$string', '$notnull']
   };
   users1.miniActiveRecord.createTable(usersTable);
@@ -29,7 +28,7 @@ if (Meteor.isClient) {
     tasks: function () {
       // this should call tasks.select. which should delegate to tasks.miniActiveRecord
       // Also where are the params for the search?
-      var uTasks = tasks.miniActiveRecord.select().fetch('client');
+      var uTasks = tasks.miniActiveRecord.select('tasks.id', 'tasks.text', 'tasks.checked', 'tasks.createdat', 'users1.name').join(['INNER JOIN'], ['users1id'], [['users1', ['id']]]).fetch('client');
       return uTasks;
     },
     categories: function () {
@@ -40,16 +39,16 @@ if (Meteor.isClient) {
   Template.body.events({
     "submit .new-task": function (event) {
       //console.log(event.target.category.value); // How to access name
-      var user = alasql('select _id from users1 where name = ?', [newUser]);
+      var user = alasql('select id from users1 where name = ?', [newUser]);
       console.log(user);
-      user = user[0]._id;
+      user = user[0].id;
       var text = event.target.text.value;
       // this should call tasks.insert which should delegate to tasks.miniactive record
       tasks.miniActiveRecord.insert({
         text:text,
         checked:false,
-        users1_id: user
-      }, {_id:-1, name: newUser}).save();
+        users1id: user
+      }, {id:-1}).save();
       tasks.unvalidated = true;
       event.target.text.value = "";
 
@@ -57,10 +56,10 @@ if (Meteor.isClient) {
     },
     "click .toggle-checked": function () {
       // this should call tasks.update which should delegate
-      tasks.miniActiveRecord.update({_id: this._id, "checked": !this.checked}).where("_id = ?", this._id).save();
+      tasks.miniActiveRecord.update({id: this.id, "checked": !this.checked}).where("id = ?", this.id).save();
     },
     "click .delete": function () {
-      tasks.miniActiveRecord.remove().where("_id = ?", this._id).save();
+      tasks.miniActiveRecord.remove().where("id = ?", this.id).save();
     },
     "change .catselect": function(event){
       newUser = event.target.value;
@@ -72,6 +71,12 @@ if (Meteor.isClient) {
 if (Meteor.isServer) {
   tasks.getActiveRecord('tasks');
   users1.getActiveRecord('users1');
+
+  //tasks.ActiveRecord.createTable({text: ['$string'], checked: ["$bool", {$default: false}]}).save();
+  //users1.ActiveRecord.createTable({name: ['$string']}).save();
+  //tasks.ActiveRecord.createRelationship('users1', '$onetomany').save();
+
+
   Meteor.methods({
       tasksfetch: function(input, dataArray) {
         tasks.ActiveRecord.fetch(input, dataArray);
@@ -91,18 +96,18 @@ if (Meteor.isServer) {
   Meteor.publish('tasks', function () {
     var cursor = {};
     cursor._publishCursor = function(sub) {
-      tasks.ActiveRecord.select('tasks._id as _id', 'tasks.text', 'tasks.checked', 'tasks.created_at', 'users1._id as users_id', 'users1.name').join(['INNER JOIN'], ["users1_id"], [["users1", '_id']]).order('created_at DESC').limit(10).autoSelect(sub);
+      tasks.ActiveRecord.select('tasks.id as id', 'tasks.text', 'tasks.checked', 'tasks.createdat', 'users1.id as users1id', 'users1.name').join(['INNER JOIN'], ["users1id"], [["users1", 'id']]).order('createdat DESC').limit(10).autoSelect(sub);
     };
-    cursor.autoSelect = tasks.ActiveRecord.select('tasks._id as _id', 'tasks.text', 'tasks.checked', 'tasks.created_at', 'users1._id as users1id', 'users1._name').join('INNER JOIN', ['_id'], ['users1:_id']).order('created_at DESC').limit(10).autoSelect;
+    cursor.autoSelect = tasks.ActiveRecord.select('tasks.id as id', 'tasks.text', 'tasks.checked', 'tasks.createdat', 'users1.id as users1id', 'users1.name').join('INNER JOIN', ['id'], ['users1:id']).order('createdat DESC').limit(10).autoSelect;
     return cursor;
   });
 
   Meteor.publish('users1', function(){
     var cursor = {};
     cursor._publishCursor = function(sub) {
-      users1.ActiveRecord.select('_id', 'name').limit(10).autoSelect(sub);
+      users1.ActiveRecord.select('id', 'name').limit(10).autoSelect(sub);
     };
-    cursor.autoSelect = users1.ActiveRecord.select('_id', 'name').limit(10).autoSelect;
+    cursor.autoSelect = users1.ActiveRecord.select('id', 'name').limit(10).autoSelect;
     return cursor;
   })
 }

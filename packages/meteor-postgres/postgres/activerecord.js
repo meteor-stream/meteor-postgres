@@ -82,24 +82,24 @@ ActiveRecord.prototype.createTable = function (tableObj) {
     }
     inputString += ', ';
   }
-  // check to see if _id already provided
-  if (inputString.indexOf('_id') === -1) {
-    startString += '_id serial primary key,';
+  // check to see if id already provided
+  if (inputString.indexOf('id') === -1) {
+    startString += 'id serial primary key,';
   }
 
-  this.inputString = startString + inputString + " created_at TIMESTAMP default now()); " +
+  this.inputString = startString + inputString + " createdat TIMESTAMP default now()); " +
   "CREATE OR REPLACE FUNCTION notify_trigger_" + this.table + "() RETURNS trigger AS $$" +
   "BEGIN" +
   " IF (TG_OP = 'DELETE') THEN " +
-  "PERFORM pg_notify('notify_trigger_" + this.table + "', '[{' || TG_TABLE_NAME || ':' || OLD._id || '}, { operation: " +
+  "PERFORM pg_notify('notify_trigger_" + this.table + "', '[{' || TG_TABLE_NAME || ':' || OLD.id || '}, { operation: " +
   "\"' || TG_OP || '\"}]');" +
   "RETURN old;" +
   "ELSIF (TG_OP = 'INSERT') THEN " +
-  "PERFORM pg_notify('notify_trigger_" + this.table + "', '[{' || TG_TABLE_NAME || ':' || NEW._id || '}, { operation: " +
+  "PERFORM pg_notify('notify_trigger_" + this.table + "', '[{' || TG_TABLE_NAME || ':' || NEW.id || '}, { operation: " +
   "\"' || TG_OP || '\"}]');" +
   "RETURN new; " +
   "ELSIF (TG_OP = 'UPDATE') THEN " +
-  "PERFORM pg_notify('notify_trigger_" + this.table + "', '[{' || TG_TABLE_NAME || ':' || NEW._id || '}, { operation: " +
+  "PERFORM pg_notify('notify_trigger_" + this.table + "', '[{' || TG_TABLE_NAME || ':' || NEW.id || '}, { operation: " +
   "\"' || TG_OP || '\"}]');" +
   "RETURN new; " +
   "END IF; " +
@@ -202,7 +202,7 @@ ActiveRecord.prototype.select = function (/*arguments*/) {
 // QUERY/INPUT STRING
 ActiveRecord.prototype.findOne = function (/*arguments*/) {
   if (arguments.length === 2) {
-    this.inputString = 'SELECT * FROM ' + this.table + ' WHERE ' + this.table + '._id = ' + args + ' LIMIT 1;';
+    this.inputString = 'SELECT * FROM ' + this.table + ' WHERE ' + this.table + '.id = ' + args + ' LIMIT 1;';
   } else {
     this.inputString = 'SELECT * FROM ' + this.table + ' LIMIT 1';
   }
@@ -295,23 +295,23 @@ ActiveRecord.prototype.group = function (group) {
 // TODO: HAVING
 
 // Parameters: limit (optional, defaults to 1)
-// SQL: SELECT * FROM table ORDER BY table._id ASC LIMIT 1, SELECT * FROM table ORDER BY table._id ASC LIMIT limit
+// SQL: SELECT * FROM table ORDER BY table.id ASC LIMIT 1, SELECT * FROM table ORDER BY table.id ASC LIMIT limit
 // Special: Retrieves first item, overrides all other chainable functions
 // QUERY/INPUT STRING
 ActiveRecord.prototype.first = function (limit) {
   limit = limit || 1;
-  this.inputString += 'SELECT * FROM ' + this.table + ' ORDER BY ' + this.table + '._id ASC LIMIT ' + limit + ';';
+  this.inputString += 'SELECT * FROM ' + this.table + ' ORDER BY ' + this.table + '.id ASC LIMIT ' + limit + ';';
   this.prevFunc = 'FIRST';
   return this;
 };
 
 // Parameters: limit (optional, defaults to 1)
-// SQL: SELECT * FROM table ORDER BY table._id DESC LIMIT 1, SELECT * FROM table ORDER BY table._id DESC LIMIT limit
+// SQL: SELECT * FROM table ORDER BY table.id DESC LIMIT 1, SELECT * FROM table ORDER BY table.id DESC LIMIT limit
 // Special: Retrieves first item, overrides all other chainable functions
 // QUERY/INPUT STRING
 ActiveRecord.prototype.last = function (limit) {
   limit = limit || 1;
-  this.inputString += 'SELECT * FROM ' + this.table + ' ORDER BY ' + this.table + '._id DESC LIMIT ' + limit + ';';
+  this.inputString += 'SELECT * FROM ' + this.table + ' ORDER BY ' + this.table + '.id DESC LIMIT ' + limit + ';';
   this.prevFunc = 'LAST';
   return this;
 };
@@ -355,7 +355,7 @@ ActiveRecord.prototype.fetch = function (input, data, cb) {
       //   // cb(prevFunc, table, results);
       //   cb(error, results);
       // }
-      console.log(error, results);
+      //console.log(error, results);
       done();
     });
   });
@@ -426,13 +426,13 @@ ActiveRecord.prototype.clearAll = function() {
 ActiveRecord.prototype.createRelationship = function(relTable, relationship){
   if (relationship === "$onetomany"){
     this.inputString = "ALTER TABLE " +  this.table + " ADD " + relTable +
-    "_id INTEGER references " + relTable + "(_id) ON DELETE CASCADE;";
+    "id INTEGER references " + relTable + "(id) ON DELETE CASCADE;";
   }
   else {
     this.inputString = "CREATE TABLE IF NOT EXISTS" +
-    this.table + relTable + " (" + this.table + "_id integer references " + this.table + "(_id) ON DELETE CASCADE, " +
-    relTable + "_id integer references " + relTable + "(_id) ON DELETE CASCADE, " +
-    "PRIMARY KEY(" + this.table + "_id, " + relTable + "_id)); ";
+    this.table + relTable + " (" + this.table + "id integer references " + this.table + "(id) ON DELETE CASCADE, " +
+    relTable + "id integer references " + relTable + "(id) ON DELETE CASCADE, " +
+    "PRIMARY KEY(" + this.table + "id, " + relTable + "id)); ";
   }
   return this;
 };
@@ -517,7 +517,7 @@ ActiveRecord.prototype.autoSelect = function(sub) {
         });
       }
       else if (returnMsg[1].operation === "UPDATE") {
-        var selectString1 = newSelect + newJoin + " WHERE " + table + "._id = " + returnMsg[0][table];
+        var selectString1 = newSelect + newJoin + " WHERE " + table + ".id = " + returnMsg[0][table];
         console.log(530, selectString1);
         client.query(selectString1, this.autoSelectData, function(error, results) {
           console.log('fired');
@@ -543,8 +543,8 @@ ActiveRecord.prototype.autoSelect = function(sub) {
       else if (returnMsg[1].operation === "INSERT") {
         //console.log(newSelect, 'select string');
         //console.log(newJoin, 'join string');
-        var selectString1 = newSelect + newJoin + " WHERE " + table + "._id = " + returnMsg[0][table];
-        //var selectString = selectStatement(name, properties, {_id: {$eq: returnMsg[0][sub._name]}}, optionsObj, joinObj);
+        var selectString1 = newSelect + newJoin + " WHERE " + table + ".id = " + returnMsg[0][table];
+        //var selectString = selectStatement(name, properties, {id: {$eq: returnMsg[0][sub._name]}}, optionsObj, joinObj);
         client.query(selectString1, this.autoSelectData, function(error, results) {
           console.log("insert", selectString1);
           if (error) {
