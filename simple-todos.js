@@ -3,9 +3,7 @@
 
 if (Meteor.isClient) {
   // To mirror the Mongo interface we should make it so taht 1 collection is 1 table
-  tasks.getminiActiveRecord('tasks');
   tasks.miniActiveRecord.extra = 'name';
-  users1.getminiActiveRecord('users1');
   var newUser = 'ko';
   var taskTable = {
     id: ['$number'],
