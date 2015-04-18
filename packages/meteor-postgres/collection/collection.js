@@ -6,8 +6,6 @@ var buffer = [];
  */
 SQL = {};
 
-isDirty = true;
-
 SQL.Collection = function(connection, name) {
   var self = this;
   this.unvalidated = false;
