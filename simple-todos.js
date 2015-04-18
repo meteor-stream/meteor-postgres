@@ -3,7 +3,7 @@ users1 = new SQL.Collection('users1', 'postgres://postgres:1234@localhost/postgr
 
 if (Meteor.isClient) {
   // To mirror the Mongo interface we should make it so taht 1 collection is 1 table
-  var newUser = 'kate';
+  var newUser = 'ko';
   var taskTable = {
     id: ['$number'],
     text: ['$string', '$notnull'],
@@ -41,7 +41,7 @@ if (Meteor.isClient) {
         text:text,
         checked:false,
         users1id: user
-      }, {id:-1}).save();
+      }, {}).save();
       tasks.unvalidated = true;
       event.target.text.value = "";
 
