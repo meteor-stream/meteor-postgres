@@ -10,12 +10,12 @@ SQL.Collection = function(connection, name) {
   var self = this;
   if (!(self instanceof SQL.Collection)) {
     throw new Error('Use new to construct a SQLCollection');
-  };
+  }
 
-  this.getActiveRecord = function(connection){
-    // Alternativly you could add to the SQL.Collection object with:
-    self.ActiveRecord = new ActiveRecord(connection);
-    return;
+  this.getActiveRecord = function(table){
+    // Alternately you could add to the SQL.Collection object with:
+    self.ActiveRecord = new ActiveRecord(table);
+    self.MiniSQL = new MiniSQL(table);
   };
 
   var reactiveData = new Tracker.Dependency;
@@ -34,16 +34,69 @@ SQL.Collection = function(connection, name) {
   }
 
   // Defining the methods that application can interact with.
-  this.createTable = function(tableDefinition) {
+  this.createTable = function(tableObj) {
+    this.MiniSQL.createTable(tableObj).save();
     // TODO: This will take the configuration from the cursor and will be modeled after a view
-    minisql.createTable(this.tableName, tableDefinition);
     // TODO: This will also create a postgres view for the data specified by the cursor
     //var usersTable = {name: ['$string', '$notnull']};
     //Meteor.call('createTable', 'users1', usersTable);
   };
 
-  this.select = function(returnFields, selectObj, optionsObj) {
+  MiniSQL.prototype.createTable = function (tableObj) {
+    var _DataTypes = {
+      $number: 'integer',
+      $string: 'varchar(255)',
+      $json: 'json',
+      $datetime: 'date',
+      $float: 'decimal',
+      $seq: 'serial',
+      $bool: 'boolean'
+    };
+
+    var _TableConstraints = {
+      $unique: 'unique',
+      $check: 'check ', // value
+      $exclude: 'exclude',
+      $notnull: 'not null',
+      $default: 'default ', // value
+      $primary: 'primary key'
+    };
+
+    alasql.fn.Date = Date;
+
+    var startString = 'CREATE TABLE ' + this.table + ' (';
+    var item, subKey, valOperator, inputString = '';
+
+    for (var key in tableObj) {
+      inputString += key + ' ';
+      inputString += _DataTypes[tableObj[key][0]];
+      if (Array.isArray(tableObj[key]) && tableObj[key].length > 1) {
+        for (var i = 1, count = tableObj[key].length; i < count; i++) {
+          item = tableObj[key][i];
+          if (typeof item === 'object') {
+            subKey = Object.keys(item);
+            valOperator = _TableConstraints[subKey];
+            inputString += ' ' + valOperator + item[subKey];
+          } else {
+            inputString += ' ' + _TableConstraints[item];
+          }
+        }
+      }
+      inputString += ', ';
+    }
+    // check to see if _id already provided
+    if (inputString.indexOf('_id') === -1) {
+      startString += '_id serial primary key,';
+    }
+
+    this.inputString = startString + inputString + " created_at Date); ";
+    this.prevFunc = 'CREATE TABLE';
+    return this;
+  };
+
+  this.select = function(/*arguments*/) {
     reactiveData.depend();
+    //return this.MiniSQL.select(arguments).
     return minisql.select(this.tableName, returnFields);
   };
 
@@ -325,3 +378,5 @@ SQL.Collection.prototype.reactive = function() {
   self.depend();
   return self;
 };
+
+

@@ -328,18 +328,20 @@ ActiveRecord.prototype.take = function (limit) {
 };
 
 // Data function that retrieves data from database
-ActiveRecord.prototype.fetch = function (cb) {
+ActiveRecord.prototype.fetch = function (input, data, cb) {
 
   var table = this.table;
-  var dataArray = this.dataArray;
+  var dataArray = data || this.dataArray;
   var prevFunc = this.prevFunc;
 
   var starter = this.updateString || this.deleteString || this.selectString;
 
-  var input = this.inputString.length > 0 ? this.inputString : starter + this.joinString + this.whereString + this.orderString + this.limitString +
-  this.offsetString + this.groupString + this.havingString + ';';
+  if (!input) {
+    input = this.inputString.length > 0 ? this.inputString : starter + this.joinString + this.whereString + this.orderString + this.limitString +
+    this.offsetString + this.groupString + this.havingString + ';';
+  }
 
-  cb = cb || function(prevFunc, table, results) {return console.log("results in " + prevFunc + ' ' + table, results.rows)};
+  //cb = cb || function(prevFunc, table, results) {return console.log("results in " + prevFunc + ' ' + table, results.rows)};
   console.log('FETCH:', input, dataArray);
   pg.connect(this.conString, function (err, client, done) {
     if (err) {
@@ -353,7 +355,7 @@ ActiveRecord.prototype.fetch = function (cb) {
       //   // cb(prevFunc, table, results);
       //   cb(error, results);
       // }
-      cb(error, results);
+      console.log(error, results);
       done();
     });
   });
@@ -361,15 +363,17 @@ ActiveRecord.prototype.fetch = function (cb) {
 };
 
 // Data function that saves information to database
-ActiveRecord.prototype.save = function (cb) {
+ActiveRecord.prototype.save = function (input, data, cb) {
 
   var table = this.table;
-  var dataArray = this.dataArray;
+  var dataArray = data || this.dataArray;
   var prevFunc = this.prevFunc;
 
   var starter = this.updateString || this.deleteString || this.selectString;
 
-  var input = this.inputString.length > 0 ? this.inputString : starter + this.joinString + this.whereString + ';';
+  if (!input) {
+    input = this.inputString.length > 0 ? this.inputString : starter + this.joinString + this.whereString + ';';
+  }
 
   var callback = function (err, results) {
       console.log(err, results);
@@ -381,7 +385,7 @@ ActiveRecord.prototype.save = function (cb) {
       console.log(err, "in " + prevFunc + ' ' + table);
     }
     client.query(input, dataArray, function (error, results) {
-      if (cb) { cb(error, results); }
+      if (callback) { callback(error, results); }
     });
     done();
   });
@@ -443,7 +447,7 @@ ActiveRecord.prototype.returnSql = function(){
   var input = this.inputString.length > 0 ? this.inputString : starter + this.joinString + this.whereString + this.orderString + this.limitString +
   this.offsetString + this.groupString + this.havingString + ';';
 
-  return input
+  return input;
 };
 
 ActiveRecord.prototype.autoSelect = function(sub) {
