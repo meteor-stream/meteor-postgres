@@ -277,7 +277,12 @@ miniActiveRecord.prototype.insert = function(serverInserts, clientInserts) {
 miniActiveRecord.prototype.update = function(updates) {
   this.updateString = 'UPDATE ' + this.table + ' SET ';
   for (var key in updates) {
-    this.updateString += key + ' = ' + updates[key] + ', ';
+    if (typeof updates[key] === 'number' && !isNaN(updates[key]) || typeof(updates[key])){
+      this.updateString += key + ' = ' + updates[key] + ', ';
+    }
+    else {
+      this.updateString += key + ' = "' + updates[key] + '", ';
+    }
   }
   this.updateString = this.updateString.substring(0,this.updateString.length-2);
   this.prevFunc = 'UPDATE';
