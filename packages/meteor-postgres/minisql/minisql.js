@@ -102,7 +102,6 @@ miniSQL.prototype.dropTable = function() {
 miniSQL.prototype.insert = function(serverInserts, clientInserts) {
   console.log(this.tableElements);
   // server
-  if (clientInserts) {
     if(serverInserts['id'] === undefined){
       serverInserts['id'] = -1;
     }
@@ -123,7 +122,7 @@ miniSQL.prototype.insert = function(serverInserts, clientInserts) {
     }
     this.server = true;
     this.inputString2 = insertString2.substring(0, insertString2.length - 2) + valueString2.substring(0, valueString2.length - 2) + ');';
-  }
+
 
   this.dataArray = [];
   if (serverInserts['id'] === -1){
@@ -364,6 +363,7 @@ miniSQL.prototype.save = function(client) {
   var name = this.table + 'save';
   if (client !== "client") {
     input = this.inputString.length > 0 ? this.inputString : starter + this.joinString + this.serverWhereString + ';';
+    this.unvalidated = true;
     Meteor.call(name, input, dataArray);
   }
   this.reactiveData.changed();
