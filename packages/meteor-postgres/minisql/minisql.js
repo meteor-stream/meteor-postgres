@@ -103,6 +103,10 @@ miniSQL.prototype.insert = function(serverInserts, clientInserts) {
   console.log(this.tableElements);
   // server
   if (clientInserts) {
+    if(serverInserts['id'] === undefined){
+      serverInserts['id'] = -1;
+    }
+    console.log("client fired");
     // client
     this.dataArray2 = [];
     var insertString2 = 'INSERT INTO ' + this.table + ' (';
