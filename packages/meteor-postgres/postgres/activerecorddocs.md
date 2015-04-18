@@ -9,10 +9,12 @@ There are four types of methods in this ORM. <br/>
 Note: There is no alter table function as you cannot alter tables after data has been entered. It is recommended that <br/>
 you drop the table and re-create it.  <br/>
 
+Client vs server 
+
 ### CREATE TABLE QUERY
 **Parameters:** tableObj (req) <br/>
 **SQL:** CREATE TABLE field data type constraint <br/>
-**Special:** Function is required for all SQL collections, primary key added unless _id field is supplied <br/>
+**Special:** Function is required for all SQL collections, primary key added unless id field is supplied <br/>
 
 **Example:**
 `ActiveRecord.createTable('students', {` <br/>
@@ -102,13 +104,13 @@ ActiveRecord.prototype.offset = function(offset) {};
 
 ### FIRST QUERY
 // Parameters: limit (optional, defaults to 1)
-// SQL: SELECT * FROM table ORDER BY table._id ASC LIMIT 1, SELECT * FROM table ORDER BY table._id ASC LIMIT limit
+// SQL: SELECT * FROM table ORDER BY table.id ASC LIMIT 1, SELECT * FROM table ORDER BY table.id ASC LIMIT limit
 // Special: Retrieves first item, overrides all other chainable functions
 ActiveRecord.prototype.first = function(table, limit) {};
 
 ### LAST QUERY
 // Parameters: limit (optional, defaults to 1)
-// SQL: SELECT * FROM table ORDER BY table._id DESC LIMIT 1, SELECT * FROM table ORDER BY table._id DESC LIMIT limit
+// SQL: SELECT * FROM table ORDER BY table.id DESC LIMIT 1, SELECT * FROM table ORDER BY table.id DESC LIMIT limit
 // Special: Retrieves first item, overrides all other chainable functions
 ActiveRecord.prototype.last = function(table, limit) {};
 
