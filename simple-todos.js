@@ -3,9 +3,6 @@
 
 if (Meteor.isClient) {
   // To mirror the Mongo interface we should make it so taht 1 collection is 1 table
-  tasks.getminiActiveRecord('tasks');
-  tasks.miniActiveRecord.extra = 'name';
-  users1.getminiActiveRecord('users1');
   var newUser = 'ko';
   var taskTable = {
     id: ['$number'],
@@ -69,8 +66,6 @@ if (Meteor.isClient) {
 }
 
 if (Meteor.isServer) {
-  tasks.getActiveRecord('tasks');
-  users1.getActiveRecord('users1');
 
   //tasks.ActiveRecord.createTable({text: ['$string'], checked: ["$bool", {$default: false}]}).save();
   //users1.ActiveRecord.createTable({name: ['$string']}).save();

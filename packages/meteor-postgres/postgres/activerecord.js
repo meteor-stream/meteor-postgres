@@ -329,7 +329,7 @@ ActiveRecord.prototype.take = function (limit) {
 
 // Data function that retrieves data from database
 ActiveRecord.prototype.fetch = function (input, data, cb) {
-
+  console.log(123, input, data, cb);
   var table = this.table;
   var dataArray = data || this.dataArray;
   var prevFunc = this.prevFunc;
