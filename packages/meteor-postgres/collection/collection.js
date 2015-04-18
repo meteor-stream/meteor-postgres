@@ -6,24 +6,17 @@ var buffer = [];
  */
 SQL = {};
 
-SQL.Collection = function(connection, name) {
+SQL.Collection = function(connection, conString) {
   var self = this;
   this.unvalidated = false;
-  var reactiveData = new Tracker.Dependency;
+  this.reactiveData = new Tracker.Dependency;
+  this.tableName = connection;
+  this.conString = conString;
 
   if (!(self instanceof SQL.Collection)) {
     throw new Error('Use new to construct a SQLCollection');
   }
 
-  if (Meteor.isClient) {
-    self.miniActiveRecord = new miniActiveRecord(connection);
-  }
-
-  if (Meteor.isServer){
-    self.ActiveRecord = new ActiveRecord(connection);
-  }
-
-  this.tableName = connection;
   // boolean to keep track of whether the local DB has an unvalidated entry
   self._events = [];
 
@@ -35,6 +28,16 @@ SQL.Collection = function(connection, name) {
     throw new Error('First argument to new SQLCollection must be a string or null');
   }
 
+  if (Meteor.isClient) {
+    // Sets certain properties used for miniActiveRecord
+    miniActiveRecord(this);
+  }
+
+  if (Meteor.isServer){
+    // Sets certain properties used for ActiveRecord
+    ActiveRecord(this);
+  }
+
   // initialize class
   this.table = connection;
 
@@ -42,9 +45,9 @@ SQL.Collection = function(connection, name) {
     // Added will only be triggered on the initial population of the database client side.
     // Data added to any client while the page is already loaded will trigger a 'changed event'
     this.addEventListener('added', function(index, msg, name) {
-      this.miniActiveRecord.remove().save('client');
+      this.remove().save('client');
       for (var x = msg.results.length - 1; x >= 0; x--) {
-        this.miniActiveRecord.insert(msg.results[x], {}).save('client');
+        this.insert(msg.results[x], {}).save('client');
       }
       // Triggering Meteor's reactive data to allow for full stack reactivity
       //reactiveData.changed();
@@ -57,14 +60,13 @@ SQL.Collection = function(connection, name) {
         var tableId = msg.tableId;
         // For the client that triggered the removal event, the data will have
         // already been removed and this is redundant, but it would be inefficient to fix.
-        this.miniActiveRecord.remove().where("id = ?", tableId).save('client');
+        this.remove().where("id = ?", tableId).save('client');
       }
       // Checking to see if event is a modification of the DB
       else if (msg.modified) {
         // For the client that triggered the removal event, the data will have
         // already been removed and this is redundant.
-        console.log(msg.results);
-        this.miniActiveRecord.update(msg.results).where("id = ?", msg.results.id).save('client');
+        this.update(msg.results).where("id = ?", msg.results.id).save('client');
       }
       else {
         // The message is a new insertion of a message
@@ -72,13 +74,13 @@ SQL.Collection = function(connection, name) {
         // by the server should be an update rather than an insert
         // We use the unvalidated boolean variabe to keep track of this
         if (this.unvalidated) {
-          this.miniActiveRecord.update(msg.results).where("id = ?", -1).save('client');
+          this.update(msg.results).where("id = ?", -1).save('client');
           //reactiveData.changed();
           this.unvalidated = false;
         }
         else {
           // The data was added by another client so just a regular insert
-          this.miniActiveRecord.insert(msg.results, {}).save('client');
+          this.insert(msg.results, {}).save('client');
           //reactiveData.changed();
         }
       }
@@ -123,20 +125,10 @@ SQL.Collection = function(connection, name) {
     }).length === 1) {
     registerStore(connection, name);
   }
+
+
 };
 
-
-//if (Meteor.isServer) {
-//  Meteor.methods({
-//      fetch: function(table, input, dataArray) {
-//        this.ActiveRecord.fetch();
-//      },
-//      save: function(table, input, dataArray) {
-//        table.ActiveRecord.save();
-//      }
-//    }
-//  );
-//}
 
 var registerStore = function(connection, name) {
   connection.registerStore(name, {
@@ -181,6 +173,16 @@ var registerStore = function(connection, name) {
 // Inherit from Array and Tracker.Dependency
 SQL.Collection.prototype = new Array;
 _.extend(SQL.Collection.prototype, Tracker.Dependency.prototype);
+if (Meteor.isClient) {
+  // extends the proto with miniActiveRecord Methods
+  _.extend(SQL.Collection.prototype, miniActiveRecord.prototype);
+}
+
+if (Meteor.isServer){
+  // extends the proto with ActiveRecord Methods
+  _.extend(SQL.Collection.prototype, ActiveRecord.prototype);
+}
+
 
 
 SQL.Collection.prototype._eventRoot = function(eventName) {

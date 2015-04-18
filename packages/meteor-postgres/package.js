@@ -28,14 +28,12 @@ Package.onUse(function(api) {
   api.addFiles('minisql/miniactiverecord.js');
   api.export('miniActiveRecord');
 
+  api.addFiles('postgres/activerecord.js', 'server');
+  api.export('ActiveRecord', 'server');
+
   api.addFiles('collection/collection.js');
   api.export('SQL');
 
-  //api.addFiles('collection/collection.js');
-  //api.export('SQL');
-
-  api.addFiles('postgres/activerecord.js', 'server');
-  api.export('ActiveRecord', 'server');
 });
 
 Package.onTest(function (api) {
