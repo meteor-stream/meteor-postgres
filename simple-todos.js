@@ -1,5 +1,5 @@
- tasks = new Collection('tasks');
- users1 = new Collection('users1');
+ tasks = new SQL.Collection('tasks');
+ users1 = new SQL.Collection('users1');
 
 if (Meteor.isClient) {
   // To mirror the Mongo interface we should make it so taht 1 collection is 1 table

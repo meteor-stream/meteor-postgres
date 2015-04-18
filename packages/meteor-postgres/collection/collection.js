@@ -1,13 +1,17 @@
-/**
- * Created by Kate Jefferson on 4/17/2015.
- */
+
 var buffer = [];
+/**
+ * @summary Namespace for SQL-related items
+ * @namespace
+ */
+SQL = {};
+
 isDirty = true;
 
-Collection = function(connection, name) {
+SQL.Collection = function(connection, name) {
   var self = this;
   this.unvalidated = false;
-  if (!(self instanceof Collection)) {
+  if (!(self instanceof SQL.Collection)) {
     throw new Error('Use new to construct a SQLCollection');
   }
 
@@ -35,25 +39,8 @@ Collection = function(connection, name) {
     throw new Error('First argument to new SQLCollection must be a string or null');
   }
 
-  /*ACTIVE RECORD*/
   // initialize class
   this.table = connection;
-
-  // inputString used by queries, overrides other strings
-  // includes: create table, create relationship, drop table, insert
-  //this.prototype = Collection.prototype;
-  //if (Meteor.isServer && isDirty) {
-  //  Meteor.methods({
-  //      fetch: function(table, input, dataArray) {
-  //        this.tableName.ActiveRecord.fetch();
-  //      },
-  //      save: function(table, input, dataArray) {
-  //        this.ActiveRecord.save();
-  //      }
-  //    }
-  //  );
-  //  isDirty = false;
-  //}
 
   if (Meteor.isClient) {
     // Added will only be triggered on the initial population of the database client side.
@@ -590,15 +577,15 @@ var registerStore = function(connection, name) {
 };
 
 // Inherit from Array and Tracker.Dependency
-Collection.prototype = new Array;
-_.extend(Collection.prototype, Tracker.Dependency.prototype);
+SQL.Collection.prototype = new Array;
+_.extend(SQL.Collection.prototype, Tracker.Dependency.prototype);
 
 
-Collection.prototype._eventRoot = function(eventName) {
+SQL.Collection.prototype._eventRoot = function(eventName) {
   return eventName.split('.')[0];
 };
 
-Collection.prototype._selectEvents = function(eventName, invert) {
+SQL.Collection.prototype._selectEvents = function(eventName, invert) {
   var self = this;
   var eventRoot, testKey, testVal;
   if (!(eventName instanceof RegExp)) {
@@ -622,7 +609,7 @@ Collection.prototype._selectEvents = function(eventName, invert) {
   });
 };
 
-Collection.prototype.addEventListener = function(eventName, listener) {
+SQL.Collection.prototype.addEventListener = function(eventName, listener) {
   var self = this;
   if (typeof listener !== 'function')
     throw new Error('invalid-listener');
@@ -633,18 +620,18 @@ Collection.prototype.addEventListener = function(eventName, listener) {
   });
 };
 
-Collection.prototype.initialValue = function(eventName, listener) {
+SQL.Collection.prototype.initialValue = function(eventName, listener) {
   return Postgres.select(this.tableName);
 };
 
 // @param {string} eventName - Remove events of this name, pass without suffix
 //                             to remove all events matching root.
-Collection.prototype.removeEventListener = function(eventName) {
+SQL.Collection.prototype.removeEventListener = function(eventName) {
   var self = this;
   self._events = self._selectEvents(eventName, true);
 };
 
-Collection.prototype.dispatchEvent = function(eventName /* arguments */) {
+SQL.Collection.prototype.dispatchEvent = function(eventName /* arguments */) {
   var self = this;
   var listenerArgs = Array.prototype.slice.call(arguments, 1);
   var listeners = self._selectEvents(eventName);
@@ -656,7 +643,7 @@ Collection.prototype.dispatchEvent = function(eventName /* arguments */) {
   return true;
 };
 
-Collection.prototype.reactive = function() {
+SQL.Collection.prototype.reactive = function() {
   var self = this;
   self.depend();
   return self;
