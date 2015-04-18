@@ -363,6 +363,7 @@ miniSQL.prototype.save = function(client) {
   var name = this.table + 'save';
   if (client !== "client") {
     input = this.inputString.length > 0 ? this.inputString : starter + this.joinString + this.serverWhereString + ';';
+    this.unvalidated = true;
     Meteor.call(name, input, dataArray);
   }
   this.reactiveData.changed();

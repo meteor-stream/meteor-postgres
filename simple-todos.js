@@ -42,7 +42,7 @@ if (Meteor.isClient) {
         checked:false,
         users1id: user
       }).save();
-      tasks.unvalidated = true;
+      //tasks.unvalidated = true;
       event.target.text.value = "";
 
       return false;
