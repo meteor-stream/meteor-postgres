@@ -277,7 +277,7 @@ miniActiveRecord.prototype.insert = function(serverInserts, clientInserts) {
 miniActiveRecord.prototype.update = function(updates) {
   this.updateString = 'UPDATE ' + this.table + ' SET ';
   for (var key in updates) {
-    if (typeof updates[key] === 'number' && !isNaN(updates[key]) || typeof(updates[key])){
+    if (typeof updates[key] === 'number' && !isNaN(updates[key]) || typeof(updates[key]) === "boolean"){
       this.updateString += key + ' = ' + updates[key] + ', ';
     }
     else {
