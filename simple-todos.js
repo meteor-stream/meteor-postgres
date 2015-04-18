@@ -1,9 +1,12 @@
- tasks = new SQL.Collection('tasks');
- users1 = new SQL.Collection('users1');
+ tasks = new Collection('tasks');
+ users1 = new Collection('users1');
 
 if (Meteor.isClient) {
   // TODO: Move the table definition into SQLCollection
   // To mirror the Mongo interface we should make it so taht 1 collection is 1 table
+  tasks.getminiActiveRecord('tasks');
+  tasks.miniActiveRecord.extra = 'name';
+  users1.getminiActiveRecord('users1');
   var newUser = 'ko';
   var taskTable = {
     _id: ['$number'],
@@ -12,21 +15,35 @@ if (Meteor.isClient) {
     name: ['$string'],
     users1_id: ['$number']
   };
-  tasks.createTable(taskTable);
+
+  //var taskTable = {
+  //  _id: ['$number'],
+  //  text: ['$string', '$notnull'],
+  //  checked: ['$bool'],
+  //  users1_id: ['$number']
+  //};
+
+  console.log(tasks);
+  tasks.miniActiveRecord.createTable(taskTable);
+  //tasks.reactiveData.changed();
 
   var usersTable = {
     _id: ['$number'],
     name: ['$string', '$notnull']
   };
-  users1.createTable(usersTable);
+  users1.miniActiveRecord.createTable(usersTable);
 
 
   Template.body.helpers({
     tasks: function () {
-      return tasks.select();
+      //tasks.reactiveData.depend();
+      //console.log(tasks);
+      var uTasks = tasks.miniActiveRecord.select().fetch('client');
+      return uTasks;
     },
     categories: function () {
-      return users1.select();
+      //users1.reactiveData.depend();
+      return users1.miniActiveRecord.select().fetch('client');
     }
   });
 
@@ -34,16 +51,17 @@ if (Meteor.isClient) {
     "submit .new-task": function (event) {
       //console.log(event.target.category.value); // How to access name
       // This function is called when the new task form is submitted
-      //console.log(newUser);
+      console.log(alasql('select _id from users1 where name = ?', [newUser]));
       var user = alasql('select _id from users1 where name = ?', [newUser])[0]._id;
-      //console.log(user);
+      console.log(user);
       var text = event.target.text.value;
-      tasks.insert({
+      tasks.miniActiveRecord.insert({
         text:text,
         checked:false,
-        name: newUser,
         users1_id: user
-      }, tasks);
+      }, {_id:-1, name: newUser}).save();
+      tasks.unvalidated = true;
+      //tasks.reactiveData.changed();
 
       // Clear form
       event.target.text.value = "";
@@ -53,10 +71,12 @@ if (Meteor.isClient) {
     },
     "click .toggle-checked": function () {
       // Set the checked property to the opposite of its current value
-      tasks.update({_id: this._id, "checked": !this.checked}, {"_id": {$eq: this._id}});
+      tasks.miniActiveRecord.update({_id: this._id, "checked": !this.checked}).where("_id = ?", this._id).save();
+      //tasks.reactiveData.changed();
     },
     "click .delete": function () {
-      tasks.remove({_id: {$eq: this._id}});
+      tasks.miniActiveRecord.remove().where("_id = ?", this._id).save();
+      //tasks.reactiveData.changed();
     },
     "change .catselect": function(event){
       newUser = event.target.value;
@@ -89,19 +109,19 @@ if (Meteor.isServer) {
 
   //tasks.ActiveRecord.select('users1.name', 'tasks.text').join(['INNER JOIN'], ["users1_id"], [["users1", '_id']]).where("users1.name = ?", "kate").order('tasks.text DESC').fetch();
   Meteor.methods({
-    add: function(table, paramObj) {
-      tasks.ActiveRecord.insert(paramObj).save();
-    },
-    update: function(table, paramObj, selectObj){
-      tasks.ActiveRecord.update(paramObj).where("_id = ?", selectObj._id.$eq).save();
-    },
-    remove: function(table, paramObj){
-      tasks.ActiveRecord.remove().where("_id = ?", paramObj._id.$eq).save();
-    },
-    createTable: function(table, paramObj){
-      tasks.createTable(table, paramObj);
-    }
-  });
+      tasksfetch: function(input, dataArray) {
+        tasks.ActiveRecord.fetch(input, dataArray);
+      },
+      taskssave: function(input, dataArray) {
+        tasks.ActiveRecord.save(input, dataArray);
+      },
+      users1save: function(input, dataArray) {
+        users1.ActiveRecord.fetch(input, dataArray);
+      },
+      users1fetch: function(input, dataArray) {
+        users1.ActiveRecord.save(input, dataArray);
+      }
+    });
 
 
   Meteor.publish('tasks', function () {
@@ -109,7 +129,8 @@ if (Meteor.isServer) {
     cursor._publishCursor = function(sub) {
       tasks.ActiveRecord.select('tasks._id as _id', 'tasks.text', 'tasks.checked', 'tasks.created_at', 'users1._id as users_id', 'users1.name').join(['INNER JOIN'], ["users1_id"], [["users1", '_id']]).order('created_at DESC').limit(10).autoSelect(sub);
     };
-    cursor.autoSelect = tasks.ActiveRecord.select('tasks._id as _id', 'tasks.text', 'tasks.checked', 'tasks.created_at', 'users1._id as users_id', 'users1._name').join('INNER JOIN', ['_id'], ['users1:_id']).order('created_at DESC').limit(10).autoSelect;    return cursor;
+    cursor.autoSelect = tasks.ActiveRecord.select('tasks._id as _id', 'tasks.text', 'tasks.checked', 'tasks.created_at', 'users1._id as users1id', 'users1._name').join('INNER JOIN', ['_id'], ['users1:_id']).order('created_at DESC').limit(10).autoSelect;
+    return cursor;
   });
 
   Meteor.publish('users1', function(){

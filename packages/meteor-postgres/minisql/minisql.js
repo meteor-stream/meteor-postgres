@@ -35,26 +35,26 @@ MiniSQL = function (table) {
   this.prototype = MiniSQL.prototype;
 };
 
-MiniSQL.prototype._DataTypes = {
-  $number: 'integer',
-  $string: 'varchar(255)',
-  $json: 'json',
-  $datetime: 'date',
-  $float: 'decimal',
-  $seq: 'serial',
-  $bool: 'boolean'
-};
-
-MiniSQL.prototype._TableConstraints = {
-  $unique: 'unique',
-  $check: 'check ', // value
-  $exclude: 'exclude',
-  $notnull: 'not null',
-  $default: 'default ', // value
-  $primary: 'primary key'
-};
-
 MiniSQL.prototype.createTable = function (tableObj) {
+  var _DataTypes = {
+    $number: 'integer',
+    $string: 'varchar(255)',
+    $json: 'json',
+    $datetime: 'date',
+    $float: 'decimal',
+    $seq: 'serial',
+    $bool: 'boolean'
+  };
+
+  var _TableConstraints = {
+    $unique: 'unique',
+    $check: 'check ', // value
+    $exclude: 'exclude',
+    $notnull: 'not null',
+    $default: 'default ', // value
+    $primary: 'primary key'
+  };
+
   alasql.fn.Date = Date;
 
   var startString = 'CREATE TABLE ' + this.table + ' (';
@@ -62,16 +62,16 @@ MiniSQL.prototype.createTable = function (tableObj) {
 
   for (var key in tableObj) {
     inputString += key + ' ';
-    inputString += this._DataTypes[tableObj[key][0]];
+    inputString += _DataTypes[tableObj[key][0]];
     if (Array.isArray(tableObj[key]) && tableObj[key].length > 1) {
       for (var i = 1, count = tableObj[key].length; i < count; i++) {
         item = tableObj[key][i];
         if (typeof item === 'object') {
           subKey = Object.keys(item);
-          valOperator = this._TableConstraints[subKey];
+          valOperator = _TableConstraints[subKey];
           inputString += ' ' + valOperator + item[subKey];
         } else {
-          inputString += ' ' + this._TableConstraints[item];
+          inputString += ' ' + _TableConstraints[item];
         }
       }
     }
@@ -278,7 +278,7 @@ MiniSQL.prototype.fetch = function () {
   this.offsetString + this.groupString + this.havingString + ';';
 
   // alaSQL
-  alasql(input, dataArray);
+  return alasql(input, dataArray);
 
   this.clearAll();
 };
