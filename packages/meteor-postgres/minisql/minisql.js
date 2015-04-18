@@ -198,10 +198,11 @@ miniSQL.prototype.join = function(joinType, fields, joinTable) {
 };
 
 miniSQL.prototype.where = function(/*Arguments*/) {
+
   this.dataArray = [];
   this.dataArray2 = [];
-
   var where = '', redux, substring1, substring2;
+
   where += arguments[0];
   // replace ? with rest of array
   for (var i = 1, count = arguments.length; i < count; i++) {
@@ -213,7 +214,7 @@ miniSQL.prototype.where = function(/*Arguments*/) {
   }
   this.serverWhereString = ' WHERE ' + where;
 
-  var where = '', redux, substring1, substring2;
+  where = '';
   where += arguments[0];
   // replace ? with rest of array
   for (var i = 1, count = arguments.length; i < count; i++) {
@@ -222,41 +223,7 @@ miniSQL.prototype.where = function(/*Arguments*/) {
   }
   this.clientWhereString = ' WHERE ' + where;
 
-
   return this;
-
-  //this.dataArray = [];
-  //var where = '';
-  //if (client === 'client') {
-  //  if (Array.isArray(arguments[1])) {
-  //    var array = arguments[1];
-  //    where += array[1];
-  //    for (var i = 1, count = array.length; i < count; i++) {
-  //      this.dataArray.push(array[i]);
-  //    }
-  //  } else {
-  //    where += arguments[0];
-  //    for (var i = 1, count = arguments.length; i < count; i++) {
-  //      this.dataArray.push(arguments[i]);
-  //    }
-  //  }
-  //  this.whereString = ' WHERE ' + where;
-  //} else {
-  //  var redux, substring1, substring2;
-  //  var argsArray = arguments;
-  //  where += argsArray[0];
-  //  for (var i = 1, count = argsArray.length; i < count; i++) {
-  //    redux = where.indexOf('?');
-  //    substring1 = where.substring(0, redux);
-  //    substring2 = where.substring(redux + 1, where.length);
-  //    where = substring1 + '$' + i + substring2;
-  //    this.dataArray.push(argsArray[i]);
-  //  }
-  //  this.whereString = ' WHERE ' + where;
-  //}
-
-  //console.log(this.whereString);
-  //return this;
 };
 
 miniSQL.prototype.order = function(/*arguments*/) {
