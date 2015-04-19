@@ -3,7 +3,7 @@ var clientHolder = {};
 
 ActiveRecord = function (Collection) {
 
-  Collection = Collection || {};
+  Collection = Collection || Object.create(ActiveRecord.prototype);
   // initialize class
   Collection.table = Collection.tableName;
 
