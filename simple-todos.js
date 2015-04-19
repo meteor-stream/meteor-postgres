@@ -23,18 +23,20 @@ if (Meteor.isClient) {
   Template.body.helpers({
     tasks: function () {
       // Also where are the params for the search?
-      var uTasks = tasks.select('tasks.id', 'tasks.text', 'tasks.checked', 'tasks.createdat', 'users1.name').join(['OUTER JOIN'], ['users1id'], [['users1', ['id']]]).fetch('client');
+      var uTasks = tasks.select('tasks.id', 'tasks.text', 'tasks.checked', 'tasks.createdat', 'users1.name').join(['OUTER JOIN'], ['users1id'], [['users1', ['id']]]).fetch();
       return uTasks;
     },
     categories: function () {
-      return users1.select().fetch('client');
+      return users1.select().fetch();
     }
   });
 
   Template.body.events({
     "submit .new-task": function (event) {
       //console.log(event.target.category.value); // How to access name
-      var user = alasql('select id from users1 where name = ?', [newUser]);
+      var user = users1.select('id').where("name = ?", newUser).fetch();
+      //var user = alasql('select id from users1 where name = ?', [newUser]);
+      console.log(user);
       user = user[0].id;
       var text = event.target.text.value;
       tasks.insert({

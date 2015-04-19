@@ -318,7 +318,7 @@ miniSQL.prototype.clearAll = function() {
   this.prevFunc = '';
 };
 
-miniSQL.prototype.fetch = function(client) {
+miniSQL.prototype.fetch = function(server) {
 
   this.reactiveData.depend();
 
@@ -335,7 +335,7 @@ miniSQL.prototype.fetch = function(client) {
   // postgres
   console.log(505, result);
   var name = this.table + 'fetch';
-  if (client !== "client") {
+  if (server === "server") {
     input = this.inputString.length > 0 ? this.inputString : starter + this.joinString + this.serverWhereString + this.orderString + this.limitString +
     this.offsetString + this.groupString + this.havingString + ';';
     Meteor.call(name, input, dataArray);
