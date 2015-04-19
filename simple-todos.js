@@ -81,34 +81,20 @@ if (Meteor.isServer) {
 
 
   Meteor.publish('tasks', function () {
-    var cursor = {};
-    cursor._publishCursor = function(sub) {
-
-      // Why do we need to write this twice??
+    return tasks.getCursor(function(sub){
       tasks.select('tasks.id as id', 'tasks.text', 'tasks.checked', 'tasks.createdat', 'users1.id as users1id', 'users1.name')
            .join(['INNER JOIN'], ["users1id"], [["users1", 'id']])
            .order('createdat DESC')
            .limit(10)
            .autoSelect(sub);
-    };
-    cursor.autoSelect = tasks.select('tasks.id as id', 'tasks.text', 'tasks.checked', 'tasks.createdat', 'users1.id as users1id', 'users1.name')
-                             .join('INNER JOIN', ['id'], ['users1:id'])
-                             .order('createdat DESC')
-                             .limit(10)
-                             .autoSelect;
-    return cursor;
+    });
   });
 
   Meteor.publish('users1', function(){
-    var cursor = {};
-    cursor._publishCursor = function(sub) {
+    return users1.getCursor(function(sub) {
       users1.select('id', 'name')
             .limit(10)
             .autoSelect(sub);
-    };
-    cursor.autoSelect = users1.select('id', 'name')
-                              .limit(10)
-                              .autoSelect;
-    return cursor;
+    });
   })
 }
