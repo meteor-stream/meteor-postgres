@@ -126,7 +126,13 @@ SQL.Collection = function(connection, conString) {
     registerStore(connection, name);
   }
 
-
+  this.getCursor = function(cb){
+    return {
+      _publishCursor: function(sub){
+        cb(sub);
+      }
+    }
+  }
 };
 
 

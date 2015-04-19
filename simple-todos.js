@@ -2,8 +2,7 @@ tasks = new SQL.Collection('tasks', 'postgres://postgres:1234@localhost/postgres
 users1 = new SQL.Collection('users1', 'postgres://postgres:1234@localhost/postgres');
 
 if (Meteor.isClient) {
-  // To mirror the Mongo interface we should make it so taht 1 collection is 1 table
-  var newUser = 'ko';
+
   var taskTable = {
     id: ['$number'],
     text: ['$string', '$notnull'],
@@ -22,21 +21,20 @@ if (Meteor.isClient) {
 
   Template.body.helpers({
     tasks: function () {
-      // Also where are the params for the search?
-      var uTasks = tasks.select('tasks.id', 'tasks.text', 'tasks.checked', 'tasks.createdat', 'users1.name').join(['OUTER JOIN'], ['users1id'], [['users1', ['id']]]).fetch();
+      var uTasks = tasks.select('tasks.id', 'tasks.text', 'tasks.checked', 'tasks.createdat', 'users1.name')
+                        .join(['OUTER JOIN'], ['users1id'], [['users1', ['id']]])
+                        .fetch('client');
       return uTasks;
     },
     categories: function () {
-      return users1.select().fetch();
+      return users1.select()
+                   .fetch('client');
     }
   });
 
   Template.body.events({
     "submit .new-task": function (event) {
-      //console.log(event.target.category.value); // How to access name
-      var user = users1.select('id').where("name = ?", newUser).fetch();
-      //var user = alasql('select id from users1 where name = ?', [newUser]);
-      console.log(user);
+      var user = alasql('select id from users1 where name = ?', [event.target.category.value]);
       user = user[0].id;
       var text = event.target.text.value;
       tasks.insert({
@@ -46,15 +44,17 @@ if (Meteor.isClient) {
       }).save();
       //tasks.unvalidated = true;
       event.target.text.value = "";
-
       return false;
     },
     "click .toggle-checked": function () {
-      // this should call tasks.update which should delegate
-      tasks.update({id: this.id, "checked": !this.checked}).where("id = ?", this.id).save();
+      tasks.update({id: this.id, "checked": !this.checked})
+           .where("id = ?", this.id)
+           .save();
     },
     "click .delete": function () {
-      tasks.remove().where("id = ?", this.id).save();
+      tasks.remove()
+           .where("id = ?", this.id)
+           .save();
     },
     "change .catselect": function(event){
       newUser = event.target.value;
@@ -71,36 +71,30 @@ if (Meteor.isServer) {
 
 
   Meteor.methods({
-      tasksfetch: function(input, dataArray) {
-        tasks.fetch(input, dataArray);
-      },
-      taskssave: function(input, dataArray) {
-        tasks.save(input, dataArray);
-      },
-      users1save: function(input, dataArray) {
-        users1.fetch(input, dataArray);
-      },
-      users1fetch: function(input, dataArray) {
-        users1.save(input, dataArray);
-      }
-    });
+    taskssave: function(input, dataArray) {
+      tasks.save(input, dataArray);
+    },
+    users1save: function(input, dataArray) {
+      users1.fetch(input, dataArray);
+    },
+  });
 
 
   Meteor.publish('tasks', function () {
-    var cursor = {};
-    cursor._publishCursor = function(sub) {
-      tasks.select('tasks.id as id', 'tasks.text', 'tasks.checked', 'tasks.createdat', 'users1.id as users1id', 'users1.name').join(['INNER JOIN'], ["users1id"], [["users1", 'id']]).order('createdat DESC').limit(10).autoSelect(sub);
-    };
-    cursor.autoSelect = tasks.select('tasks.id as id', 'tasks.text', 'tasks.checked', 'tasks.createdat', 'users1.id as users1id', 'users1.name').join('INNER JOIN', ['id'], ['users1:id']).order('createdat DESC').limit(10).autoSelect;
-    return cursor;
+    return tasks.getCursor(function(sub){
+      tasks.select('tasks.id as id', 'tasks.text', 'tasks.checked', 'tasks.createdat', 'users1.id as users1id', 'users1.name')
+           .join(['INNER JOIN'], ["users1id"], [["users1", 'id']])
+           .order('createdat DESC')
+           .limit(10)
+           .autoSelect(sub);
+    });
   });
 
   Meteor.publish('users1', function(){
-    var cursor = {};
-    cursor._publishCursor = function(sub) {
-      users1.select('id', 'name').limit(10).autoSelect(sub);
-    };
-    cursor.autoSelect = users1.select('id', 'name').limit(10).autoSelect;
-    return cursor;
+    return users1.getCursor(function(sub) {
+      users1.select('id', 'name')
+            .limit(10)
+            .autoSelect(sub);
+    });
   })
 }
