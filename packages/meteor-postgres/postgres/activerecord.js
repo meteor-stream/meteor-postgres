@@ -338,6 +338,8 @@ ActiveRecord.prototype.fetch = function (input, data, cb) {
     this.offsetString + this.groupString + this.havingString + ';';
   }
 
+  //cb = cb || function(prevFunc, table, results) {return console.log("results in " + prevFunc + ' ' + table, results.rows)};
+  // console.log('FETCH:', input, dataArray);
   pg.connect(this.conString, function (err, client, done) {
     if (err) {
       console.log(err);
