@@ -8,7 +8,7 @@ This project is still under development and will likely contain minor bugs. We a
 ### In this repo
 
 * Meteor-Postgres package
-* [Example todos application](spaceelephant.meteor.com)
+* [Example todos application](http://spaceelephant.meteor.com)
 * [Documentation](https://github.com/meteor-stream/meteor-postgres/wiki/Getting-Started)
 * [Team website](http://www.meteorelephant.com/)
 
