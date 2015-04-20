@@ -10,6 +10,7 @@ This project is still under development and will likely contain minor bugs. We a
 * Meteor-Postgres package
 * Example sample-todos application
 * [Documentation](https://github.com/meteor-stream/meteor-postgres/wiki/Getting-Started)
+* [Team website](http://www.meteorelephant.com/)
 
 ### Installation
 
