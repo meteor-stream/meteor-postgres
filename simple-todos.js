@@ -3,7 +3,7 @@ tasks = new SQL.Collection('tasks', 'postgres://postgres:1234@localhost/postgres
 username = new SQL.Collection('username', 'postgres://postgres:1234@localhost/postgres');
 
 if (Meteor.isClient) {
-  var newUser = 'kate';
+  var newUser = '';
   var taskTable = {
     id: ['$number'],
     text: ['$string', '$notnull'],
@@ -21,15 +21,18 @@ if (Meteor.isClient) {
 
 
   Template.body.helpers({
-    tasks: function () {
-      var uTasks = tasks.select('tasks.id', 'tasks.text', 'tasks.checked', 'tasks.createdat', 'username.name')
-                        .join(['OUTER JOIN'], ['usernameid'], [['username', ['id']]])
-                        .fetch();
-      return uTasks;
-    },
     usernames: function () {
       return username.select()
-                     .fetch();
+        .fetch();
+    },
+    tasks: function () {
+      if (newUser === ''){
+        newUser = username.findOne().fetch()[0].name;
+      }
+      return tasks.select('tasks.id', 'tasks.text', 'tasks.checked', 'tasks.createdat', 'username.name')
+                        .join(['OUTER JOIN'], ['usernameid'], [['username', ['id']]])
+                        .where("name = ?", newUser)
+                        .fetch();
     }
   });
 
@@ -72,6 +75,8 @@ if (Meteor.isClient) {
            .save();
     },
     "change .catselect": function(event){
+      console.log(event.target.value);
+      newUser = event.target.value;
       tasks.reactiveData.changed();
     }
   });
