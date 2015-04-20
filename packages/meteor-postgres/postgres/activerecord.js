@@ -462,7 +462,7 @@ ActiveRecord.prototype.autoSelect = function(sub) {
     var context = this;
     pg.connect(conString, function(err, client, done) {
       clientHolder[name] = client;
-      console.log(err);
+      //console.log(err);
       cb(client);
     });
   };
