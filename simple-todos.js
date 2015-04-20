@@ -42,10 +42,9 @@ if (Meteor.isClient) {
     "submit .new-task": function (event) {
       // TODO: rewrite this to use '?' syntax
       // building up where string
-      var string = 'name = "' + event.target.category.value + '"';
-      // getting userID for the given username
+      var value = event.target.category.value;
       var user = users1.select('id')
-                       .where(string)
+                       .where('name = ?', value)
                        .fetch();
       user = user[0].id;
       var text = event.target.text.value;
@@ -87,9 +86,15 @@ if (Meteor.isServer) {
     taskssave: function(input, dataArray) {
       tasks.save(input, dataArray);
     },
-    users1save: function(input, dataArray) {
-      users1.fetch(input, dataArray);
+    tasksfetch: function(input, dataArray) {
+      tasks.fetch(input, dataArray);
     },
+    users1save: function(input, dataArray) {
+      users1.save(input, dataArray);
+    },
+    users1fetch: function(input, dataArray) {
+      users1.fetch(input, dataArray);
+    }
   });
 
   // Publishing the collections
