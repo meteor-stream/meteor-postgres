@@ -44,7 +44,7 @@ Defining the schema on the client for the tables and creating the table. These t
     };
     tasks.createTable('tasks', taskTable);
 
-Seperately we will need to create the table on the server. See the [documentation](https://github.com/meteor-stream/meteor-postgres/blob/master/packages/meteor-postgres/postgres/activerecorddocs.md) for our ORM.
+Seperately we will need to create the table on the server. See the [wiki](https://github.com/meteor-stream/meteor-postgres/wiki/Getting-Started) for official documentation.
 
     tasks.ActiveRecord.createTable({text: ['$string'], checked: ["$bool", {$default: false}]}).save();
 
