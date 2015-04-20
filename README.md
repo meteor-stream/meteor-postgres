@@ -73,12 +73,7 @@ This is meant to be quick demo. See the [Documentation](https://github.com/meteo
         }
         
         if (Meteor.isServer) {
-          Meteor.methods({
-            taskssave: function(input, dataArray) {
-              tasks.save(input, dataArray);
-            },
-          });
-        
+                 
           Meteor.publish('tasks', function () {
             return tasks.getCursor(function(sub){
               tasks.select('id', 'text', 'checked', 'createdat').order('createdat DESC').limit(10).autoSelect(sub);

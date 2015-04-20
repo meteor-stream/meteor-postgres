@@ -71,11 +71,11 @@ if (Meteor.isServer) {
     return tasks.select('tasks.id as id', 'tasks.text', 'tasks.checked', 'tasks.createdat', 'users1.id as users1id', 'users1.name')
        .join(['INNER JOIN'], ["users1id"], [["users1", 'id']])
        .order('createdat DESC')
-       .limit(10)
+       .limit(100)
   });
 
   users1.publish('users1', function(){
     return users1.select('id', 'name')
-                 .limit(10)
+                 .limit(100)
   });
 }
