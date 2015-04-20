@@ -128,6 +128,7 @@ if (Meteor.isServer) {
     // branch coverage TODO
     // select args not empty branch
       // not empty and no distinct
+    // var result1 = testUser.select('testUser.username', 'testUser.age').
       // not empty and has distinct
 
     // update args > 1 branch
@@ -219,9 +220,11 @@ if (Meteor.isServer) {
   var testSpecies = ActiveRecordStub('testSpeciesTable');
 
   Tinytest.addAsync('activerecord - advanced - success', function(test, onComplete) {
+    testTree.dropTable().wrapSave(null, null);
+    testLocation.dropTable().wrapSave(null, null);
+    testSpecies.dropTable().wrapSave(null, null);
     onComplete();
   });
-
 }
 
 // Connection test, should be added after the default connect string removed

@@ -299,7 +299,6 @@ ActiveRecord.prototype.group = function (group) {
 // QUERY/INPUT STRING
 ActiveRecord.prototype.first = function (limit) {
   limit = limit || 1;
-  this.clearAll();
   this.inputString += 'SELECT * FROM ' + this.table + ' ORDER BY ' + this.table + '.id ASC LIMIT ' + limit + ';';
   this.prevFunc = 'FIRST';
   return this;
@@ -311,7 +310,6 @@ ActiveRecord.prototype.first = function (limit) {
 // QUERY/INPUT STRING
 ActiveRecord.prototype.last = function (limit) {
   limit = limit || 1;
-  this.clearAll();
   this.inputString += 'SELECT * FROM ' + this.table + ' ORDER BY ' + this.table + '.id DESC LIMIT ' + limit + ';';
   this.prevFunc = 'LAST';
   return this;
@@ -323,7 +321,6 @@ ActiveRecord.prototype.last = function (limit) {
 // QUERY/INPUT STRING
 ActiveRecord.prototype.take = function (limit) {
   limit = limit || 1;
-  this.clearAll();
   this.inputString += 'SELECT * FROM ' + this.table + ' LIMIT ' + limit + ';';
   this.prevFunc = 'TAKE';
   return this;
