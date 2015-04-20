@@ -1,32 +1,38 @@
+// Defining 2 SQL collections. The additional paramater is the postgres connection string which will only run on the server
 tasks = new SQL.Collection('tasks', 'postgres://postgres:1234@localhost/postgres');
 users1 = new SQL.Collection('users1', 'postgres://postgres:1234@localhost/postgres');
 
 if (Meteor.isClient) {
 
+  // Creating schema for tables
   var taskTable = {
     id: ['$number'],
     text: ['$string', '$notnull'],
     checked: ['$bool'],
     users1id: ['$number']
   };
-
+  // creating table
   tasks.createTable(taskTable);
 
+  // creating schema for second table
   var usersTable = {
     id: ['$number'],
     name: ['$string', '$notnull']
   };
+  // creating second table
   users1.createTable(usersTable);
 
 
   Template.body.helpers({
     tasks: function () {
+      // selecting and returning from minisql - client side database
       var uTasks = tasks.select('tasks.id', 'tasks.text', 'tasks.checked', 'tasks.createdat', 'users1.name')
                         .join(['OUTER JOIN'], ['users1id'], [['users1', ['id']]])
                         .fetch('client');
       return uTasks;
     },
     categories: function () {
+      // selecting and returning from minisql
       return users1.select()
                    .fetch('client');
     }
@@ -34,30 +40,34 @@ if (Meteor.isClient) {
 
   Template.body.events({
     "submit .new-task": function (event) {
-      var user = alasql('select id from users1 where name = ?', [event.target.category.value]);
+      // TODO: rewrite this to use '?' syntax
+      // building up where string
+      var string = 'name = "' + event.target.category.value + '"';
+      // getting userID for the given username
+      var user = users1.select('id')
+                       .where(string)
+                       .fetch();
       user = user[0].id;
       var text = event.target.text.value;
+      // Inserting into localDB. meteor-Postgres will update the server
       tasks.insert({
         text:text,
         checked:false,
         users1id: user
       }).save();
-      //tasks.unvalidated = true;
       event.target.text.value = "";
-      return false;
     },
     "click .toggle-checked": function () {
+      // Updating local db. meteor-Postgres will udpate the server
       tasks.update({id: this.id, "checked": !this.checked})
            .where("id = ?", this.id)
            .save();
     },
     "click .delete": function () {
+      // Deleting from local db. meteor-Postgres will udpate the server
       tasks.remove()
            .where("id = ?", this.id)
            .save();
-    },
-    "change .catselect": function(event){
-      newUser = event.target.value;
     }
   });
 
@@ -65,11 +75,14 @@ if (Meteor.isClient) {
 
 if (Meteor.isServer) {
 
+  // Commented out calls to create tables on the server
   //tasks.ActiveRecord.createTable({text: ['$string'], checked: ["$bool", {$default: false}]}).save();
   //users1.ActiveRecord.createTable({name: ['$string']}).save();
   //tasks.ActiveRecord.createRelationship('users1', '$onetomany').save();
 
-
+  // Defining the meteor.methods to handle inserting into the serverDB. These will be automatically
+  // called when inserting into the localDB. They need to be named {{collection name}}+'save'
+  // This is a limitation of our implementation and will be fixed in later versions
   Meteor.methods({
     taskssave: function(input, dataArray) {
       tasks.save(input, dataArray);
@@ -79,8 +92,12 @@ if (Meteor.isServer) {
     },
   });
 
-
+  // Publishing the collections
   Meteor.publish('tasks', function () {
+    // For this implementation to work you must call getCursor and provide a callback with the select
+    // statement that needs to be reactive. The 'caboose' on the chain of calls must be autoSelect
+    // and it must be passed the param 'sub' which is defining in the anon function.
+    // This is a limiation of our implementation and will be fixed in later versions
     return tasks.getCursor(function(sub){
       tasks.select('tasks.id as id', 'tasks.text', 'tasks.checked', 'tasks.createdat', 'users1.id as users1id', 'users1.name')
            .join(['INNER JOIN'], ["users1id"], [["users1", 'id']])

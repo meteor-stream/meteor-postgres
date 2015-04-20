@@ -60,5 +60,9 @@ Removing
 
     tasks.remove(this._id);
 
+# Limitations
+
+Right now the client sends data to the server using Meteor.call rather than DDP. This will be changed in future versions.
+
 # License
 Released under the MIT license. See the LICENSE file for more info.

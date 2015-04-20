@@ -100,28 +100,26 @@ miniSQL.prototype.dropTable = function() {
 };
 
 miniSQL.prototype.insert = function(serverInserts, clientInserts) {
-  console.log(this.tableElements);
   // server
-    if(serverInserts['id'] === undefined){
-      serverInserts['id'] = -1;
-    }
-    console.log("client fired");
-    // client
-    this.dataArray2 = [];
-    var insertString2 = 'INSERT INTO ' + this.table + ' (';
-    var valueString2 = ') VALUES (';
-    for (var key2 in clientInserts) {
-      insertString2 += key2 + ', ';
-      this.dataArray2.push(clientInserts[key2]);
-      valueString2 += '?, ';
-    }
-    for (var key3 in serverInserts) {
-      insertString2 += key3 + ', ';
-      this.dataArray2.push(serverInserts[key3]);
-      valueString2 += '?, ';
-    }
-    this.server = true;
-    this.inputString2 = insertString2.substring(0, insertString2.length - 2) + valueString2.substring(0, valueString2.length - 2) + ');';
+  if(serverInserts['id'] === undefined){
+    serverInserts['id'] = -1;
+  }
+  // client
+  this.dataArray2 = [];
+  var insertString2 = 'INSERT INTO ' + this.table + ' (';
+  var valueString2 = ') VALUES (';
+  for (var key2 in clientInserts) {
+    insertString2 += key2 + ', ';
+    this.dataArray2.push(clientInserts[key2]);
+    valueString2 += '?, ';
+  }
+  for (var key3 in serverInserts) {
+    insertString2 += key3 + ', ';
+    this.dataArray2.push(serverInserts[key3]);
+    valueString2 += '?, ';
+  }
+  this.server = true;
+  this.inputString2 = insertString2.substring(0, insertString2.length - 2) + valueString2.substring(0, valueString2.length - 2) + ');';
 
 
   this.dataArray = [];
@@ -333,7 +331,6 @@ miniSQL.prototype.fetch = function(server) {
   var result = alasql(input, dataArray);
 
   // postgres
-  console.log(505, result);
   var name = this.table + 'fetch';
   if (server === "server") {
     input = this.inputString.length > 0 ? this.inputString : starter + this.joinString + this.serverWhereString + this.orderString + this.limitString +
