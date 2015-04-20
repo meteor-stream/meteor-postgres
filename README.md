@@ -16,17 +16,11 @@ Run the following from a command line
 
     meteor add meteorsteam:meteor-postgres
 
-If you want to make modifications to our package for your project, clone this repo and include the /pacakges/meteor-postgres folder in your /pacakges.
-
-Either way you will need to add the following to .meteor/packages
-
-    meteorsteam:meteor-postgres
-
-
+If you want to make modifications to our package for your project, clone this repo and include the /pacakges/meteor-postgres folder in your /pacakges. You will need to add the package to your packages file in .meteor.
 
 # Implementation
 
-The ORM is designed after Ruby's [active record](https://github.com/rails/rails/tree/master/activerecord). MiniSQL is implemented using [alasql](https://github.com/agershun/alasql).
+We used [Node-Postgres](https://github.com/brianc/node-postgres) on the server and [alasql](https://github.com/agershun/alasql) on the client.
 
 # Usage
 
