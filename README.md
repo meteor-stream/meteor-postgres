@@ -1,10 +1,9 @@
 This project is still under development and will likely contain minor bugs. We are targeting 4/26/2015 as our stable release date.
 
-# Meteor-Postgres
+# [Meteor-Postgres](http://www.meteorpostgres.com/)
 
 
 ![Postgres](https://s3-us-west-1.amazonaws.com/treebookicons/postgresql_logo.jpg "Postgres")![Meteor](https://s3-us-west-1.amazonaws.com/treebookicons/meteor-logo.png  "Meteor")
-
 
 ### In this repo
 
