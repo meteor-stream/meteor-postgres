@@ -1,4 +1,4 @@
-This project is still under development and will likely contain serious bugs. We are targetting 4/26/2015 as our stable release date.
+This project is still under development and will likely contain minor bugs. We are targeting 4/26/2015 as our stable release date.
 
 # meteor-postgres
 Postgres integration for Meteor
@@ -32,13 +32,13 @@ The ORM is designed after Ruby's [active record](https://github.com/rails/rails/
 
 Defining the SQL collection on both server and client. Pass in the postgres connection string, which will only be used on the server.
 
-    tasks = new SQL.Collection('tasks', 'postgres://<user>:<password>@<host>/postgres');
+    tasks = new SQL.Collection('tasks', 'postgres://username:password@localhost/database');
     // replaces Mongo.Collection('tasks');
 
-Defining the schema on the client for the tables and creating the table. These tables are not persistant.
+Defining the schema on the client for the tables and creating the table. These tables are not persistent.
 
     var taskTable = {
-      _id: ['INT', 'AUTO_INCREMENT'],
+      _id: ['INT', 'PRIMARY KEY'],
       text: ['varchar (255)', 'not null'],
       checked: ['BOOL', 'DEFAULT true']
     };
@@ -70,7 +70,7 @@ On the server the cursor needs to be created and published
       return cursor;
     });
 
-One limitation of our current implementation is that client does not transmit data to the server using ddp. Instead after the data is inserted into the local miniSQL database it triggers a call to the server side method named {{tablename}}+"save". We cannot know what the users will call the collection so the user needs to specify the following Meteor.methods in order fo rhtis implementation to work
+One limitation of our current implementation is that client does not transmit data to the server using ddp. Instead after the data is inserted into the local miniSQL database it triggers a call to the server side method named {{tablename}}+"save". We cannot know what the users will call the collection so the user needs to specify the following Meteor.methods in order for this implementation to work
 
     Meteor.methods({
       taskssave: function(input, dataArray) {
@@ -101,7 +101,7 @@ Inserting
       text:text,
       checked:false,
       users1id: user
-    }, {id:-1}).save();
+    }).save();
 
 Updating
 
