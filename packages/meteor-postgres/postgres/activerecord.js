@@ -234,7 +234,6 @@ ActiveRecord.prototype.where = function (/*Arguments*/) {
   this.dataArray = [];
   var where = '', redux, substring1, substring2;
   where += arguments[0];
-  // replace ? with rest of array
   for (var i = 1, count = arguments.length; i < count; i++) {
     redux = where.indexOf('?');
     substring1 = where.substring(0, redux);
@@ -328,7 +327,6 @@ ActiveRecord.prototype.take = function (limit) {
 
 // Data function that retrieves data from database
 ActiveRecord.prototype.fetch = function (input, data, cb) {
-  console.log(123, input, data, cb);
   var table = this.table;
   var dataArray = data || this.dataArray;
   var prevFunc = this.prevFunc;
@@ -340,21 +338,11 @@ ActiveRecord.prototype.fetch = function (input, data, cb) {
     this.offsetString + this.groupString + this.havingString + ';';
   }
 
-  //cb = cb || function(prevFunc, table, results) {return console.log("results in " + prevFunc + ' ' + table, results.rows)};
-  console.log('FETCH:', input, dataArray);
   pg.connect(this.conString, function (err, client, done) {
     if (err) {
       console.log(err);
     }
-    //console.log(input);
     client.query(input, dataArray, function (error, results) {
-      // if (error) {
-      //   console.log("error in " + prevFunc + ' ' + table, error);
-      // } else {
-      //   // cb(prevFunc, table, results);
-      //   cb(error, results);
-      // }
-      console.log(error, results);
       done();
     });
   });
@@ -373,18 +361,14 @@ ActiveRecord.prototype.save = function (input, data, cb) {
   if (!input) {
     input = this.inputString.length > 0 ? this.inputString : starter + this.joinString + this.whereString + ';';
   }
-
-  var callback = function (err, results) {
-      console.log(err, results);
-    };
-
-  console.log('SAVE:', input, dataArray);
   pg.connect(this.conString, function (err, client, done) {
     if (err) {
       console.log(err, "in " + prevFunc + ' ' + table);
     }
     client.query(input, dataArray, function (error, results) {
-      if (callback) { callback(error, results); }
+      if (cb) {
+        cb(error, results);
+      }
     });
     done();
   });
@@ -462,14 +446,12 @@ ActiveRecord.prototype.autoSelect = function(sub) {
 
   this.autoSelectInput = this.autoSelectInput !== "" ? this.autoSelectInput : this.selectString + this.joinString + newWhere + this.orderString + this.limitString + ';';
   this.autoSelectData = this.autoSelectData !== "" ? this.autoSelectData  : this.dataArray;
-  //console.log('auto:', this.autoSelectInput, this.autoSelectData);
   var value = this.autoSelectInput;
   this.clearAll();
 
 
   var loadAutoSelectClient = function(name, cb){
     // Function to load a new client, store it, and then send it to the function to add the watcher
-    //console.log("Loading new client for autoSelect");
     var context = this;
     pg.connect(conString, function(err, client, done) {
       clientHolder[name] = client;
@@ -517,7 +499,6 @@ ActiveRecord.prototype.autoSelect = function(sub) {
       else if (returnMsg[1].operation === "UPDATE") {
         var selectString1 = newSelect + newJoin + " WHERE " + table + ".id = " + returnMsg[0][table];
         client.query(selectString1, this.autoSelectData, function(error, results) {
-          console.log('fired');
           if (error) {
             console.log(error, "in autoSelect update");
           } else {
@@ -542,7 +523,6 @@ ActiveRecord.prototype.autoSelect = function(sub) {
         var selectString1 = newSelect + newJoin + " WHERE " + table + ".id = " + returnMsg[0][table];
         //var selectString = selectStatement(name, properties, {id: {$eq: returnMsg[0][sub._name]}}, optionsObj, joinObj);
         client.query(selectString1, this.autoSelectData, function(error, results) {
-          console.log("insert", selectString1);
           if (error) {
             //console.log("========================", selectString1);
             console.log(error, "in autoSelect insert")
