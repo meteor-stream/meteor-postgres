@@ -501,8 +501,8 @@ ActiveRecord.prototype.autoSelect = function(sub) {
         });
       }
       else if (returnMsg[1].operation === "UPDATE") {
-        var selectString1 = newSelect + newJoin + " WHERE " + table + ".id = " + returnMsg[0][table];
-        client.query(selectString1, this.autoSelectData, function(error, results) {
+        var selectString = newSelect + newJoin + " WHERE " + table + ".id = " + returnMsg[0][table];
+        client.query(selectString, this.autoSelectData, function(error, results) {
           if (error) {
             console.log(error, "in autoSelect update");
           } else {
@@ -522,13 +522,9 @@ ActiveRecord.prototype.autoSelect = function(sub) {
         });
       }
       else if (returnMsg[1].operation === "INSERT") {
-        //console.log(newSelect, 'select string');
-        //console.log(newJoin, 'join string');
-        var selectString1 = newSelect + newJoin + " WHERE " + table + ".id = " + returnMsg[0][table];
-        //var selectString = selectStatement(name, properties, {id: {$eq: returnMsg[0][sub._name]}}, optionsObj, joinObj);
-        client.query(selectString1, this.autoSelectData, function(error, results) {
+        var selectString = newSelect + newJoin + " WHERE " + table + ".id = " + returnMsg[0][table];
+        client.query(selectString, this.autoSelectData, function(error, results) {
           if (error) {
-            //console.log("========================", selectString1);
             console.log(error, "in autoSelect insert")
           } else {
             sub._session.send({
