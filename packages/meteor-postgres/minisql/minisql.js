@@ -320,17 +320,11 @@ miniSQL.prototype.fetch = function(server) {
 
   this.reactiveData.depend();
 
-  var dataArray, input;
+  var dataArray = this.dataArray;
+  var starter = this.updateString || this.deleteString || this.selectString;
 
-  if (this.inputString.length > 0) {
-    input = this.inputString;
-    dataArray = this.inputString.indexOf('INSERT') === 0 ? this.dataArray : [];
-  } else {
-    var starter = this.updateString || this.deleteString || this.selectString;
-    input = starter + this.joinString + this.clientWhereString + this.orderString + this.limitString +
-    this.offsetString + this.groupString + this.havingString + ';';
-    dataArray = this.whereString.length > 0 ? this.dataArray : [];
-  }
+  var input = this.inputString.length > 0 ? this.inputString : starter + this.joinString + this.clientWhereString + this.orderString + this.limitString +
+  this.offsetString + this.groupString + this.havingString + ';';
 
 
   var result = alasql(input, dataArray);
@@ -347,29 +341,16 @@ miniSQL.prototype.fetch = function(server) {
 
 miniSQL.prototype.save = function(client) {
 
-  var input, starter, dataArray, dataArray2;
-
-  if (this.inputString2.length > 0) {
-    input = this.inputString2;
-    dataArray2 = this.inputString.indexOf('INSERT') === 0 ? this.dataArray2 : [];
-  } else {
-    starter = this.updateString || this.deleteString || this.selectString;
-    input = starter + this.joinString + this.clientWhereString + ';';
-    dataArray2 = this.clientWhereString.length > 0 ? this.dataArray2 : [];
-  }
+  var dataArray = this.dataArray;
+  var dataArray2 = this.dataArray2;
+  var starter = this.updateString || this.deleteString || this.selectString;
+  var input = this.inputString2.length > 0 ? this.inputString2 : starter + this.joinString + this.clientWhereString + ';';
 
   var result = alasql(input, dataArray2);
   // postgres
   var name = this.table + 'save';
   if (client !== "client") {
-    if (this.inputString.length > 0) {
-      input = this.inputString;
-      dataArray = this.inputString.indexOf('INSERT') === 0 ? this.dataArray : [];
-    } else {
-      input = starter + this.joinString + this.serverWhereString + ';';
-      dataArray = this.clientWhereString.length > 0 ? this.dataArray : [];
-    }
-
+    input = this.inputString.length > 0 ? this.inputString : starter + this.joinString + this.serverWhereString + ';';
     this.unvalidated = true;
     Meteor.call(name, input, dataArray);
   }
