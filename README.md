@@ -33,16 +33,20 @@ Defining the SQL collection on both server and client. Pass in the postgres conn
 
 Defining the schema on the client for the tables and creating the table. These tables are not persistent.
 
-    var taskTable = {
-      _id: ['INT', 'PRIMARY KEY'],
-      text: ['varchar (255)', 'not null'],
-      checked: ['BOOL', 'DEFAULT true']
-    };
-    tasks.createTable('tasks', taskTable);
+    if (Meteor.isClient) {
+        var taskTable = {
+          _id: ['INT', 'PRIMARY KEY'],
+          text: ['varchar (255)', 'not null'],
+          checked: ['BOOL', 'DEFAULT true']
+        };
+        tasks.createTable('tasks', taskTable);
+    }
 
 Seperately we will need to create the table on the server. See the [wiki](https://github.com/meteor-stream/meteor-postgres/wiki/Getting-Started) for official documentation.
 
-    tasks.ActiveRecord.createTable({text: ['$string'], checked: ["$bool", {$default: false}]}).save();
+    if (Meteor.isServer) {
+        tasks.createTable({text: ['$string'], checked: ["$bool", {$default: false}]}).save();
+    }
 
 
 On the server the cursor needs to be created and published
