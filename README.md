@@ -34,7 +34,7 @@ This is meant to be quick demo. See the [Documentation](https://github.com/meteo
             id: ['$number'],
             text: ['$string', '$notnull'],
             checked: ['$bool'],
-            usersnamesid: ['$number']
+            usernameid: ['$number']
           };
           tasks.createTable(taskTable);
 
@@ -73,8 +73,8 @@ This is meant to be quick demo. See the [Documentation](https://github.com/meteo
         if (Meteor.isServer) {
           // Use SQL.Collection.publish
           tasks.publish('tasks', function(){
-            return tasks.select('tasks.id as id', 'tasks.text', 'tasks.checked', 'tasks.createdat', 'usernames.id as usernamesid', 'usernames.name')
-               .join(['INNER JOIN'], ["usernamesid"], [["usernames", 'id']])
+            return tasks.select('tasks.id as id', 'tasks.text', 'tasks.checked', 'tasks.createdat', 'username.id as usernameid', 'username.name')
+               .join(['INNER JOIN'], ["usernameid"], [["username", 'id']])
                .order('createdat DESC')
                .limit(100)
           });
