@@ -12,6 +12,8 @@ SQL.Collection = function(connection, conString) {
   this.reactiveData = new Tracker.Dependency;
   this.tableName = connection;
   this.conString = conString;
+  this.saveMethod = this.tableName + 'save';
+  this.fetchMethod = this.tableName + 'fetch';
 
   if (!(self instanceof SQL.Collection)) {
     throw new Error('Use new to construct a SQLCollection');
@@ -182,6 +184,15 @@ if (Meteor.isServer){
 }
 
 SQL.Collection.prototype.publish = function(collname, pubFunc) {
+  var methodObj = {};
+  var context = this;
+  methodObj[this.saveMethod] = function(input, dataArray) {
+    context.save(input, dataArray);
+  }
+  methodObj[this.fetchMethod] = function(input, dataArray) {
+    context.fetch(input, dataArray);
+  }
+  Meteor.methods(methodObj);
   Meteor.publish(collname, function () {
     // For this implementation to work you must call getCursor and provide a callback with the select
     // statement that needs to be reactive. The 'caboose' on the chain of calls must be autoSelect

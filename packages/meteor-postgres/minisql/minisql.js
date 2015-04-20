@@ -333,7 +333,7 @@ miniSQL.prototype.fetch = function(server) {
   if (server === "server") {
     input = this.inputString.length > 0 ? this.inputString : starter + this.joinString + this.serverWhereString + this.orderString + this.limitString +
     this.offsetString + this.groupString + this.havingString + ';';
-    Meteor.call(name, input, dataArray);
+    Meteor.call(this.fetchMethod, input, dataArray);
   }
   this.clearAll();
   return result;
@@ -352,7 +352,7 @@ miniSQL.prototype.save = function(client) {
   if (client !== "client") {
     input = this.inputString.length > 0 ? this.inputString : starter + this.joinString + this.serverWhereString + ';';
     this.unvalidated = true;
-    Meteor.call(name, input, dataArray);
+    Meteor.call(this.saveMethod, input, dataArray);
   }
   this.reactiveData.changed();
 
