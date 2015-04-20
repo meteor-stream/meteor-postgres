@@ -125,14 +125,6 @@ SQL.Collection = function(connection, conString) {
     }).length === 1) {
     registerStore(connection, name);
   }
-
-  this.getCursor = function(cb){
-    return {
-      _publishCursor: function(sub){
-        cb(sub);
-      }
-    }
-  }
 };
 
 
@@ -189,7 +181,19 @@ if (Meteor.isServer){
   _.extend(SQL.Collection.prototype, ActiveRecord.prototype);
 }
 
-
+SQL.Collection.prototype.publish = function(collname, pubFunc) {
+  Meteor.publish(collname, function () {
+    // For this implementation to work you must call getCursor and provide a callback with the select
+    // statement that needs to be reactive. The 'caboose' on the chain of calls must be autoSelect
+    // and it must be passed the param 'sub' which is defining in the anon function.
+    // This is a limitation of our implementation and will be fixed in later versions
+    return {
+      _publishCursor: function(sub){
+        return pubFunc().autoSelect(sub);
+      }
+    }
+  });
+};
 
 SQL.Collection.prototype._eventRoot = function(eventName) {
   return eventName.split('.')[0];
