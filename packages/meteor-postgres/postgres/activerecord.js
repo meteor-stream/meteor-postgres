@@ -201,6 +201,7 @@ ActiveRecord.prototype.select = function (/*arguments*/) {
 // QUERY/INPUT STRING
 ActiveRecord.prototype.findOne = function (/*arguments*/) {
   if (arguments.length === 1) {
+    var args = arguments[0];
     this.inputString = 'SELECT * FROM ' + this.table + ' WHERE ' + this.table + '.id = ' + args + ' LIMIT 1;';
   } else {
     this.inputString = 'SELECT * FROM ' + this.table + ' LIMIT 1';
