@@ -84,6 +84,7 @@ if (Meteor.isServer) {
 
   usernames.publish('usernames', function(){
     return usernames.select('id', 'name')
-                 .limit(100)
+       .limit(100)
+
   });
 }
