@@ -66,23 +66,6 @@ if (Meteor.isServer) {
   //users1.ActiveRecord.createTable({name: ['$string']}).save();
   //tasks.ActiveRecord.createRelationship('users1', '$onetomany').save();
 
-
-  Meteor.methods({
-    tasksfetch: function(input, dataArray) {
-      tasks.fetch(input, dataArray);
-    },
-    taskssave: function(input, dataArray) {
-      tasks.save(input, dataArray);
-    },
-    users1save: function(input, dataArray) {
-      users1.fetch(input, dataArray);
-    },
-    users1fetch: function(input, dataArray) {
-      users1.save(input, dataArray);
-    }
-  });
-
-
   // Publishing the collections
   tasks.publish('tasks', function(){
     return tasks.select('tasks.id as id', 'tasks.text', 'tasks.checked', 'tasks.createdat', 'users1.id as users1id', 'users1.name')
