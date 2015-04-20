@@ -46,15 +46,52 @@ if (Meteor.isServer) {
     test.equal(findOneResult2.rows.length, 1);
     test.equal(findOneResult2.rows[0].text, 'testing1');
 
+    //select
     var result = testTasks.select().where('text = ?', 'testing1').wrapFetch(null, null);
+    //select + limit
     var result2 = testTasks.select().where('text = ?', 'testing1').limit(3).wrapFetch(null, null);
+    //select + limit + offset
     var result3 = testTasks.select().where('text = ?', 'testing1').limit(3).offset(2).wrapFetch(null, null);
+    //select + offset
+    var result4 = testTasks.select().where('text = ?', 'testing1').offset(2).wrapFetch(null, null);
+    var result5 = testTasks.select().where('text = ?', 'testing1').offset(6).wrapFetch(null, null);
+    var result6 = testTasks.select().where('text = ?', 'testing1').offset(8).wrapFetch(null, null);
+    //order default and DESC/ASC
+    var result7 = testTasks.select().order('text').wrapFetch(null, null);
+    var result8 = testTasks.select().order('text ASC').wrapFetch(null, null);
+    var result9 = testTasks.select().order('text DESC').wrapFetch(null, null);
+    //chaining order
+    var result10 = testTasks.select().where('text = ?', 'testing1').order('id DESC').offset(2).limit(3).wrapFetch(null, null);
+    var result11 = testTasks.select().where('text = ?', 'testing1').offset(2).order('id DESC').limit(3).wrapFetch(null, null);
 
     test.equal(typeof result.rows, 'object');
     test.equal(result.rows.length, 6);
     _.each(result.rows, function(item) {
       test.equal(item.text, 'testing1');
     });
+    test.equal(result2.rows.length, 3);
+    _.each(result2.rows, function(item) {
+      test.equal(item.text, 'testing1');
+    });
+    test.equal(result3.rows.length, 3);
+    _.each(result3.rows, function(item) {
+      test.equal(item.text, 'testing1');
+    });
+    test.equal(result4.rows.length, 4);
+    _.each(result4.rows, function(item) {
+      test.equal(item.text, 'testing1');
+    });
+    test.equal(result5.rows.length, 0);
+    test.equal(result6.rows.length, 0);
+    test.equal(result7.rows, result8.rows);
+    test.equal(result7.rows[7], result9.rows[0]);
+    test.equal(result10.rows, result11.rows);
+
+    // Non-overreiden first, last, take
+    var result1 = testTasks.select().offset(2).where('text = ?', 'testing1').order('id DESC').limit(3).first().wrapFetch(null, null);
+    var result2 = testTasks.select().first(2).wrapFetch(null, null);
+
+    test.equal(result1.rows[0], result2.rows[0]);
     onComplete();
   });
 
@@ -76,10 +113,13 @@ if (Meteor.isServer) {
       expectedError = error;
     }
     test.isTrue(!expectedError);
-
-    testTasks.dropTable().wrapSave(null, null);
+    //findOne can only find id
+    test.throws(function() {
+      testTasks.findOne('testing1').wrapFetch(null, null);
+    });
 
     // recreate a complex table for test
+    testTasks.dropTable().wrapSave(null, null);
     var testTasksTable = {
       text: ['$string', '$notnull'],
       tasknumber: ['$number', {$default: '0'}]
