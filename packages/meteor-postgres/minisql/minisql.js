@@ -1,6 +1,6 @@
 miniSQL = function(Collection){
 
-  Collection = Collection || {};
+  Collection = Collection || Object.create(miniSQL.prototype);
   Collection.table = Collection.tableName;
 
   // inputString used by queries, overrides other strings
@@ -265,6 +265,7 @@ miniSQL.prototype.group = function(group) {
 
 miniSQL.prototype.first = function(limit) {
   limit = limit || 1;
+  this.clearAll();
   this.inputString += 'SELECT * FROM ' + this.table + ' ORDER BY ' + this.table + '.id ASC LIMIT ' + limit + ';';
   this.prevFunc = 'FIRST';
   return this;
@@ -272,6 +273,7 @@ miniSQL.prototype.first = function(limit) {
 
 miniSQL.prototype.last = function(limit) {
   limit = limit || 1;
+  this.clearAll();
   this.inputString += 'SELECT * FROM ' + this.table + ' ORDER BY ' + this.table + '.id DESC LIMIT ' + limit + ';';
   this.prevFunc = 'LAST';
   return this;
@@ -279,6 +281,7 @@ miniSQL.prototype.last = function(limit) {
 
 miniSQL.prototype.take = function(limit) {
   limit = limit || 1;
+  this.clearAll();
   this.inputString += 'SELECT * FROM ' + this.table + ' LIMIT ' + limit + ';';
   this.prevFunc = 'TAKE';
   return this;

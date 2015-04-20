@@ -3,7 +3,7 @@ var clientHolder = {};
 
 ActiveRecord = function (Collection) {
 
-  Collection = Collection || {};
+  Collection = Collection || Object.create(ActiveRecord.prototype);
   // initialize class
   Collection.table = Collection.tableName;
 
@@ -200,7 +200,8 @@ ActiveRecord.prototype.select = function (/*arguments*/) {
 // Special: If no idea is passed, may be chained with a where function
 // QUERY/INPUT STRING
 ActiveRecord.prototype.findOne = function (/*arguments*/) {
-  if (arguments.length === 2) {
+  if (arguments.length === 1) {
+    var args = arguments[0];
     this.inputString = 'SELECT * FROM ' + this.table + ' WHERE ' + this.table + '.id = ' + args + ' LIMIT 1;';
   } else {
     this.inputString = 'SELECT * FROM ' + this.table + ' LIMIT 1';
@@ -298,6 +299,7 @@ ActiveRecord.prototype.group = function (group) {
 // QUERY/INPUT STRING
 ActiveRecord.prototype.first = function (limit) {
   limit = limit || 1;
+  this.clearAll();
   this.inputString += 'SELECT * FROM ' + this.table + ' ORDER BY ' + this.table + '.id ASC LIMIT ' + limit + ';';
   this.prevFunc = 'FIRST';
   return this;
@@ -309,6 +311,7 @@ ActiveRecord.prototype.first = function (limit) {
 // QUERY/INPUT STRING
 ActiveRecord.prototype.last = function (limit) {
   limit = limit || 1;
+  this.clearAll();
   this.inputString += 'SELECT * FROM ' + this.table + ' ORDER BY ' + this.table + '.id DESC LIMIT ' + limit + ';';
   this.prevFunc = 'LAST';
   return this;
@@ -320,6 +323,7 @@ ActiveRecord.prototype.last = function (limit) {
 // QUERY/INPUT STRING
 ActiveRecord.prototype.take = function (limit) {
   limit = limit || 1;
+  this.clearAll();
   this.inputString += 'SELECT * FROM ' + this.table + ' LIMIT ' + limit + ';';
   this.prevFunc = 'TAKE';
   return this;
@@ -338,11 +342,14 @@ ActiveRecord.prototype.fetch = function (input, data, cb) {
     this.offsetString + this.groupString + this.havingString + ';';
   }
 
+  //cb = cb || function(prevFunc, table, results) {return console.log("results in " + prevFunc + ' ' + table, results.rows)};
+  // console.log('FETCH:', input, dataArray);
   pg.connect(this.conString, function (err, client, done) {
     if (err) {
       console.log(err);
     }
     client.query(input, dataArray, function (error, results) {
+      if (cb) { cb(error, results); }
       done();
     });
   });
@@ -361,14 +368,14 @@ ActiveRecord.prototype.save = function (input, data, cb) {
   if (!input) {
     input = this.inputString.length > 0 ? this.inputString : starter + this.joinString + this.whereString + ';';
   }
+
+  // console.log('SAVE:', input, dataArray);
   pg.connect(this.conString, function (err, client, done) {
     if (err) {
       console.log(err, "in " + prevFunc + ' ' + table);
     }
     client.query(input, dataArray, function (error, results) {
-      if (cb) {
-        cb(error, results);
-      }
+      if (cb) { cb(error, results); }
     });
     done();
   });

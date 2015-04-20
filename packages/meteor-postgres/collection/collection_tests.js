@@ -21,10 +21,17 @@ Tinytest.add(
       },
       /First argument to new SQLCollection must be a string or null/
     );
+
+    test.throws(
+      function() {
+        var test3 = new SQL.Collection('test');
+      },
+      /connection Error/
+    );
   }
 );
 
 Tinytest.add('Livedata - server method - tests', function (test) {
-  var testCollection = new SQL.Collection('test');
+  // var testCollection = new SQL.Collection('test');
   //no event name error handle
 });
