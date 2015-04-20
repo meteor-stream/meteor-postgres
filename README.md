@@ -29,9 +29,9 @@ We used [Node-Postgres](https://github.com/brianc/node-postgres) on the server a
 This is meant to be quick demo. See the [Documentation](https://github.com/meteor-stream/meteor-postgres/wiki/Getting-Started) for more info.
 
         tasks = new SQL.Collection('tasks', 'postgres://postgres:1234@localhost/postgres');
-        
+
         if (Meteor.isClient) {
-        
+
           var taskTable = {
             id: ['$number'],
             text: ['$string', '$notnull'],
@@ -39,14 +39,14 @@ This is meant to be quick demo. See the [Documentation](https://github.com/meteo
             users1id: ['$number']
           };
           tasks.createTable(taskTable);
-        
+
           Template.body.helpers({
             tasks: function () {
               var Tasks = tasks.select('tasks.id', 'tasks.text', 'tasks.checked', 'tasks.createdat').fetch();
               return Tasks;
             },
           });
-        
+
           Template.body.events({
             "submit .new-task": function (event) {
               var text = event.target.text.value;
@@ -69,11 +69,11 @@ This is meant to be quick demo. See the [Documentation](https://github.com/meteo
                    .save();
             }
           });
-        
+
         }
-        
+
         if (Meteor.isServer) {
-                 
+
           Meteor.publish('tasks', function () {
             return tasks.getCursor(function(sub){
               tasks.select('id', 'text', 'checked', 'createdat').order('createdat DESC').limit(10).autoSelect(sub);
