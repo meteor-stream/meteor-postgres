@@ -1,6 +1,6 @@
 miniSQL = function(Collection){
 
-  Collection = Collection || {};
+  Collection = Collection || Object.create(miniSQL.prototype);
   Collection.table = Collection.tableName;
 
   // inputString used by queries, overrides other strings
