@@ -24,9 +24,9 @@ If you want to make modifications to our package for your project, clone this re
 
 We used [Node-Postgres](https://github.com/brianc/node-postgres) on the server and [AlaSQL](https://github.com/agershun/alasql) on the client.
 
-# Usage
+### Usage
 
-This is meant to be quick demo. See the [wiki](https://github.com/meteor-stream/meteor-postgres/wiki/Getting-Started) for official documentation.
+This is meant to be quick demo. See the [Documentation](https://github.com/meteor-stream/meteor-postgres/wiki/Getting-Started) for more info.
 
         tasks = new SQL.Collection('tasks', 'postgres://postgres:1234@localhost/postgres');
         
@@ -86,6 +86,6 @@ This is meant to be quick demo. See the [wiki](https://github.com/meteor-stream/
           });
         }
 
-# License
+### License
 
 Released under the MIT license. See the LICENSE file for more info.
