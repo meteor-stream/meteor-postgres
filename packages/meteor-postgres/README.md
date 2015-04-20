@@ -37,14 +37,12 @@ This is meant to be quick demo. See the [wiki](https://github.com/meteor-stream/
         
         if (Meteor.isClient) {
         
-          // Creating schema for tables
           var taskTable = {
             id: ['$number'],
             text: ['$string', '$notnull'],
             checked: ['$bool'],
             users1id: ['$number']
           };
-          // creating table
           tasks.createTable(taskTable);
         
           Template.body.helpers({
@@ -86,7 +84,6 @@ This is meant to be quick demo. See the [wiki](https://github.com/meteor-stream/
             },
           });
         
-          // Publishing the collections
           Meteor.publish('tasks', function () {
             return tasks.getCursor(function(sub){
               tasks.select('id', 'text', 'checked', 'createdat').order('createdat DESC').limit(10).autoSelect(sub);
