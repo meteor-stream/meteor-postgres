@@ -84,25 +84,15 @@ if (Meteor.isServer) {
 
 
   // Publishing the collections
-  Meteor.publish('tasks', function () {
-    // For this implementation to work you must call getCursor and provide a callback with the select
-    // statement that needs to be reactive. The 'caboose' on the chain of calls must be autoSelect
-    // and it must be passed the param 'sub' which is defining in the anon function.
-    // This is a limitation of our implementation and will be fixed in later versions
-    return tasks.getCursor(function(sub){
-      tasks.select('tasks.id as id', 'tasks.text', 'tasks.checked', 'tasks.createdat', 'users1.id as users1id', 'users1.name')
-           .join(['INNER JOIN'], ["users1id"], [["users1", 'id']])
-           .order('createdat DESC')
-           .limit(10)
-           .autoSelect(sub);
-    });
+  tasks.publish('tasks', function(){
+    return tasks.select('tasks.id as id', 'tasks.text', 'tasks.checked', 'tasks.createdat', 'users1.id as users1id', 'users1.name')
+       .join(['INNER JOIN'], ["users1id"], [["users1", 'id']])
+       .order('createdat DESC')
+       .limit(10)
   });
 
-  Meteor.publish('users1', function(){
-    return users1.getCursor(function(sub) {
-      users1.select('id', 'name')
-            .limit(10)
-            .autoSelect(sub);
-    });
-  })
+  users1.publish('users1', function(){
+    return users1.select('id', 'name')
+                 .limit(10)
+  });
 }
