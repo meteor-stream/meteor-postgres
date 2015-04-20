@@ -1,5 +1,3 @@
-This project is still under development and will likely contain minor bugs. We are targeting 4/26/2015 as our stable release date.
-
 # [Meteor-Postgres](http://www.meteorpostgres.com/)
 
 
