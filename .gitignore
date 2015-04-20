@@ -28,3 +28,4 @@ universe
 .floo
 .flooignore
 .gitconfig
+'postgres://meteor:Meteor1234@191.238.146.165/meteor'
