@@ -22,28 +22,34 @@ if (Meteor.isClient) {
 
   Template.body.helpers({
     tasks: function () {
-      // Also where are the params for the search?
-      console.log(newUser);
-      var uTasks = tasks.select('tasks.id', 'tasks.text', 'tasks.checked', 'tasks.createdat', 'username.name').join(['OUTER JOIN'], ['usernameid'], [['username', ['id']]]).where("username.name = ?", newUser).fetch();
+      var uTasks = tasks.select('tasks.id', 'tasks.text', 'tasks.checked', 'tasks.createdat', 'username.name')
+                        .join(['OUTER JOIN'], ['usernameid'], [['username', ['id']]])
+                        .fetch();
       return uTasks;
     },
-    categories: function () {
-      return username.select().fetch();
+    usernames: function () {
+      return username.select()
+                     .fetch();
     }
   });
 
   Template.body.events({
     "submit .new-task": function (event) {
-      var user = username.select('id').where("name = ?", newUser).fetch();
-      user = user[0].id;
-      var text = event.target.text.value;
-      tasks.insert({
-        text:text,
-        checked:false,
-        usernameid: user
-      }).save();
-      event.target.text.value = "";
-
+      if (event.target.category.value){
+        var user = username.select('id')
+                     .where("name = ?", event.target.category.value)
+                     .fetch();
+        user = user[0].id;
+        var text = event.target.text.value;
+        tasks.insert({
+          text:text,
+          checked:false,
+          usernameid: user
+        }).save();
+        event.target.text.value = "";
+      } else{
+        alert("please add a user first");
+      }
       return false;
     },
     "submit .new-user": function (event) {
@@ -56,13 +62,16 @@ if (Meteor.isClient) {
       return false;
     },
     "click .toggle-checked": function () {
-      tasks.update({id: this.id, "checked": !this.checked}).where("id = ?", this.id).save();
+      tasks.update({id: this.id, "checked": !this.checked})
+           .where("id = ?", this.id)
+           .save();
     },
     "click .delete": function () {
-      tasks.remove().where("id = ?", this.id).save();
+      tasks.remove()
+           .where("id = ?", this.id)
+           .save();
     },
     "change .catselect": function(event){
-      newUser = event.target.value;
       tasks.reactiveData.changed();
     }
   });
@@ -80,11 +89,11 @@ if (Meteor.isServer) {
     return tasks.select('tasks.id as id', 'tasks.text', 'tasks.checked', 'tasks.createdat', 'username.id as usernameid', 'username.name')
        .join(['INNER JOIN'], ["usernameid"], [["username", 'id']])
        .order('createdat DESC')
-       .limit(100)
+       .limit(100);
   });
 
   username.publish('username', function(){
     return username.select('id', 'name')
-                 .limit(100)
+                   .limit(100);
   });
 }

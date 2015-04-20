@@ -35,7 +35,7 @@ This is meant to be quick demo. See the [Documentation](https://github.com/meteo
             id: ['$number'],
             text: ['$string', '$notnull'],
             checked: ['$bool'],
-            users1id: ['$number']
+            usersnamesid: ['$number']
           };
           tasks.createTable(taskTable);
 
