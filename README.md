@@ -1,7 +1,6 @@
 This project is still under development and will likely contain minor bugs. We are targeting 4/26/2015 as our stable release date.
 
 # meteor-postgres
-Postgres integration for Meteor
 
 
 ![Postgres](https://s3-us-west-1.amazonaws.com/treebookicons/postgresql_logo.jpg "Postgres")![Meteor](https://s3-us-west-1.amazonaws.com/treebookicons/meteor-logo.png  "Meteor")
@@ -12,7 +11,7 @@ Reactive Postgres for Meteor.
 
 # Installation
 
-Run the following from a command line
+Run the following from a command line.
 
     meteor add meteorsteam:meteor-postgres
 
@@ -20,7 +19,7 @@ If you want to make modifications to our package for your project, clone this re
 
 # Implementation
 
-We used [Node-Postgres](https://github.com/brianc/node-postgres) on the server and [alasql](https://github.com/agershun/alasql) on the client.
+We used [Node-Postgres](https://github.com/brianc/node-postgres) on the server and [AlaSQL](https://github.com/agershun/alasql) on the client.
 
 # Usage
 
