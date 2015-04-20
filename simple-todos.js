@@ -76,9 +76,9 @@ if (Meteor.isClient) {
 if (Meteor.isServer) {
 
   // Commented out calls to create tables on the server
-  //tasks.ActiveRecord.createTable({text: ['$string'], checked: ["$bool", {$default: false}]}).save();
-  //users1.ActiveRecord.createTable({name: ['$string']}).save();
-  //tasks.ActiveRecord.createRelationship('users1', '$onetomany').save();
+  //tasks.createTable({text: ['$string'], checked: ["$bool", {$default: false}]}).save();
+  //users1.createTable({name: ['$string']}).save();
+  //tasks.createRelationship('users1', '$onetomany').save();
 
   // Defining the meteor.methods to handle inserting into the serverDB. These will be automatically
   // called when inserting into the localDB. They need to be named {{collection name}}+'save'
@@ -97,7 +97,7 @@ if (Meteor.isServer) {
     // For this implementation to work you must call getCursor and provide a callback with the select
     // statement that needs to be reactive. The 'caboose' on the chain of calls must be autoSelect
     // and it must be passed the param 'sub' which is defining in the anon function.
-    // This is a limiation of our implementation and will be fixed in later versions
+    // This is a limitation of our implementation and will be fixed in later versions
     return tasks.getCursor(function(sub){
       tasks.select('tasks.id as id', 'tasks.text', 'tasks.checked', 'tasks.createdat', 'users1.id as users1id', 'users1.name')
            .join(['INNER JOIN'], ["users1id"], [["users1", 'id']])
