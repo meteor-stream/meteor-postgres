@@ -32,7 +32,7 @@ The ORM is designed after Ruby's [active record](https://github.com/rails/rails/
 
 Defining the SQL collection on both server and client. Pass in the postgres connection string, which will only be used on the server.
 
-    tasks = new SQL.Collection('tasks', 'postgres://postgres:1234@localhost/postgres')
+    tasks = new SQL.Collection('tasks', 'postgres://<user>:<password>@<host>/postgres');
     // replaces Mongo.Collection('tasks');
 
 Defining the schema on the client for the tables and creating the table. These tables are not persistant.
