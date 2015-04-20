@@ -23,7 +23,8 @@ if (Meteor.isClient) {
   Template.body.helpers({
     tasks: function () {
       // Also where are the params for the search?
-      var uTasks = tasks.select('tasks.id', 'tasks.text', 'tasks.checked', 'tasks.createdat', 'users1.name').join(['RIGHT OUTER JOIN'], ['users1id'], [['users1', ['id']]]).fetch();
+      console.log(newUser);
+      var uTasks = tasks.select('tasks.id', 'tasks.text', 'tasks.checked', 'tasks.createdat', 'users1.name').join(['OUTER JOIN'], ['users1id'], [['users1', ['id']]]).where("users1.name = ?", newUser).fetch();
       return uTasks;
     },
     categories: function () {
@@ -53,6 +54,7 @@ if (Meteor.isClient) {
     },
     "change .catselect": function(event){
       newUser = event.target.value;
+      tasks.reactiveData.changed();
     }
   });
 
