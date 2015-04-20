@@ -9,7 +9,7 @@ There are four types of methods in this ORM. <br/>
 Note: There is no alter table function as you cannot alter tables after data has been entered. It is recommended that <br/>
 you drop the table and re-create it.  <br/>
 
-Client vs server 
+Client vs server
 
 ### CREATE TABLE QUERY
 **Parameters:** tableObj (req) <br/>

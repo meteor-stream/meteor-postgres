@@ -343,6 +343,7 @@ ActiveRecord.prototype.fetch = function (input, data, cb) {
       console.log(err);
     }
     client.query(input, dataArray, function (error, results) {
+      if (cb) { cb(error, results); }
       done();
     });
   });
@@ -361,14 +362,14 @@ ActiveRecord.prototype.save = function (input, data, cb) {
   if (!input) {
     input = this.inputString.length > 0 ? this.inputString : starter + this.joinString + this.whereString + ';';
   }
+
+  // console.log('SAVE:', input, dataArray);
   pg.connect(this.conString, function (err, client, done) {
     if (err) {
       console.log(err, "in " + prevFunc + ' ' + table);
     }
     client.query(input, dataArray, function (error, results) {
-      if (cb) {
-        cb(error, results);
-      }
+      if (cb) { cb(error, results); }
     });
     done();
   });
