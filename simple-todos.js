@@ -46,6 +46,15 @@ if (Meteor.isClient) {
 
       return false;
     },
+    "submit .new-user": function (event) {
+      var text = event.target.text.value;
+      users1.insert({
+        name:text
+      }).save();
+      event.target.text.value = "";
+
+      return false;
+    },
     "click .toggle-checked": function () {
       tasks.update({id: this.id, "checked": !this.checked}).where("id = ?", this.id).save();
     },
