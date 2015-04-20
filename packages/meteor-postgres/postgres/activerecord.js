@@ -329,7 +329,7 @@ ActiveRecord.prototype.take = function (limit) {
 // Data function that retrieves data from database
 ActiveRecord.prototype.fetch = function (input, data, cb) {
   var table = this.table;
-  var dataArray = data || this.dataArray;
+  var dataArray = data;
   var prevFunc = this.prevFunc;
 
   var starter = this.updateString || this.deleteString || this.selectString;
@@ -337,6 +337,7 @@ ActiveRecord.prototype.fetch = function (input, data, cb) {
   if (!input) {
     input = this.inputString.length > 0 ? this.inputString : starter + this.joinString + this.whereString + this.orderString + this.limitString +
     this.offsetString + this.groupString + this.havingString + ';';
+    dataArray = this.whereString.length > 0 ? this.dataArray : [];
   }
 
   //cb = cb || function(prevFunc, table, results) {return console.log("results in " + prevFunc + ' ' + table, results.rows)};
@@ -357,13 +358,21 @@ ActiveRecord.prototype.fetch = function (input, data, cb) {
 ActiveRecord.prototype.save = function (input, data, cb) {
 
   var table = this.table;
-  var dataArray = data || this.dataArray;
+  var dataArray = data;
   var prevFunc = this.prevFunc;
 
   var starter = this.updateString || this.deleteString || this.selectString;
 
   if (!input) {
-    input = this.inputString.length > 0 ? this.inputString : starter + this.joinString + this.whereString + ';';
+    if (this.inputString.length > 0) {
+      input = this.inputString;
+      // data array only applicable to insert statement
+      dataArray = this.inputString.indexOf('INSERT') === 0 ? this.dataArray : [];
+    } else {
+      input = starter + this.joinString + this.whereString + ';';
+      // data array only applicable to where statement
+      dataArray = this.whereString.length > 0 ? this.dataArray : [];
+    }
   }
 
   // console.log('SAVE:', input, dataArray);
