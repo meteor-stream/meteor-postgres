@@ -73,11 +73,12 @@ This is meant to be quick demo. See the [Documentation](https://github.com/meteo
         }
 
         if (Meteor.isServer) {
-
-          Meteor.publish('tasks', function () {
-            return tasks.getCursor(function(sub){
-              tasks.select('id', 'text', 'checked', 'createdat').order('createdat DESC').limit(10).autoSelect(sub);
-            });
+          // Use SQL.Collection.publish
+          tasks.publish('tasks', function(){
+            return tasks.select('tasks.id as id', 'tasks.text', 'tasks.checked', 'tasks.createdat', 'usernames.id as usernamesid', 'usernames.name')
+               .join(['INNER JOIN'], ["usernamesid"], [["usernames", 'id']])
+               .order('createdat DESC')
+               .limit(100)
           });
         }
 
