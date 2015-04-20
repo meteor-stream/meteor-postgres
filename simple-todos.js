@@ -27,7 +27,7 @@ if (Meteor.isClient) {
     tasks: function () {
       // selecting and returning from minisql - client side database
       var uTasks = tasks.select('tasks.id', 'tasks.text', 'tasks.checked', 'tasks.createdat', 'users1.name')
-                        .join(['OUTER JOIN'], ['users1id'], [['users1', ['id']]])
+                        .join(['LEFT OUTER JOIN'], ['users1id'], [['users1', ['id']]])
                         .fetch('client');
       return uTasks;
     },

@@ -101,7 +101,7 @@ miniSQL.prototype.dropTable = function() {
 
 miniSQL.prototype.insert = function(serverInserts, clientInserts) {
   // server
-  if(serverInserts['id'] === undefined){
+  if(serverInserts['id'] > 0){
     serverInserts['id'] = -1;
   }
   // client
@@ -327,10 +327,8 @@ miniSQL.prototype.fetch = function(server) {
   this.offsetString + this.groupString + this.havingString + ';';
 
 
-  // alaSQL
   var result = alasql(input, dataArray);
 
-  // postgres
   var name = this.table + 'fetch';
   if (server === "server") {
     input = this.inputString.length > 0 ? this.inputString : starter + this.joinString + this.serverWhereString + this.orderString + this.limitString +
@@ -343,19 +341,13 @@ miniSQL.prototype.fetch = function(server) {
 
 miniSQL.prototype.save = function(client) {
 
-  //var table = this.table;
-  //var prevFunc = this.prevFunc;
-
   var dataArray = this.dataArray;
   var dataArray2 = this.dataArray2;
   var starter = this.updateString || this.deleteString || this.selectString;
   var input = this.inputString2.length > 0 ? this.inputString2 : starter + this.joinString + this.clientWhereString + ';';
-  // alaSQL
-  //if (input = ";"){
-  //  throw 'error';
-  //}
+
   var result = alasql(input, dataArray2);
-  // postgres
+
   var self = this;
   var name = this.table + 'save';
   if (client !== "client") {

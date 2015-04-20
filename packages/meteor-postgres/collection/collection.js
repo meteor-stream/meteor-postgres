@@ -47,10 +47,9 @@ SQL.Collection = function(connection, conString) {
     this.addEventListener('added', function(index, msg, name) {
       this.remove().save('client');
       for (var x = msg.results.length - 1; x >= 0; x--) {
-        this.insert(msg.results[x], {}).save('client');
+        this.insert(msg.results[x]).save('client');
       }
       // Triggering Meteor's reactive data to allow for full stack reactivity
-      //reactiveData.changed();
     });
     // Changed will be triggered whenever the server database changed while the client has the page open.
     // This could happen from an addition, an update, or a removal, from that specific client, or another client
@@ -75,13 +74,11 @@ SQL.Collection = function(connection, conString) {
         // We use the unvalidated boolean variabe to keep track of this
         if (this.unvalidated) {
           this.update(msg.results).where("id = ?", -1).save('client');
-          //reactiveData.changed();
           this.unvalidated = false;
         }
         else {
           // The data was added by another client so just a regular insert
-          this.insert(msg.results, {}).save('client');
-          //reactiveData.changed();
+          this.insert(msg.results).save('client');
         }
       }
     });
