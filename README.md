@@ -1,15 +1,18 @@
 This project is still under development and will likely contain minor bugs. We are targeting 4/26/2015 as our stable release date.
 
-# meteor-postgres
+# Meteor-Postgres
 
 
 ![Postgres](https://s3-us-west-1.amazonaws.com/treebookicons/postgresql_logo.jpg "Postgres")![Meteor](https://s3-us-west-1.amazonaws.com/treebookicons/meteor-logo.png  "Meteor")
 
-Included in this repo is a sample-todos application to serve as an example.
 
-Reactive Postgres for Meteor.
+### In this repo
 
-# Installation
+* Meteor-Postgres package
+* Example sample-todos application
+* [Documentation](https://github.com/meteor-stream/meteor-postgres/wiki/Getting-Started
+
+### Installation
 
 Run the following from a command line.
 
@@ -17,7 +20,7 @@ Run the following from a command line.
 
 If you want to make modifications to our package for your project, clone this repo and include the /pacakges/meteor-postgres folder in your /pacakges. You will need to add the package to your packages file in .meteor.
 
-# Implementation
+### Implementation
 
 We used [Node-Postgres](https://github.com/brianc/node-postgres) on the server and [AlaSQL](https://github.com/agershun/alasql) on the client.
 
@@ -108,5 +111,5 @@ Removing
          .where("id = ?", this.id)
          .save();
 
-# License
+### License
 Released under the MIT license. See the LICENSE file for more info.
