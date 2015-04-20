@@ -196,8 +196,8 @@ ActiveRecord.prototype.select = function (/*arguments*/) {
 };
 
 // Parameters: id (optional)
-// SQL: SELECT fields FROM table, SELECT * FROM table
-// Special: If no idea is passed, may be chained with a where function
+// SQL: SELECT * FROM table WHERE table.id = id LIMIT 1; SELECT * FROM table LIMIT 1;
+// Special: If no idea is passed will return random
 // QUERY/INPUT STRING
 ActiveRecord.prototype.findOne = function (/*arguments*/) {
   if (arguments.length === 1) {
