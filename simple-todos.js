@@ -3,7 +3,7 @@ tasks = new SQL.Collection('tasks', 'postgres://postgres:1234@localhost/postgres
 users1 = new SQL.Collection('users1', 'postgres://postgres:1234@localhost/postgres');
 
 if (Meteor.isClient) {
-  var newUser = 'ko';
+  var newUser = 'kate';
   var taskTable = {
     id: ['$number'],
     text: ['$string', '$notnull'],
