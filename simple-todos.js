@@ -1,6 +1,6 @@
 // Defining 2 SQL collections. The additional paramater is the postgres connection string which will only run on the server
 tasks = new SQL.Collection('tasks', 'postgres://postgres:1234@localhost/postgres');
-users1 = new SQL.Collection('users1', 'postgres://postgres:1234@localhost/postgres');
+username = new SQL.Collection('username', 'postgres://postgres:1234@localhost/postgres');
 
 if (Meteor.isClient) {
   var newUser = 'kate';
@@ -8,7 +8,7 @@ if (Meteor.isClient) {
     id: ['$number'],
     text: ['$string', '$notnull'],
     checked: ['$bool'],
-    users1id: ['$number']
+    usernameid: ['$number']
   };
 
   tasks.createTable(taskTable);
@@ -17,30 +17,30 @@ if (Meteor.isClient) {
     id: ['$number'],
     name: ['$string', '$notnull']
   };
-  users1.createTable(usersTable);
+  username.createTable(usersTable);
 
 
   Template.body.helpers({
     tasks: function () {
       // Also where are the params for the search?
       console.log(newUser);
-      var uTasks = tasks.select('tasks.id', 'tasks.text', 'tasks.checked', 'tasks.createdat', 'users1.name').join(['OUTER JOIN'], ['users1id'], [['users1', ['id']]]).where("users1.name = ?", newUser).fetch();
+      var uTasks = tasks.select('tasks.id', 'tasks.text', 'tasks.checked', 'tasks.createdat', 'username.name').join(['OUTER JOIN'], ['usernameid'], [['username', ['id']]]).where("username.name = ?", newUser).fetch();
       return uTasks;
     },
     categories: function () {
-      return users1.select().fetch();
+      return username.select().fetch();
     }
   });
 
   Template.body.events({
     "submit .new-task": function (event) {
-      var user = users1.select('id').where("name = ?", newUser).fetch();
+      var user = username.select('id').where("name = ?", newUser).fetch();
       user = user[0].id;
       var text = event.target.text.value;
       tasks.insert({
         text:text,
         checked:false,
-        users1id: user
+        usernameid: user
       }).save();
       event.target.text.value = "";
 
@@ -48,7 +48,7 @@ if (Meteor.isClient) {
     },
     "submit .new-user": function (event) {
       var text = event.target.text.value;
-      users1.insert({
+      username.insert({
         name:text
       }).save();
       event.target.text.value = "";
@@ -71,20 +71,20 @@ if (Meteor.isClient) {
 
 if (Meteor.isServer) {
 
-  //tasks.ActiveRecord.createTable({text: ['$string'], checked: ["$bool", {$default: false}]}).save();
-  //users1.ActiveRecord.createTable({name: ['$string']}).save();
-  //tasks.ActiveRecord.createRelationship('users1', '$onetomany').save();
+  tasks.createTable({text: ['$string'], checked: ["$bool", {$default: false}]}).save();
+  username.createTable({name: ['$string']}).save();
+  tasks.createRelationship('username', '$onetomany').save();
 
   // Publishing the collections
   tasks.publish('tasks', function(){
-    return tasks.select('tasks.id as id', 'tasks.text', 'tasks.checked', 'tasks.createdat', 'users1.id as users1id', 'users1.name')
-       .join(['INNER JOIN'], ["users1id"], [["users1", 'id']])
+    return tasks.select('tasks.id as id', 'tasks.text', 'tasks.checked', 'tasks.createdat', 'username.id as usernameid', 'username.name')
+       .join(['INNER JOIN'], ["usernameid"], [["username", 'id']])
        .order('createdat DESC')
        .limit(100)
   });
 
-  users1.publish('users1', function(){
-    return users1.select('id', 'name')
+  username.publish('username', function(){
+    return username.select('id', 'name')
                  .limit(100)
   });
 }
