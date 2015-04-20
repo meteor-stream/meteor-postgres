@@ -343,7 +343,7 @@ ActiveRecord.prototype.fetch = function (input, data, cb) {
   // console.log('FETCH:', input, dataArray);
   pg.connect(this.conString, function (err, client, done) {
     if (err) {
-      console.log(err);
+      console.log(err, "in " + prevFunc + ' ' + table);
     }
     client.query(input, dataArray, function (error, results) {
       if (cb) { cb(error, results); }
