@@ -3,12 +3,6 @@
 
 ![Postgres](https://s3-us-west-1.amazonaws.com/treebookicons/postgresql_logo.jpg "Postgres")![Meteor](https://s3-us-west-1.amazonaws.com/treebookicons/meteor-logo.png  "Meteor")
 
-### In this repo
-
-* Meteor-Postgres package
-* [Documentation](https://github.com/meteor-stream/meteor-postgres/wiki/Getting-Started)
-* [Team website](http://www.meteorelephant.com/)
-
 ### Installation
 
 Run the following from a command line.
