@@ -88,9 +88,9 @@ if (Meteor.isClient) {
 
 if (Meteor.isServer) {
 
-  tasks.createTable({text: ['$string'], checked: ["$bool", {$default: false}]}).save();
-  username.createTable({name: ['$string', '$unique']}).save();
-  tasks.createRelationship('username', '$onetomany').save();
+  //tasks.createTable({text: ['$string'], checked: ["$bool", {$default: false}]}).save();
+  //username.createTable({name: ['$string', '$unique']}).save();
+  //tasks.createRelationship('username', '$onetomany').save();
 
 
   username.insert({name:'all'}).save();
