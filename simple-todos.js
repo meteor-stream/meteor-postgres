@@ -1,6 +1,6 @@
 // Defining 2 SQL collections. The additional paramater is the postgres connection string which will only run on the server
-tasks = new SQL.Collection('tasks', 'postgres://postgres:1234@localhost/postgres');
-username = new SQL.Collection('username', 'postgres://postgres:1234@localhost/postgres');
+tasks = new SQL.Collection('tasks', 'postgres://meteor:Meteor1234@191.238.146.165/meteor');
+username = new SQL.Collection('username', 'postgres://meteor:Meteor1234@191.238.146.165/meteor');
 
 if (Meteor.isClient) {
   var newUser = '';
@@ -27,14 +27,19 @@ if (Meteor.isClient) {
     },
     tasks: function () {
       if (newUser === ''){
-        newUser = username.findOne().fetch()[0].name;
+          return tasks.select('tasks.id', 'tasks.text', 'tasks.checked', 'tasks.createdat', 'username.name')
+            .join(['OUTER JOIN'], ['usernameid'], [['username', ['id']]])
+            .fetch();
       }
-      return tasks.select('tasks.id', 'tasks.text', 'tasks.checked', 'tasks.createdat', 'username.name')
-                        .join(['OUTER JOIN'], ['usernameid'], [['username', ['id']]])
-                        .where("name = ?", newUser)
-                        .fetch();
+      else {
+        return tasks.select('tasks.id', 'tasks.text', 'tasks.checked', 'tasks.createdat', 'username.name')
+          .join(['OUTER JOIN'], ['usernameid'], [['username', ['id']]])
+          .where("name = ?", newUser)
+          .fetch();
+      }
     }
   });
+
 
   Template.body.events({
     "submit .new-task": function (event) {
@@ -75,12 +80,10 @@ if (Meteor.isClient) {
            .save();
     },
     "change .catselect": function(event){
-      console.log(event.target.value);
       newUser = event.target.value;
       tasks.reactiveData.changed();
     }
   });
-
 }
 
 if (Meteor.isServer) {
