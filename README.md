@@ -9,8 +9,6 @@ Run the following from a command line.
 
     meteor add meteorsteam:meteor-postgres
 
-If you want to make modifications to our package for your project, clone this repo and include the /packages/meteor-postgres folder in your /packages. You will need to add the package to your packages file in .meteor.
-
 ### Usage
 
 * [Getting Started](https://github.com/meteor-stream/meteor-postgres/wiki/Getting-Started)
@@ -20,6 +18,12 @@ If you want to make modifications to our package for your project, clone this re
 ### Implementation
 
 We used [Node-Postgres](https://github.com/brianc/node-postgres) on the server and [AlaSQL](https://github.com/agershun/alasql) on the client.
+
+### Contribution Guidelines
+
+Coming soon. 
+
+If you want to make modifications to our package for your project, clone this repo and include the /packages/meteor-postgres folder in your /packages. You will need to add the package to your packages file in .meteor.
 
 ### License
 
