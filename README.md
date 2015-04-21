@@ -9,6 +9,8 @@ Run the following from a command line.
 
     meteor add meteorsteam:meteor-postgres
 
+If you had previously downloaded the unstable pre-release, please remove and re-add the package.
+
 ### Usage
 
 * [Getting Started](https://github.com/meteor-stream/meteor-postgres/wiki/Getting-Started)
