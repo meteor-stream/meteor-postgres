@@ -3,7 +3,7 @@ tasks = new SQL.Collection('tasks', 'postgres://meteor:Meteor1234@191.238.146.16
 username = new SQL.Collection('username', 'postgres://meteor:Meteor1234@191.238.146.165/meteor');
 
 if (Meteor.isClient) {
-  var newUser = '';
+  var newUser = 'all';
   var taskTable = {
     id: ['$number'],
     text: ['$string', '$notnull'],
@@ -26,7 +26,7 @@ if (Meteor.isClient) {
         .fetch();
     },
     tasks: function () {
-      if (newUser === ''){
+      if (newUser === 'all'){
           return tasks.select('tasks.id', 'tasks.text', 'tasks.checked', 'tasks.createdat', 'username.name')
             .join(['OUTER JOIN'], ['usernameid'], [['username', ['id']]])
             .fetch();
@@ -89,9 +89,11 @@ if (Meteor.isClient) {
 if (Meteor.isServer) {
 
   tasks.createTable({text: ['$string'], checked: ["$bool", {$default: false}]}).save();
-  username.createTable({name: ['$string']}).save();
+  username.createTable({name: ['$string', '$unique']}).save();
   tasks.createRelationship('username', '$onetomany').save();
 
+
+  username.insert({name:'all'}).save();
   // Publishing the collections
   tasks.publish('tasks', function(){
     return tasks.select('tasks.id as id', 'tasks.text', 'tasks.checked', 'tasks.createdat', 'username.id as usernameid', 'username.name')
@@ -102,6 +104,7 @@ if (Meteor.isServer) {
 
   username.publish('username', function(){
     return username.select('id', 'name')
+                   .order('createdat DESC')
                    .limit(100);
   });
 }
