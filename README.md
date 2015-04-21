@@ -11,16 +11,15 @@ Run the following from a command line.
 
 If you want to make modifications to our package for your project, clone this repo and include the /packages/meteor-postgres folder in your /packages. You will need to add the package to your packages file in .meteor.
 
-### Implementation
-
-We used [Node-Postgres](https://github.com/brianc/node-postgres) on the server and [AlaSQL](https://github.com/agershun/alasql) on the client.
-
 ### Usage
 
 * [Getting Started](https://github.com/meteor-stream/meteor-postgres/wiki/Getting-Started)
 * [Full List of Database Methods](https://github.com/meteor-stream/meteor-postgres/wiki/Database-Methods)
 * [Demo](http://spaceelephant.meteor.com)
 
+### Implementation
+
+We used [Node-Postgres](https://github.com/brianc/node-postgres) on the server and [AlaSQL](https://github.com/agershun/alasql) on the client.
 
 ### License
 
