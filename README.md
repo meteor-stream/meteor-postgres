@@ -16,7 +16,7 @@ Run the following from a command line.
 
     meteor add meteorsteam:meteor-postgres
 
-If you want to make modifications to our package for your project, clone this repo and include the /pacakges/meteor-postgres folder in your /pacakges. You will need to add the package to your packages file in .meteor.
+If you want to make modifications to our package for your project, clone this repo and include the /packages/meteor-postgres folder in your /packages. You will need to add the package to your packages file in .meteor.
 
 ### Implementation
 
