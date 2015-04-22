@@ -15,7 +15,6 @@ If you had previously downloaded the unstable pre-release, please remove and re-
 
 * [Getting Started](https://github.com/meteor-stream/meteor-postgres/wiki/Getting-Started)
 * [Full List of Database Methods](https://github.com/meteor-stream/meteor-postgres/wiki/Database-Methods)
-* [Demo](http://psqltest.cloudapp.net/)
 
 ### Implementation
 
