@@ -49,11 +49,13 @@ if (Meteor.isClient) {
                      .fetch();
         user = user[0].id;
         var text = event.target.text.value;
-        tasks.insert({
+        var jerry = {
           text:text,
           checked:false,
           usernameid: user
-        }).save();
+        }
+        console.log(jerry);
+        tasks.insert(jerry).save();
         event.target.text.value = "";
       } else{
         alert("please add a user first");
@@ -88,9 +90,9 @@ if (Meteor.isClient) {
 
 if (Meteor.isServer) {
 
-  //tasks.createTable({text: ['$string'], checked: ["$bool", {$default: false}]}).save();
-  //username.createTable({name: ['$string', '$unique']}).save();
-  //tasks.createRelationship('username', '$onetomany').save();
+  tasks.createTable({text: ['$string'], checked: ["$bool", {$default: false}]}).save();
+  username.createTable({name: ['$string', '$unique']}).save();
+  tasks.createRelationship('username', '$onetomany').save();
 
 
   username.insert({name:'all'}).save();
