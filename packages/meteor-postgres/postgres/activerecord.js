@@ -238,6 +238,9 @@ ActiveRecord.prototype.where = function (/*Arguments*/) {
   where += arguments[0];
   for (var i = 1, count = arguments.length; i < count; i++) {
     if (Array.isArray(arguments[i])) {
+      if (arguments[i].length === 0) {
+        throw 'Invalid input: array is empty'
+      }
       redux = where.indexOf('?');
       substring1 = where.substring(0, redux);
       substring2 = where.substring(redux + 1, where.length);
