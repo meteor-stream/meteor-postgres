@@ -462,6 +462,11 @@ ActiveRecord.prototype.autoSelect = function(sub) {
     var context = this;
     pg.connect(conString, function(err, client, done) {
       clientHolder[name] = client;
+      setTimeout(function(){
+        delete clientHolder[name];
+        done();
+        loadAutoSelectClient(name, cb);
+      }, 1000*60);
       //console.log(err);
       cb(client);
     });
