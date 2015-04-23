@@ -1,6 +1,6 @@
 Package.describe({
   name: 'meteorsteam:meteor-postgres',
-  version: '0.0.3',
+  version: '0.1.0',
   // Brief, one-line summary of the package.
   summary: 'PostgreSQL support for Meteor',
   // URL to the Git repository containing the source code for this package.

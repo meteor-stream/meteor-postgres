@@ -8,12 +8,16 @@
   <div class="container">
     <header>
       <h1>Todo List</h1>
-
+      <form class="new-user">
+        <input type="text" name="text" placeholder="Type to add new user" />
+          <div class="menu">
+        </div>
+      </form>
       <form class="new-task">
         <input type="text" name="text" placeholder="Type to add new tasks" />
           <div class="menu">
           <select class="catselect" name="category">
-            {{ #each categories }}
+            {{ #each usernames }}
             <option value="{{ name }}">{{ name }}</option>
             {{ /each }}
           </select>
@@ -36,6 +40,6 @@
 
     <input type="checkbox" checked="{{checked}}" class="toggle-checked" />
 
-    <span class="text">{{text}} by {{name}}</span>
+    <span class="text">{{text}} - {{name}}</span>
   </li>
 </template>

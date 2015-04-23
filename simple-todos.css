@@ -49,6 +49,20 @@ form {
   position: relative;
 }
 
+.new-user input {
+  box-sizing: border-box;
+  padding: 10px 0;
+  background: transparent;
+  border: none;
+  width: 100%;
+  padding-right: 80px;
+  font-size: 1em;
+}
+
+.new-user input:focus{
+  outline: 0;
+}
+
 .new-task input {
   box-sizing: border-box;
   padding: 10px 0;
