@@ -230,19 +230,29 @@ ActiveRecord.prototype.join = function (joinType, fields, joinTable) {
 // SQL: WHERE field operator comparator, WHERE field1 operator1 comparator1 AND/OR field2 operator2 comparator2
 // Special:
 // db.select('students').where('age = ? and class = ? or name = ?','18','senior','kate').fetch();
+// db.select('students').where('age = ? and class = ? or name = ?',[17,18,19],'senior','kate').fetch();'
 // STATEMENT/WHERE STRING & DATA ARRAY
 ActiveRecord.prototype.where = function (/*Arguments*/) {
   this.dataArray = [];
   var where = '', redux, substring1, substring2;
   where += arguments[0];
   for (var i = 1, count = arguments.length; i < count; i++) {
-    redux = where.indexOf('?');
-    substring1 = where.substring(0, redux);
-    substring2 = where.substring(redux + 1, where.length);
-    where = substring1 + '$' + i + substring2;
-    this.dataArray.push(arguments[i]);
+    if (Array.isArray(arguments[i])) {
+      redux = where.indexOf('?');
+      substring1 = where.substring(0, redux);
+      substring2 = where.substring(redux + 1, where.length);
+      where = substring1 + 'ANY($' + i + ')'+ substring2;
+      this.dataArray.push(arguments[i]);
+    } else {
+      redux = where.indexOf('?');
+      substring1 = where.substring(0, redux);
+      substring2 = where.substring(redux + 1, where.length);
+      where = substring1 + '$' + i + substring2;
+      this.dataArray.push(arguments[i]);
+    }
   }
   this.whereString = ' WHERE ' + where;
+  console.log(this.whereString, this.dataArray);
   return this;
 };
 
