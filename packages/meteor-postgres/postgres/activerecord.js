@@ -246,8 +246,6 @@ ActiveRecord.prototype.where = function (/*Arguments*/) {
   return this;
 };
 
-// TODO WHEREIN
-
 // Parameters: order fields (req)
 // SQL: ORDER BY fields
 // Special: ASC is default
