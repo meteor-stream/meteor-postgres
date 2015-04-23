@@ -123,9 +123,9 @@ miniSQL.prototype.insert = function(serverInserts, clientInserts) {
 
 
   this.dataArray = [];
-  // if (serverInserts['id'] === -1){
-  //   delete serverInserts['id'];
-  // }
+  if (serverInserts['id'] === -1){
+    delete serverInserts['id'];
+  }
   var insertString = 'INSERT INTO ' + this.table + ' (';
   var valueString = ') VALUES (', j = 1;
   for (var key in serverInserts) {

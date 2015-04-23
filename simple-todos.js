@@ -1,6 +1,6 @@
 // Defining 2 SQL collections. The additional paramater is the postgres connection string which will only run on the server
-tasks = new SQL.Collection('tasks', 'postgres://meteor:Meteor1234@191.238.146.165/meteor');
-username = new SQL.Collection('username', 'postgres://meteor:Meteor1234@191.238.146.165/meteor');
+tasks = new SQL.Collection('tasks', 'postgres://postgres:1234@localhost/postgres');
+username = new SQL.Collection('username', 'postgres://postgres:1234@localhost/postgres');
 
 if (Meteor.isClient) {
   var newUser = 'all';
@@ -49,13 +49,11 @@ if (Meteor.isClient) {
                      .fetch();
         user = user[0].id;
         var text = event.target.text.value;
-        var jerry = {
+        tasks.insert({
           text:text,
           checked:false,
           usernameid: user
-        }
-        console.log(jerry);
-        tasks.insert(jerry).save();
+        }).save();
         event.target.text.value = "";
       } else{
         alert("please add a user first");
@@ -90,9 +88,9 @@ if (Meteor.isClient) {
 
 if (Meteor.isServer) {
 
-  tasks.createTable({text: ['$string'], checked: ["$bool", {$default: false}]}).save();
-  username.createTable({name: ['$string', '$unique']}).save();
-  tasks.createRelationship('username', '$onetomany').save();
+  // tasks.createTable({text: ['$string'], checked: ["$bool", {$default: false}]}).save();
+  // username.createTable({name: ['$string', '$unique']}).save();
+  // tasks.createRelationship('username', '$onetomany').save();
 
 
   username.insert({name:'all'}).save();
