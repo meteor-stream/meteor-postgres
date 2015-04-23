@@ -236,11 +236,22 @@ ActiveRecord.prototype.where = function (/*Arguments*/) {
   var where = '', redux, substring1, substring2;
   where += arguments[0];
   for (var i = 1, count = arguments.length; i < count; i++) {
-    redux = where.indexOf('?');
-    substring1 = where.substring(0, redux);
-    substring2 = where.substring(redux + 1, where.length);
-    where = substring1 + '$' + i + substring2;
-    this.dataArray.push(arguments[i]);
+    if (Array.isArray(arguments[i])) {
+      if (arguments[i].length === 0) {
+        throw new Error('Invalid input: array is empty');
+      }
+      redux = where.indexOf('?');
+      substring1 = where.substring(0, redux);
+      substring2 = where.substring(redux + 1, where.length);
+      where = substring1 + 'ANY($' + i + ')'+ substring2;
+      this.dataArray.push(arguments[i]);
+    } else {
+      redux = where.indexOf('?');
+      substring1 = where.substring(0, redux);
+      substring2 = where.substring(redux + 1, where.length);
+      where = substring1 + '$' + i + substring2;
+      this.dataArray.push(arguments[i]);
+    }
   }
   this.whereString = ' WHERE ' + where;
   return this;
