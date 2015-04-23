@@ -91,8 +91,8 @@ if (Meteor.isServer) {
   //tasks.createTable({text: ['$string'], checked: ["$bool", {$default: false}]}).save();
   //username.createTable({name: ['$string', '$unique']}).save();
   //tasks.createRelationship('username', '$onetomany').save();
-  console.log('94', tasks.select().fetch());
-  console.log('95', tasks.select().where('username = ?',['kate','ko']).fetch());
+  //console.log('94', tasks.select().fetch());
+  //console.log('95', tasks.select().where('username = ?',['kate','ko']).fetch());
 
   username.insert({name:'all'}).save();
   // Publishing the collections
