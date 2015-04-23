@@ -1,6 +1,6 @@
 // Defining 2 SQL collections. The additional paramater is the postgres connection string which will only run on the server
-tasks = new SQL.Collection('tasks', 'postgres://postgres:1234@localhost/postgres');
-username = new SQL.Collection('username', 'postgres://postgres:1234@localhost/postgres');
+tasks = new SQL.Collection('tasks', 'postgres://meteor:Meteor1234@localhost/meteor');
+username = new SQL.Collection('username', 'postgres://meteor:Meteor1234@localhost/meteor');
 
 if (Meteor.isClient) {
   var newUser = 'all';
