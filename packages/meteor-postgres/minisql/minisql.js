@@ -223,9 +223,7 @@ miniSQL.prototype.where = function(/*Arguments*/) {
 
   where = '';
   where += arguments[0];
-  // replace ? with rest of array
   for (var i = 1, count = arguments.length; i < count; i++) {
-    redux = where.indexOf('?');
     this.dataArray2.push(arguments[i]);
   }
   this.clientWhereString = ' WHERE ' + where;
