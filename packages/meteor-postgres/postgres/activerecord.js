@@ -469,16 +469,20 @@ ActiveRecord.prototype.autoSelect = function(sub) {
   var loadAutoSelectClient = function(name, cb){
     // Function to load a new client, store it, and then send it to the function to add the watcher
     var context = this;
-    pg.connect(conString, function(err, client, done) {
-      clientHolder[name] = client;
-      setTimeout(function(){
-        delete clientHolder[name];
-        done();
-        loadAutoSelectClient(name, cb);
-      }, 1000*60);
-      //console.log(err);
-      cb(client);
-    });
+    var client = new pg.Client("postgres://meteor:Meteor1234@191.238.146.165/meteor");
+    //pg.connect(conString, function(err, client, done) {
+    //  clientHolder[name] = client;
+    //  setTimeout(function(){
+    //    console.log(clientHolder[name]);
+    //    delete clientHolder[name];
+    //    console.log('================================', clientHolder[name]);
+    //    done();
+    //    loadAutoSelectClient(name, cb);
+    //  }, 1000*60);
+    //  //console.log(err);
+    client.connect();
+    cb(client);
+    //});
   };
 
   var autoSelectHelper = function(client){
@@ -542,6 +546,7 @@ ActiveRecord.prototype.autoSelect = function(sub) {
         var selectString = newSelect + newJoin + " WHERE " + table + ".id = " + returnMsg[0][table];
         client.query(selectString, this.autoSelectData, function(error, results) {
           if (error) {
+            console.log(selectString);
             console.log(error, "in autoSelect insert")
           } else {
             sub._session.send({
