@@ -213,20 +213,33 @@ miniSQL.prototype.where = function(/*Arguments*/) {
   where += arguments[0];
   // replace ? with rest of array
   for (var i = 1, count = arguments.length; i < count; i++) {
-    redux = where.indexOf('?');
-    substring1 = where.substring(0, redux);
-    substring2 = where.substring(redux + 1, where.length);
-    where = substring1 + '$' + i + substring2;
-    this.dataArray.push(arguments[i]);
+    if (Array.isArray(arguments[i])) {
+      redux = where.indexOf('?');
+      substring1 = where.substring(0, redux);
+      substring2 = where.substring(redux + 1, where.length);
+      where = substring1 + 'ANY($' + i + ')'+ substring2;
+      this.dataArray.push(arguments[i]);
+    } else {
+      redux = where.indexOf('?');
+      substring1 = where.substring(0, redux);
+      substring2 = where.substring(redux + 1, where.length);
+      where = substring1 + '$' + i + substring2;
+      this.dataArray.push(arguments[i]);
+    }
   }
   this.serverWhereString = ' WHERE ' + where;
 
   where = '';
   where += arguments[0];
-  // replace ? with rest of array
   for (var i = 1, count = arguments.length; i < count; i++) {
-    redux = where.indexOf('?');
-    this.dataArray2.push(arguments[i]);
+    if (Array.isArray(arguments[i])) {
+      redux = where.indexOf('?');
+      substring1 = where.substring(0, redux);
+      substring2 = where.substring(redux + 1, where.length);
+      where = substring1 + 'IN (' + arguments[i].join(',') + ')' + substring2;
+    } else {
+      this.dataArray2.push(arguments[i]);
+    }
   }
   this.clientWhereString = ' WHERE ' + where;
 
