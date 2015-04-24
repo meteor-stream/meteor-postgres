@@ -471,6 +471,7 @@ ActiveRecord.prototype.autoSelect = function(sub) {
     var context = this;
     var client = new pg.Client(process.env.POSTGRES);
     client.connect();
+    clientHolder[name] = client;
     cb(client);
   };
 
@@ -494,6 +495,7 @@ ActiveRecord.prototype.autoSelect = function(sub) {
     // Adding notification triggers
     var query = client1.query("LISTEN notify_trigger_" + table);
     client1.on('notification', function(msg) {
+      console.log(client1);
       var returnMsg = eval("(" + msg.payload + ")");
       var k = sub._name;
       if (returnMsg[1].operation === "DELETE") {
@@ -517,6 +519,8 @@ ActiveRecord.prototype.autoSelect = function(sub) {
             console.log(err, "in " + prevFunc + ' ' + table);
           }
           client.query(selectString, this.autoSelectData, function(error, results) {
+            console.log(client);
+            console.log(client1);
             if (error) {
               console.log(error, "in autoSelect update");
             } else {
@@ -545,8 +549,6 @@ ActiveRecord.prototype.autoSelect = function(sub) {
           }
           client.query(selectString, this.autoSelectData, function(error, results) {
             if (error) {
-              console.log(selectString);
-              console.log(error, "in autoSelect insert")
             } else {
               done();
               sub._session.send({
