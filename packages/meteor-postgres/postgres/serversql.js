@@ -495,10 +495,10 @@ ActiveRecord.prototype.autoSelect = function(sub) {
     // Adding notification triggers
     var query = client1.query("LISTEN notify_trigger_" + table);
     client1.on('notification', function(msg) {
-      console.log(client1);
       var returnMsg = eval("(" + msg.payload + ")");
       var k = sub._name;
       if (returnMsg[1].operation === "DELETE") {
+        //The line bellow was originally from Numtel's meteor-mysql but adapted for the purposes of this project
         var tableId = parseInt(returnMsg[0][k]);
         sub._session.send({
           msg: 'changed',
@@ -519,8 +519,6 @@ ActiveRecord.prototype.autoSelect = function(sub) {
             console.log(err, "in " + prevFunc + ' ' + table);
           }
           client.query(selectString, this.autoSelectData, function(error, results) {
-            console.log(client);
-            console.log(client1);
             if (error) {
               console.log(error, "in autoSelect update");
             } else {
