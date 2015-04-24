@@ -498,7 +498,6 @@ ActiveRecord.prototype.autoSelect = function(sub) {
       var returnMsg = eval("(" + msg.payload + ")");
       var k = sub._name;
       if (returnMsg[1].operation === "DELETE") {
-        //The line bellow was originally from Numtel's meteor-mysql but adapted for the purposes of this project
         var tableId = parseInt(returnMsg[0][k]);
         sub._session.send({
           msg: 'changed',
