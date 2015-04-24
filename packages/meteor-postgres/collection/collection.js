@@ -125,7 +125,7 @@ SQL.Collection = function(connection) {
   }
 };
 
-//The code below is originally from Numtel's meteor-mysql but adapted for the purposes of this project
+//The code below is originally from Numtel's meteor-mysql but adapted for the purposes of this project (https://github.com/numtel/meteor-mysql/blob/8d7ce8458892f6b255618d884fcde0ec4d04039b/lib/MysqlSubscription.js)
 var registerStore = function(connection, name) {
   connection.registerStore(name, {
     beginUpdate: function(batchSize, reset) {
