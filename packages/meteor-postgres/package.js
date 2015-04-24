@@ -11,10 +11,10 @@ Package.describe({
 });
 
 Npm.depends({
-  'pg'            :  '4.3.0'
+  'pg': '4.3.0'
 });
 
-Package.onUse(function(api) {
+Package.onUse(function (api) {
   // The order these files are imported is very important
   api.versionsFrom('1.1.0.1');
   api.use('underscore');
@@ -25,7 +25,7 @@ Package.onUse(function(api) {
   api.addFiles(['minisql/alasql.js', 'minisql/alasql.js.map', 'minisql/minisql.js'], 'client');
   api.export('miniSQL', 'client');
 
-  api.addFiles('postgres/activerecord.js', 'server');
+  api.addFiles('postgres/serversql.js', 'server');
   api.export('ActiveRecord', 'server');
 
   api.addFiles('collection/collection.js');
@@ -36,11 +36,11 @@ Package.onUse(function(api) {
 Package.onTest(function (api) {
   api.versionsFrom('1.1');
   api.use(['spacebars', 'tinytest', 'test-helpers', 'underscore', 'tracker', 'ddp']);
-  api.addFiles('postgres/activerecord.js', 'server');
+  api.addFiles('postgres/serversql.js', 'server');
   api.export('ActiveRecord', 'server');
   api.addFiles('collection/collection.js', ['server', 'client']);
   api.export('SQL', ['server', 'client']);
   api.addFiles('collection/collection_tests.js');
-  api.addFiles('postgres/activerecord_tests.js', 'server');
+  api.addFiles('postgres/sqlserver_tests.js', 'server');
 });
 
