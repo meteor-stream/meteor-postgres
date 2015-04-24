@@ -6,12 +6,11 @@ var buffer = [];
  */
 SQL = {};
 
-SQL.Collection = function(connection, conString) {
+SQL.Collection = function(connection) {
   var self = this;
   this.unvalidated = false;
   this.reactiveData = new Tracker.Dependency;
   this.tableName = connection;
-  this.conString = conString;
   this.saveMethod = this.tableName + 'save';
   this.fetchMethod = this.tableName + 'fetch';
 
@@ -30,9 +29,6 @@ SQL.Collection = function(connection, conString) {
     throw new Error('First argument to new SQLCollection must be a string or null');
   }
 
-  if (!this.conString || !(typeof conString === 'string')) {
-    throw new Error('connection Error');
-  }
   if (Meteor.isClient) {
     // Sets certain properties used for miniSQL
     miniSQL(this);
