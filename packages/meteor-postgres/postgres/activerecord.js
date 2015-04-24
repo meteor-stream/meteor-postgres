@@ -353,7 +353,7 @@ ActiveRecord.prototype.fetch = function (input, data, cb) {
 
   //cb = cb || function(prevFunc, table, results) {return console.log("results in " + prevFunc + ' ' + table, results.rows)};
   // console.log('FETCH:', input, dataArray);
-  pg.connect(this.conString, function (err, client, done) {
+  pg.connect(process.env.POSTGRES, function (err, client, done) {
     if (err) {
       console.log(err, "in " + prevFunc + ' ' + table);
     }
@@ -379,7 +379,7 @@ ActiveRecord.prototype.save = function (input, data, cb) {
   }
 
   // console.log('SAVE:', input, dataArray);
-  pg.connect(this.conString, function (err, client, done) {
+  pg.connect(process.env.POSTGRES, function (err, client, done) {
     if (err) {
       console.log(err, "in " + prevFunc + ' ' + table);
     }
@@ -453,7 +453,7 @@ ActiveRecord.prototype.autoSelect = function(sub) {
 
   // We need a dedicated client to watch for changes on each table. We store these clients in
   // our clientHolder and only create a new one if one does not already exist
-  var conString = this.conString;
+  var conString = process.env.POSTGRES;
   var table = this.table;
   var prevFunc = this.prevFunc;
   var newWhere = this.whereString;
@@ -469,20 +469,9 @@ ActiveRecord.prototype.autoSelect = function(sub) {
   var loadAutoSelectClient = function(name, cb){
     // Function to load a new client, store it, and then send it to the function to add the watcher
     var context = this;
-    var client = new pg.Client("postgres://postgres:1234@localhost/postgres");
-    //pg.connect(conString, function(err, client, done) {
-    //  clientHolder[name] = client;
-    //  setTimeout(function(){
-    //    console.log(clientHolder[name]);
-    //    delete clientHolder[name];
-    //    console.log('================================', clientHolder[name]);
-    //    done();
-    //    loadAutoSelectClient(name, cb);
-    //  }, 1000*60);
-    //  //console.log(err);
+    var client = new pg.Client(process.env.POSTGRES);
     client.connect();
     cb(client);
-    //});
   };
 
   var autoSelectHelper = function(client1){
@@ -523,7 +512,7 @@ ActiveRecord.prototype.autoSelect = function(sub) {
       }
       else if (returnMsg[1].operation === "UPDATE") {
         var selectString = newSelect + newJoin + " WHERE " + table + ".id = " + returnMsg[0][table];
-        pg.connect("postgres://postgres:1234@localhost/postgres", function (err, client, done) {
+        pg.connect(process.env.POSTGRES, function (err, client, done) {
           if (err) {
             console.log(err, "in " + prevFunc + ' ' + table);
           }
@@ -550,7 +539,7 @@ ActiveRecord.prototype.autoSelect = function(sub) {
       }
       else if (returnMsg[1].operation === "INSERT") {
         var selectString = newSelect + newJoin + " WHERE " + table + ".id = " + returnMsg[0][table];
-        pg.connect("postgres://postgres:1234@localhost/postgres", function (err, client, done) {
+        pg.connect(process.env.POSTGRES, function (err, client, done) {
           if (err) {
             console.log(err, "in " + prevFunc + ' ' + table);
           }
@@ -577,7 +566,7 @@ ActiveRecord.prototype.autoSelect = function(sub) {
     });
   };
 
-  // Checking to see if this table already has a dedicated client before adding the listers
+  // Checking to see if this table already has a dedicated client before adding the listener
   if(clientHolder[table]){
     autoSelectHelper(clientHolder[table]);
   } else{
