@@ -469,7 +469,7 @@ ActiveRecord.prototype.autoSelect = function(sub) {
   var loadAutoSelectClient = function(name, cb){
     // Function to load a new client, store it, and then send it to the function to add the watcher
     var context = this;
-    var client = new pg.Client("postgres://postgres:1234@localhost/postgres");
+    var client = new pg.Client("postgres://meter:Meteor1234@localhost/meteor");
     //pg.connect(conString, function(err, client, done) {
     //  clientHolder[name] = client;
     //  setTimeout(function(){
@@ -523,7 +523,7 @@ ActiveRecord.prototype.autoSelect = function(sub) {
       }
       else if (returnMsg[1].operation === "UPDATE") {
         var selectString = newSelect + newJoin + " WHERE " + table + ".id = " + returnMsg[0][table];
-        pg.connect("postgres://postgres:1234@localhost/postgres", function (err, client, done) {
+        pg.connect("postgres://meter:Meteor1234@localhost/meteor", function (err, client, done) {
           if (err) {
             console.log(err, "in " + prevFunc + ' ' + table);
           }
@@ -550,7 +550,7 @@ ActiveRecord.prototype.autoSelect = function(sub) {
       }
       else if (returnMsg[1].operation === "INSERT") {
         var selectString = newSelect + newJoin + " WHERE " + table + ".id = " + returnMsg[0][table];
-        pg.connect("postgres://postgres:1234@localhost/postgres", function (err, client, done) {
+        pg.connect("postgres://meter:Meteor1234@localhost/meteor", function (err, client, done) {
           if (err) {
             console.log(err, "in " + prevFunc + ' ' + table);
           }
