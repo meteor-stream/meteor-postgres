@@ -1,6 +1,6 @@
 // Defining 2 SQL collections. The additional paramater is the postgres connection string which will only run on the server
-tasks = new SQL.Collection('tasks', 'postgres://meteor:Meteor1234@localhost/meteor');
-username = new SQL.Collection('username', 'postgres://meteor:Meteor1234@localhost/meteor');
+tasks = new SQL.Collection('tasks');
+username = new SQL.Collection('username');
 
 if (Meteor.isClient) {
   var newUser = 'all';
@@ -87,10 +87,9 @@ if (Meteor.isClient) {
 }
 
 if (Meteor.isServer) {
-
-   tasks.createTable({text: ['$string'], checked: ["$bool", {$default: false}]}).save();
-   username.createTable({name: ['$string', '$unique']}).save();
-   tasks.createRelationship('username', '$onetomany').save();
+   //tasks.createTable({text: ['$string'], checked: ["$bool", {$default: false}]}).save();
+   //username.createTable({name: ['$string', '$unique']}).save();
+   //tasks.createRelationship('username', '$onetomany').save();
 
 
   username.insert({name:'all'}).save();
