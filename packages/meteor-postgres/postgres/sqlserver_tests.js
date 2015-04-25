@@ -91,6 +91,19 @@ if (Meteor.isServer) {
     test.equal(result7.rows[7], result9.rows[0]);
     test.equal(result10.rows, result11.rows);
 
+    var result12 = testTasks.select().where('text = ?', ['testing1', 'testing2']).wrapFetch(null, null);
+    var result13 = testTasks.select().where('text = ?', ['testing1']).wrapFetch(null, null);
+    var result14 = testTasks.select().where('id = ? AND text = ?', 2, 'testing1').wrapFetch(null, null);
+    var result15 = testTasks.select().where('id = ? AND text = ?', [1, 2, 3], ['testing1', 'testing2']).wrapFetch(null, null);
+    test.equal(result12.rows.length, 7);
+    test.equal(result12.rows[1].text, 'testing2');
+    test.equal(result13.rows, result.rows);
+    test.equal(result14.rows.length, 0);
+    test.equal(result15.rows.length, 2);
+    test.equal(result15.rows[0].id, 1);
+    test.equal(result15.rows[1].id, 2);
+    test.equal(result15.rows[0].text, 'testing1');
+    test.equal(result15.rows[1].text, 'testing2');
     // Non-overreiden first, last, take
     var result1 = testTasks.select().offset(2).where('text = ?', 'testing1').order('id DESC').limit(3).first().wrapFetch(null, null);
     var result2 = testTasks.select().first(2).wrapFetch(null, null);
