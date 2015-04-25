@@ -3,7 +3,7 @@ Tinytest.add(
   function (test) {
     test.throws(
       function () {
-        SQL.Collection(null, null);
+        SQL.Collection(null);
       },
       /Use new to construct a SQLCollection/
     );
@@ -22,12 +22,6 @@ Tinytest.add(
       /First argument to new SQLCollection must be a string or null/
     );
 
-    test.throws(
-      function() {
-        var test3 = new SQL.Collection('test');
-      },
-      /connection Error/
-    );
   }
 );
 
