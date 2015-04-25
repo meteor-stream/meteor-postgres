@@ -3,7 +3,6 @@
 var ActiveRecordStub = function(name) {
   var stub = ActiveRecord();
   stub.table = name;
-  stub.conString = 'postgres://postgres:1234@localhost/postgres';
   stub.wrapSave = Meteor.wrapAsync(stub.save.bind(stub));
   stub.wrapFetch = Meteor.wrapAsync(stub.fetch.bind(stub));
   return stub;
