@@ -1,7 +1,7 @@
 // Currently all the tests based on ActiveRecord are running synchronously
 // Making test Stub using decorator
 var ActiveRecordStub = function(name) {
-  var stub = ActiveRecord();
+  var stub = serverSQL();
   stub.table = name;
   stub.conString = 'postgres://postgres:1234@localhost/postgres';
   stub.wrapSave = Meteor.wrapAsync(stub.save.bind(stub));
@@ -40,7 +40,7 @@ if (Meteor.isServer) {
     testUser.insert({ username: 'paulo', age: 27}).wrapSave(null, null);
   }
 
-  //Should test the operation defined in the ActiveRecord and return result successfully
+  //Should test the operation defined in the serverSQL and return result successfully
   Tinytest.addAsync('activerecord - basic - success', function(test, onComplete) {
     var findOneResult1 = testTasks.findOne().wrapFetch(null, null);
     var findOneResult2 = testTasks.findOne(1).wrapFetch(null, null);

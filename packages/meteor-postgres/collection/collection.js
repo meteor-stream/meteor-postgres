@@ -35,8 +35,8 @@ SQL.Collection = function(connection) {
   }
 
   if (Meteor.isServer){
-    // Sets certain properties used for ActiveRecord
-    ActiveRecord(this);
+    // Sets certain properties used for serverSQL
+    serverSQL(this);
   }
 
   // initialize class
@@ -175,8 +175,8 @@ if (Meteor.isClient) {
 }
 
 if (Meteor.isServer){
-  // extends the proto with ActiveRecord Methods
-  _.extend(SQL.Collection.prototype, ActiveRecord.prototype);
+  // extends the proto with serverSQL Methods
+  _.extend(SQL.Collection.prototype, serverSQL.prototype);
 }
 
 SQL.Collection.prototype.publish = function(collname, pubFunc) {

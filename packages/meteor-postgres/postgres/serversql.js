@@ -5,9 +5,9 @@ var clientHolder = {};
  * @param Collection
  * @constructor
  */
-ActiveRecord = function (Collection) {
+serverSQL = function (Collection) {
 
-  Collection = Collection || Object.create(ActiveRecord.prototype);
+  Collection = Collection || Object.create(serverSQL.prototype);
   Collection.table = Collection.tableName;
 
   // inputString used by queries, overrides other strings
@@ -44,7 +44,7 @@ ActiveRecord = function (Collection) {
  * @type {{$number: string, $string: string, $json: string, $datetime: string, $float: string, $seq: string, $bool: string}}
  * @private
  */
-ActiveRecord.prototype._DataTypes = {
+serverSQL.prototype._DataTypes = {
   $number: 'integer',
   $string: 'varchar(255)',
   $json: 'json',
@@ -59,7 +59,7 @@ ActiveRecord.prototype._DataTypes = {
  * @type {{$unique: string, $check: string, $exclude: string, $notnull: string, $default: string, $primary: string}}
  * @private
  */
-ActiveRecord.prototype._TableConstraints = {
+serverSQL.prototype._TableConstraints = {
   $unique: 'unique',
   $check: 'check ', // value
   $exclude: 'exclude',
@@ -74,7 +74,7 @@ ActiveRecord.prototype._TableConstraints = {
  * Type: Query
  * @param tableObj
  */
-ActiveRecord.prototype.createTable = function (tableObj) {
+serverSQL.prototype.createTable = function (tableObj) {
 
   var startString = 'CREATE TABLE ' + this.table + ' (';
   var item, subKey, valOperator, inputString = '';
@@ -129,9 +129,8 @@ ActiveRecord.prototype.createTable = function (tableObj) {
 /**
  * Notes: Deletes cascade
  * SQL: DROP TABLE <table>
- *
  */
-ActiveRecord.prototype.dropTable = function () {
+serverSQL.prototype.dropTable = function () {
   this.inputString = 'DROP TABLE IF EXISTS ' + this.table + ' CASCADE; DROP FUNCTION IF EXISTS notify_trigger_' + this.table + '() CASCADE;';
   this.prevFunc = 'DROP TABLE';
   return this;
@@ -142,7 +141,7 @@ ActiveRecord.prototype.dropTable = function () {
  * Type: Query
  * @param insertObj
  */
-ActiveRecord.prototype.insert = function (insertObj) {
+serverSQL.prototype.insert = function (insertObj) {
   var valueString = ') VALUES (', keys = Object.keys(insertObj);
   var insertString = 'INSERT INTO ' + this.table + ' (';
   this.dataArray = [];
@@ -164,7 +163,7 @@ ActiveRecord.prototype.insert = function (insertObj) {
  * @param {string} updatesObj Key (Field)
  * @param {string} updatesObj Value (Data)
  */
-ActiveRecord.prototype.update = function (updatesObj) {
+serverSQL.prototype.update = function (updatesObj) {
   var updateField = '(', updateValue = '(', keys = Object.keys(updatesObj);
   if (keys.length > 1) {
     for (var i = 0, count = keys.length - 1; i < count; i++) {
@@ -187,7 +186,7 @@ ActiveRecord.prototype.update = function (updatesObj) {
  * Type: Statement Starter
  * Notes: If not chained with where it will remove all rows
  */
-ActiveRecord.prototype.remove = function () {
+serverSQL.prototype.remove = function () {
   this.deleteString = 'DELETE FROM ' + this.table;
   this.prevFunc = 'DELETE';
   return this;
@@ -204,7 +203,7 @@ ActiveRecord.prototype.remove = function () {
  * @param {string} [arguments]
  * fields to select
  */
-ActiveRecord.prototype.select = function (/*arguments*/) {
+serverSQL.prototype.select = function (/*arguments*/) {
   var args = '';
   if (arguments.length >= 1) {
     for (var i = 0; i < arguments.length; i++) {
@@ -229,7 +228,7 @@ ActiveRecord.prototype.select = function (/*arguments*/) {
  * Type: Query
  * @param {number} [id]
  */
-ActiveRecord.prototype.findOne = function (/*arguments*/) {
+serverSQL.prototype.findOne = function (/*arguments*/) {
   if (arguments.length === 1) {
     var args = arguments[0];
     this.inputString = 'SELECT * FROM ' + this.table + ' WHERE ' + this.table + '.id = ' + args + ' LIMIT 1;';
@@ -248,7 +247,7 @@ ActiveRecord.prototype.findOne = function (/*arguments*/) {
  * @param {String} fields
  * @param {String} joinTable
  */
-ActiveRecord.prototype.join = function (joinType, fields, joinTable) {
+serverSQL.prototype.join = function (joinType, fields, joinTable) {
   if (Array.isArray(joinType)) {
     for (var x = 0, count = fields.length; x < count; x++){
       this.joinString = " " + joinType[x] + " " + joinTable[x][0] + " ON " + this.table + "." + fields[x] + " = " + joinTable[x][0] + "." + joinTable[x][1];
@@ -260,12 +259,16 @@ ActiveRecord.prototype.join = function (joinType, fields, joinTable) {
   return this;
 };
 
-// Parameters: string with ?'s followed by an argument for each of the ?'s
-// SQL: WHERE field operator comparator, WHERE field1 operator1 comparator1 AND/OR field2 operator2 comparator2
-// Special:
-// db.select('students').where('age = ? and class = ? or name = ?','18','senior','kate').fetch();
-// STATEMENT/WHERE STRING & DATA ARRAY
-ActiveRecord.prototype.where = function (/*Arguments*/) {
+/**
+ * SQL: WHERE field operator comparator, WHERE field1 operator1 comparator1 AND/OR field2 operator2 comparator2, WHERE field IN (x, y)
+ * Type: Statement
+ * Notes:
+ * @param {string} directions
+ * condition with ?'s for values
+ * @param {string} values
+ * values to be used
+ */
+serverSQL.prototype.where = function (/*Arguments*/) {
   this.dataArray = [];
   var where = '', redux, substring1, substring2;
   where += arguments[0];
@@ -291,11 +294,13 @@ ActiveRecord.prototype.where = function (/*Arguments*/) {
   return this;
 };
 
-// Parameters: order fields (req)
-// SQL: ORDER BY fields
-// Special: ASC is default
-// CABOOSE/ORDER STRING
-ActiveRecord.prototype.order = function (/*arguments*/) {
+/**
+ * SQL: ORDER BY fields
+ * Notes: ASC is default, add DESC after the field name to reverse
+ * Type: Caboose
+ * @param {string} fields
+ */
+serverSQL.prototype.order = function (/*arguments*/) {
   var args = '';
   if (arguments.length > 1) {
     for (var i = 0; i < arguments.length; i++) {
@@ -309,38 +314,44 @@ ActiveRecord.prototype.order = function (/*arguments*/) {
   return this;
 };
 
-// Parameters: limit integer
-// SQL: LIMIT number
-// CABOOSE / LIMIT STRING
-ActiveRecord.prototype.limit = function (limit) {
+/**
+ * SQL: LIMIT number
+ * Type: Caboose
+ * @param {number} limit
+ */
+serverSQL.prototype.limit = function (limit) {
   this.limitString = ' LIMIT ' + limit;
   return this;
 };
 
-// Parameters: offset integer
-// SQL: OFFSET number
-// CABOOSE/OFFSET STRING
-ActiveRecord.prototype.offset = function (offset) {
+/**
+ * SQL: OFFSET number
+ * Type: Caboose
+ * @param {number} offset
+ */
+serverSQL.prototype.offset = function (offset) {
   this.offsetString = ' OFFSET ' + offset;
   return this;
 };
 
-// Parameters: group field
-// SQL: GROUP BY field
-// Special:
-// CABOOSE/GROUP BY STRING
-ActiveRecord.prototype.group = function (group) {
+/**
+ * SQL: GROUP BY field
+ * Type: Caboose
+ * @param {string} group
+ */
+serverSQL.prototype.group = function (group) {
   this.groupString = 'GROUP BY ' + group;
   return this;
 };
 
 // TODO: HAVING
 
-// Parameters: limit (optional, defaults to 1)
-// SQL: SELECT * FROM table ORDER BY table.id ASC LIMIT 1, SELECT * FROM table ORDER BY table.id ASC LIMIT limit
-// Special: Retrieves first item, overrides all other chainable functions
-// QUERY/INPUT STRING
-ActiveRecord.prototype.first = function (limit) {
+/**
+ * SQL: SELECT * FROM table ORDER BY table.id ASC LIMIT 1, SELECT * FROM table ORDER BY table.id ASC LIMIT limit
+ * Type: Query
+ * @param limit
+ */
+serverSQL.prototype.first = function (limit) {
   limit = limit || 1;
   this.clearAll();
   this.inputString += 'SELECT * FROM ' + this.table + ' ORDER BY ' + this.table + '.id ASC LIMIT ' + limit + ';';
@@ -348,11 +359,12 @@ ActiveRecord.prototype.first = function (limit) {
   return this;
 };
 
-// Parameters: limit (optional, defaults to 1)
-// SQL: SELECT * FROM table ORDER BY table.id DESC LIMIT 1, SELECT * FROM table ORDER BY table.id DESC LIMIT limit
-// Special: Retrieves first item, overrides all other chainable functions
-// QUERY/INPUT STRING
-ActiveRecord.prototype.last = function (limit) {
+/**
+ * SQL: SELECT * FROM table ORDER BY table.id DESC LIMIT 1, SELECT * FROM table ORDER BY table.id DESC LIMIT limit
+ * Type: Query
+ * @param {number} limit
+ */
+serverSQL.prototype.last = function (limit) {
   limit = limit || 1;
   this.clearAll();
   this.inputString += 'SELECT * FROM ' + this.table + ' ORDER BY ' + this.table + '.id DESC LIMIT ' + limit + ';';
@@ -360,11 +372,13 @@ ActiveRecord.prototype.last = function (limit) {
   return this;
 };
 
-// Parameters: limit (optional, defaults to 1)
-// SQL: SELECT * FROM table LIMIT 1, SELECT * FROM table LIMIT limit
-// Special: Retrieves a record without ordering, overrides all other chainable functions
-// QUERY/INPUT STRING
-ActiveRecord.prototype.take = function (limit) {
+/**
+ * SQL: SELECT * FROM table LIMIT 1, SELECT * FROM table LIMIT limit
+ * Type: Query
+ * @param {number} limit
+ * Defaults to 1
+ */
+serverSQL.prototype.take = function (limit) {
   limit = limit || 1;
   this.clearAll();
   this.inputString += 'SELECT * FROM ' + this.table + ' LIMIT ' + limit + ';';
@@ -372,8 +386,13 @@ ActiveRecord.prototype.take = function (limit) {
   return this;
 };
 
-// Data function that retrieves data from database
-ActiveRecord.prototype.fetch = function (input, data, cb) {
+/**
+ * Type: Data method
+ * @param {string} input
+ * @param {array} data
+ * @param {function} cb
+ */
+serverSQL.prototype.fetch = function (input, data, cb) {
   var table = this.table;
   var dataArray = data || this.dataArray;
   var prevFunc = this.prevFunc;
@@ -400,8 +419,13 @@ ActiveRecord.prototype.fetch = function (input, data, cb) {
   this.clearAll();
 };
 
-// Data function that saves information to database
-ActiveRecord.prototype.save = function (input, data, cb) {
+/**
+ * Type: Data method
+ * @param {string} input
+ * @param {array} data
+ * @param {function} cb
+ */
+serverSQL.prototype.save = function (input, data, cb) {
 
   var table = this.table;
   var dataArray = data || this.dataArray;
@@ -427,8 +451,10 @@ ActiveRecord.prototype.save = function (input, data, cb) {
   this.clearAll();
 };
 
-// Data function that clears all strings after a fetch or save
-ActiveRecord.prototype.clearAll = function() {
+/**
+ * Type: Maintenance
+ */
+serverSQL.prototype.clearAll = function() {
   this.inputString = '';
   this.autoSelectData = '';
   this.autoSelectInput = '';
@@ -455,10 +481,12 @@ ActiveRecord.prototype.clearAll = function() {
   this.prevFunc = '';
 };
 
-// Parameters: table (req), relationship type (req)
-// SQL:
-// QUERY/INPUT STATEMENT
-ActiveRecord.prototype.createRelationship = function(relTable, relationship){
+/**
+ * Type: Query
+ * @param {string} relTable
+ * @param {string} relationship
+ */
+serverSQL.prototype.createRelationship = function(relTable, relationship){
   if (relationship === "$onetomany"){
     this.inputString = "ALTER TABLE " +  this.table + " ADD " + relTable +
     "id INTEGER references " + relTable + "(id) ON DELETE CASCADE;";
@@ -472,7 +500,11 @@ ActiveRecord.prototype.createRelationship = function(relTable, relationship){
   return this;
 };
 
-ActiveRecord.prototype.returnSql = function(){
+/**
+ *
+ * @returns {string|*|string} input string
+ */
+serverSQL.prototype.returnSql = function(){
   var table = this.table;
   var dataArray = this.dataArray;
   var prevFunc = this.prevFunc;
@@ -485,7 +517,11 @@ ActiveRecord.prototype.returnSql = function(){
   return input;
 };
 
-ActiveRecord.prototype.autoSelect = function(sub) {
+/**
+ *
+ * @param sub
+ */
+serverSQL.prototype.autoSelect = function(sub) {
 
   // We need a dedicated client to watch for changes on each table. We store these clients in
   // our clientHolder and only create a new one if one does not already exist
