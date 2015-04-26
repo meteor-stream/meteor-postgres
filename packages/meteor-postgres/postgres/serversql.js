@@ -10,6 +10,7 @@ serverSQL = function (Collection) {
   Collection = Collection || Object.create(serverSQL.prototype);
   Collection.table = Collection.tableName;
 
+  Collection.conString = process.env.MP_POSTGRES || process.env.DATABASE_URL;
   // inputString used by queries, overrides other strings
   // includes: create table, create relationship, drop table, insert
   Collection.inputString = '';
@@ -405,8 +406,7 @@ serverSQL.prototype.fetch = function (input, data, cb) {
   }
 
   //cb = cb || function(prevFunc, table, results) {return console.log("results in " + prevFunc + ' ' + table, results.rows)};
-  // console.log('FETCH:', input, dataArray);
-  pg.connect(process.env.POSTGRES, function (err, client, done) {
+  pg.connect(this.conString, function (err, client, done) {
     if (err) {
       console.log(err, "in " + prevFunc + ' ' + table);
       console.log('Input Statement: ', input);
@@ -437,8 +437,7 @@ serverSQL.prototype.save = function (input, data, cb) {
     input = this.inputString.length > 0 ? this.inputString : starter + this.joinString + this.whereString + ';';
   }
 
-  // console.log('SAVE:', input, dataArray);
-  pg.connect(process.env.POSTGRES, function (err, client, done) {
+  pg.connect(this.conString, function (err, client, done) {
     if (err) {
       console.log(err, "in " + prevFunc + ' ' + table);
       console.log('Input Statement: ', input);
@@ -525,7 +524,6 @@ serverSQL.prototype.autoSelect = function(sub) {
 
   // We need a dedicated client to watch for changes on each table. We store these clients in
   // our clientHolder and only create a new one if one does not already exist
-  var conString = process.env.POSTGRES;
   var table = this.table;
   var prevFunc = this.prevFunc;
   var newWhere = this.whereString;
@@ -541,7 +539,7 @@ serverSQL.prototype.autoSelect = function(sub) {
   var loadAutoSelectClient = function(name, cb){
     // Function to load a new client, store it, and then send it to the function to add the watcher
     var context = this;
-    var client = new pg.Client(process.env.POSTGRES);
+    var client = new pg.Client(process.env.MP_POSTGRES);
     client.connect();
     clientHolder[name] = client;
     cb(client);
@@ -585,7 +583,7 @@ serverSQL.prototype.autoSelect = function(sub) {
       }
       else if (returnMsg[1].operation === "UPDATE") {
         var selectString = newSelect + newJoin + " WHERE " + table + ".id = " + returnMsg[0][table];
-        pg.connect(process.env.POSTGRES, function (err, client, done) {
+        pg.connect(process.env.MP_POSTGRES, function (err, client, done) {
           if (err) {
             console.log(err, "in " + prevFunc + ' ' + table);
           }
@@ -612,7 +610,7 @@ serverSQL.prototype.autoSelect = function(sub) {
       }
       else if (returnMsg[1].operation === "INSERT") {
         var selectString = newSelect + newJoin + " WHERE " + table + ".id = " + returnMsg[0][table];
-        pg.connect(process.env.POSTGRES, function (err, client, done) {
+        pg.connect(process.env.MP_POSTGRES, function (err, client, done) {
           if (err) {
             console.log(err, "in " + prevFunc + ' ' + table);
           }
