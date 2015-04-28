@@ -1,6 +1,20 @@
 pg = Npm.require('pg'); // Node-Postgres
 var clientHolder = {};
 
+function removeListeningConnections(){
+  for (var key in clientHolder) {
+    clientHolder[key].end();
+  }
+}
+
+process.on('exit', removeListeningConnections);
+_.each(['SIGINT', 'SIGHUP', 'SIGTERM'], function (sig) {
+  process.once(sig, function () {
+    removeListeningConnections();
+    process.kill(process.pid, sig);
+  });
+});
+
 /**
  * @param Collection
  * @constructor
