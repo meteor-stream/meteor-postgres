@@ -27,7 +27,7 @@ if (Meteor.isServer) {
   testTasks.insert({ text: 'testing1' }).wrapSave(null, null);
   testTasks.insert({ text: 'testing2' }).wrapSave(null, null);
   testTasks.insert({ text: 'testing3' }).wrapSave(null, null);
-  for ( var i = 0; i < 5; i++) {
+  for (var i = 0; i < 5; i++) {
     testTasks.insert({ text: 'testing1' }).wrapSave(null, null);
   }
 
