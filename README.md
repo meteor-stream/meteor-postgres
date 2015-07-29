@@ -1,4 +1,4 @@
-### As Meteor has announced that they will be providing native SQL support in the future, we are no longer maintaining this repo. 
+### As Meteor has announced that they will be providing native SQL support in the future, we are no longer maintaining this repo. But you can find an maintained version [here](https://github.com/storeness/meteor-postgres).
 
 # [Meteor-Postgres](http://www.meteorpostgres.com/)
 
